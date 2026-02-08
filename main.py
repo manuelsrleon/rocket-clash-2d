@@ -9,7 +9,7 @@ screen = pygame.display.set_mode((800,600))
 
 screen.fill((0,0,0))
 
-pygame.draw.circle(screen, WHITE, (50,50),4,0)
+pygame.draw.circle(screen, WHITE``, (50,50),4,0)
 
 pygame.display.update()
 
