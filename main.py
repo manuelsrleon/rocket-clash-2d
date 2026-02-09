@@ -1,18 +1,17 @@
-import pygame, sys
-from pygame.locals import *
 
-pygame.init()
+import pygame
 
-WHITE = (255,255,255)
-
+if __name__ == '__main__':
+    pygame.init()
 screen = pygame.display.set_mode((800,600))
+pygame.display.
+#potato_img = pygame.image.load('potato.png').convert()
 
-screen.fill((0,0,0))
+running = True
 
-pygame.draw.circle(screen, WHITE``, (50,50),4,0)
-
-pygame.display.update()
-
+while running:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+        
 pygame.quit()
-
-sys.exit()
