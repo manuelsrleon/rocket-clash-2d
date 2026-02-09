@@ -2,7 +2,8 @@
 import pygame
 
 from match_scene import MatchScene
-
+from director import Director
+from menu import Menu
 
 screen = None
 

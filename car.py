@@ -1,3 +1,6 @@
+import pygame, sys, os
+from pygame.locals import *
+
 class MySprite(pygame.sprite.Sprite):
 
     #body_img = None
@@ -27,10 +30,11 @@ class MySprite(pygame.sprite.Sprite):
         self.blit(wheel_img, (70,0))
 
 class Car(MySprite):
-    #def __init__()
+    def __init__():
+        Exception("NotImplemented")
     #def move(self, move)
     #def update()
     #
-class PlayerCar(Car):
+#class PlayerCar(Car):
     #def __init__(self):
     #def move():
