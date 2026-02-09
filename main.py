@@ -4,7 +4,6 @@ import pygame
 if __name__ == '__main__':
     pygame.init()
 screen = pygame.display.set_mode((800,600))
-pygame.display.
 #potato_img = pygame.image.load('potato.png').convert()
 
 running = True
