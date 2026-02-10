@@ -47,7 +47,7 @@ class Director():
                 self.salir_escena_pygame = True
             else:
                 raise Exception("Unrecognized scene type")
-    def salirEscena(self):
+    def exitScene(self):
         self.pararEscena()
 
         if(len(self.pila)>0):

@@ -12,6 +12,10 @@ class GUIElement:
         self.rect.left = posX
         self.rect.bottom = posY
 
+    def positionInElement(self, position):
+        (posX, posY) = position
+        return (posX >= self.rect.left) and (posX <= self.rect.right) and (posY >= self.rect.top) and (posY <= self.rect.bottom)
+
     def render(self):
         raise NotImplemented("Render method not implemented")
     def action(self):
@@ -48,7 +52,7 @@ class GUIScreen:
     def __init__(self,menu,imageName):
         self.menu = menu
         self.image = pygame.image.load("assets/gui/"+imageName)
-        self.image = pygame.transform.scale(self.image, (SCREEN_WIDTH, SCREEN_HEIGHT))
+        self.image = pygame.transform.scale(self.image, (SCREEN_WIDTH/2, SCREEN_HEIGHT/2))
         self.GUIElements = []
         self.animations = []
 
@@ -57,18 +61,19 @@ class GUIScreen:
             if event.type == MOUSEBUTTONDOWN:
                 self.clickElement = None
                 for GUIElement in self.GUIElements:
-                    if element.positionInElement(event.position):
-                        self.elementClick = element
+                    if GUIElement.positionInElement(event.position):
+                        self.GUIElementClick = GUIElement
+                        
             if event.type == MOUSEBUTTONUP:
-                for element in self.GUIElements:
-                    if element.positionInElement(event.pos):
-                        if(element == self.elementClick):
-                            element.action()
+                for GUIElement in self.GUIElements:
+                    if GUIElement.positionInElement(event.pos):
+                        if(GUIElement == self.GUIElementClick):
+                            GUIElement.action()
     
     def render(self, screen):
         screen.blit(self.image, self.image.get_rect())
-        for element in self.GUIElements:
-            element.render(screen)
+        for GUIElement in self.GUIElements:
+            GUIElement.render(screen)
 
 class InitialGUIScreen(GUIScreen):
     def __init__(self, menu, imageName):
@@ -92,7 +97,7 @@ class Menu(PyGameScene):
                 if event.key == K_ESCAPE:
                     self.exit()
             elif event.type == pygame.QUIT:
-                self.director.exit()
+                self.director.exitScene()
         self.screenList[self.currentScreen].events(event_list)
 
     def render(self,screen):
