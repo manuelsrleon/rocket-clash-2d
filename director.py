@@ -12,13 +12,14 @@ class Director():
         self.salir_escena_pygame = False
     
     def buclePygame(self, scene): 
-        reloj = pygame.time.Clock()
+        clock = pygame.time.Clock()
         self.salir_escena_pygame = False
 
         pygame.event.clear()
 
         while not self.salir_escena_pygame:
-            # Pasamos los eventos a la escena
+
+            delta_time = clock.tick(FPS)
             scene.events(pygame.event.get())
             # Actualiza la escena
             scene.update(delta_time)

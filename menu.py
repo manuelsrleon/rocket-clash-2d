@@ -1,8 +1,9 @@
 import pygame
 from scene import *
+from pygame.locals import*
 
 class GUIElement:
-    def __init__(self,pantalla,rectangle):
+    def __init__(self,screen,rectangle):
         self.screen = screen
         self.rect = rectangle
     
@@ -19,9 +20,9 @@ class GUIElement:
 class Button(GUIElement):
     
     def __init__(self, screen, imageName, position):
-        self.image = None # add img loading logic
-        #self.image = pygame.transform.scale(self.image, (20,20))
-        #GUIElement.__init__(self, screen, self.image.get_rect())
+        self.image =  pygame.image.load("assets/gui/play_button.png").convert_alpha()# add img loading logic
+        #self.image = pygame.transform.scale(self.image, self.)
+        GUIElement.__init__(self, screen, self.image.get_rect())
         self.setPosition(position)
     
     def render(self, screen):
@@ -44,9 +45,9 @@ class ExitButton(Button):
         self.screen.menu.exit()
 
 class GUIScreen:
-    def __init(self,menu,imageName):
+    def __init__(self,menu,imageName):
         self.menu = menu
-        self.image = None #TODO Load image
+        self.image = pygame.image.load("assets/gui/"+imageName)
         self.image = pygame.transform.scale(self.image, (SCREEN_WIDTH, SCREEN_HEIGHT))
         self.GUIElements = []
         self.animations = []
@@ -70,8 +71,8 @@ class GUIScreen:
             element.render(screen)
 
 class InitialGUIScreen(GUIScreen):
-    def __init__(self, menu):
-        GUIScreen.__init__(self)
+    def __init__(self, menu, imageName):
+        GUIScreen.__init__(self, menu, imageName)
         playButton = PlayButton(self)
         exitButton = ExitButton(self)
         self.GUIElements.append(playButton)
@@ -81,13 +82,13 @@ class Menu(PyGameScene):
     def __init__(self, director):
         PyGameScene.__init__(self,director)
         self.screenList = []
-        self.screenList.append(InitialGUIScreen(self))
-        self.showInitialScreen
+        self.screenList.append(InitialGUIScreen(self, "main_menu_bg.png"))
+        self.showInitialScreen()
     def update(self, *args):
         return
     def events(self, event_list):
         for event in event_list:
-            if event_type == KEYDOWN:
+            if event.type == KEYDOWN:
                 if event.key == K_ESCAPE:
                     self.exit()
             elif event.type == pygame.QUIT:
