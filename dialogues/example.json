@@ -1,0 +1,18 @@
+{
+  "scene": "opponent1_intro",
+  "next_scene": "match_scene",
+  "lines": [
+    {
+      "portrait": "assets/portraits/opponent1.png",
+      "name": "Rival",
+      "text": "¡Prepárate! Esto va a ser intenso...",
+      "speed": 60
+    },
+    {
+      "portrait": "assets/portraits/player.png",
+      "name": "Tú",
+      "text": "Estoy más que preparado.",
+      "speed": 60
+    }
+  ]
+}
