@@ -61,7 +61,6 @@ class InitialGUIScreen(GUIScreen):
 
     def __init__(self, menu):
         try:
-            GUIAssets.load()
             bg_image = GUIAssets.main_menu_bg
         except Exception:
             bg_image = None

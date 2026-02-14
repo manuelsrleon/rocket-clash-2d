@@ -1,7 +1,6 @@
 from director import Director
 from menu import Menu
 
-# Legacy global screen variable (not currently used)
 screen = None
 
 if __name__ == "__main__":

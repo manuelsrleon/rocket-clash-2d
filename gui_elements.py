@@ -88,6 +88,7 @@ class GUIScreen:
         self.image = image
         self.GUIElements = []
         self.animations = []
+        self.volume_controller = VolumeController()
 
     def events(self, event_list):
         for event in event_list:
@@ -102,9 +103,8 @@ class GUIScreen:
                     if GUIElement.positionInElement(event.pos):
                         if GUIElement == self.GUIElementClick:
                             try:
-                                SFXAssets.load()
                                 sound = pygame.mixer.Sound.play(SFXAssets.silbato_corto)
-                                sound.set_volume(VolumeController.get_current_volume())
+                                sound.set_volume(self.volume_controller.get_current_volume())
                             except Exception:
                                 pass  # Sound not available
                             GUIElement.action()
