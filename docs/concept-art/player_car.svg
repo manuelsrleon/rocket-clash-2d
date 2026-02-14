@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="205.73834mm"
+   height="51.898121mm"
+   viewBox="0 0 205.73834 51.898121"
+   version="1.1"
+   id="svg1"
+   inkscape:version="1.4.3 (0d15f75042, 2025-12-25)"
+   sodipodi:docname="player_car.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="mm"
+     inkscape:zoom="0.85789141"
+     inkscape:cx="259.93966"
+     inkscape:cy="403.89727"
+     inkscape:window-width="2057"
+     inkscape:window-height="1214"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1" />
+  <defs
+     id="defs1" />
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(-36.038871,-41.61914)">
+    <g
+       id="g7-3"
+       transform="translate(-0.57813,-92.42096)">
+      <path
+         id="rect3-5"
+         style="opacity:1;fill:#0000ff;stroke-width:0.319137"
+         d="m 66.609486,134.0401 -29.992485,12.97491 v 38.92321 H 242.35535 v -22.89111 l -85.68934,-13.84618 -17.1943,-15.16083 z" />
+      <g
+         id="g3-6"
+         transform="matrix(0.7880946,0,0,0.7880946,-91.904915,-22.598889)" />
+      <g
+         id="g5-2"
+         transform="matrix(0.74773166,0,0,0.74773166,34.419864,-12.187129)" />
+    </g>
+  </g>
+</svg>

@@ -1,4 +1,0 @@
-## Requisitos
-- Crear entorno virtual: `python3 -m venv venv`
-- Activar: `source venv/bin/activate`
-- Instalar: `pip install -r configs/requirements.txt`

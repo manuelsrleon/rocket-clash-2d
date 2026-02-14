@@ -1,16 +1,22 @@
+"""Main entry point for the game application.
 
-import pygame
+This module initializes the game director and starts the game with the main menu.
+"""
 
-if __name__ == '__main__':
-    pygame.init()
-screen = pygame.display.set_mode((800,600))
-#potato_img = pygame.image.load('potato.png').convert()
+from features.match.scene import MatchScene
+from director import Director
+from features.menu.scene import Menu
 
-running = True
+# Legacy global screen variable (not currently used)
+screen = None
 
-while running:
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
-        
-pygame.quit()
+if __name__ == "__main__":
+    # Create the game director (manages scenes and game loop)
+    director = Director()
+
+    # Start with the main menu scene
+    scene = Menu(director)
+    director.appendScene(scene)
+
+    # Run the game
+    director.execute()
