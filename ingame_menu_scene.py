@@ -80,8 +80,6 @@ class IngameMenuGUIScreen(GUIScreen):
         self.GUIElements.append(settings_button)
         self.GUIElements.append(exit_button)
 
-
-# Main Ingame Menu Scene
 class IngameMenu(PyGameScene):
 
     def __init__(self, director):

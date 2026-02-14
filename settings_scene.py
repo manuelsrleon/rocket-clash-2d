@@ -30,7 +30,7 @@ class VolumeSlider:
         self.width = SLIDER_WIDTH
         self.height = SLIDER_HEIGHT
         self.value = initial_value
-        self.dragging = False
+        self.selected = False
 
         self.bg_rect = pygame.Rect(x, y, self.width, self.height)
         self.handle_x = self._value_to_x(self.value)
@@ -41,37 +41,19 @@ class VolumeSlider:
     def _x_to_value(self, x):
         relative_x = max(0, min(x - self.x, self.width))
         raw_value = relative_x / self.width
-        # Snap to 10% increments
         snapped_value = round(raw_value * 10) / 10
         return snapped_value
 
     def handle_event(self, event):
-        if event.type == pygame.MOUSEBUTTONDOWN:
-            if event.button == 1:  # Left click
-                mouse_x, mouse_y = event.pos
-                # Check if click is on handle or slider bar
-                handle_rect = pygame.Rect(
-                    self.handle_x - SLIDER_HANDLE_RADIUS,
-                    self.y - SLIDER_HANDLE_RADIUS + self.height // 2,
-                    SLIDER_HANDLE_RADIUS * 2,
-                    SLIDER_HANDLE_RADIUS * 2,
-                )
-                if handle_rect.collidepoint(
-                    mouse_x, mouse_y
-                ) or self.bg_rect.collidepoint(mouse_x, mouse_y):
-                    self.dragging = True
-                    self.handle_x = max(self.x, min(mouse_x, self.x + self.width))
-                    self.value = self._x_to_value(self.handle_x)
-
-        elif event.type == pygame.MOUSEBUTTONUP:
-            if event.button == 1:
-                self.dragging = False
-
-        elif event.type == pygame.MOUSEMOTION:
-            if self.dragging:
-                mouse_x, mouse_y = event.pos
-                self.handle_x = max(self.x, min(mouse_x, self.x + self.width))
-                self.value = self._x_to_value(self.handle_x)
+        if event.type == KEYDOWN:
+            if event.key == K_LEFT:
+                # Disminuir volumen
+                self.value = max(VOLUME_MIN, self.value - 0.1)
+                self.handle_x = self._value_to_x(self.value)
+            elif event.key == K_RIGHT:
+                # Aumentar volumen
+                self.value = min(VOLUME_MAX, self.value + 0.1)
+                self.handle_x = self._value_to_x(self.value)
 
     def get_value(self):
         return self.value
@@ -81,7 +63,8 @@ class VolumeSlider:
         self.handle_x = self._value_to_x(self.value)
 
     def render(self, screen):
-        pygame.draw.rect(screen, SLIDER_BG_COLOR, self.bg_rect, border_radius=5)
+        bg_color = SLIDER_FG_COLOR if self.selected else SLIDER_BG_COLOR
+        pygame.draw.rect(screen, bg_color, self.bg_rect, border_radius=5)
 
         filled_width = self.handle_x - self.x
         if filled_width > 0:
@@ -116,18 +99,33 @@ class SettingsScene(PyGameScene):
         pygame.font.init()
         self.title_font = pygame.font.SysFont(GUISettings.FONT_TEXT, TITLE_FONT_SIZE, bold=True)
         self.label_font = pygame.font.SysFont(GUISettings.FONT_TEXT, LABEL_FONT_SIZE)
-        saved_volume = SettingsManager.get_volume()
         slider_x = ScreenSettings.SCREEN_WIDTH // 2 - 150
+        
+        self.settings_manager = SettingsManager()
+        saved_volume = self.settings_manager.get_volume()
         self.volume_slider = VolumeSlider(slider_x, VOLUME_SLIDER_Y, saved_volume)
+
         self.save_button = SaveButton(self)
         self.volume_controller = VolumeController()
         self.volume_controller.set_volume(self.volume_slider.get_value())
 
         self.show_save_message = False
         self.save_message_timer = 0
+        
+        self.elements = [self.volume_slider, self.save_button]
+        self.selected_index = 0
+        self._update_selection()
+
+    def _update_selection(self):
+        self.volume_slider.selected = False
+        self.save_button.hover = False
+
+        if self.selected_index == 0:
+            self.volume_slider.selected = True
+        elif self.selected_index == 1:
+            self.save_button.hover = True
 
     def update(self, delta_time):
-        # Update volume in real-time as slider changes
         self.volume_controller.set_volume(self.volume_slider.get_value())
         if self.show_save_message:
             self.save_message_timer += delta_time
@@ -137,17 +135,21 @@ class SettingsScene(PyGameScene):
 
     def events(self, event_list):
         for event in event_list:
-            if event.type == KEYDOWN and event.key == K_ESCAPE:
-                self.director.exitScene()
-            self.volume_slider.handle_event(event)
-            if event.type == MOUSEBUTTONDOWN:
-                if self.save_button.base_rect.collidepoint(event.pos):
-                    self.save_button.click_element = self.save_button
-            elif event.type == MOUSEBUTTONUP:
-                if self.save_button.base_rect.collidepoint(event.pos):
-                    if hasattr(self.save_button, 'click_element') and self.save_button.click_element == self.save_button:
+            if event.type == KEYDOWN:
+                if event.key == K_ESCAPE:
+                    self.director.exitScene()
+                elif event.key == K_UP:
+                    self.selected_index = (self.selected_index - 1) % len(self.elements)
+                    self._update_selection()
+                elif event.key == K_DOWN:
+                    self.selected_index = (self.selected_index + 1) % len(self.elements)
+                    self._update_selection()
+                elif event.key == K_RETURN or event.key == K_KP_ENTER:
+                    if self.selected_index == 1:
                         self.save_button.action()
-                self.save_button.click_element = None
+                elif event.key == K_LEFT or event.key == K_RIGHT:
+                    if self.selected_index == 0:
+                        self.volume_slider.handle_event(event)
 
     def render(self, screen):
         screen.fill(BACKGROUND_COLOR)
@@ -196,7 +198,7 @@ class SettingsScene(PyGameScene):
 
     def _render_instructions(self, screen):
         instructions = self.label_font.render(
-            "Press ESC to return", True, (150, 150, 150)
+            "Arrows: Navigate | Left/Right: Volume | Enter: Save | ESC: Return", True, (150, 150, 150)
         )
         instructions_rect = instructions.get_rect(
             center=(ScreenSettings.SCREEN_WIDTH // 2, ScreenSettings.SCREEN_HEIGHT - 50)
@@ -205,6 +207,6 @@ class SettingsScene(PyGameScene):
 
     def save_settings(self):
         settings = {"volume": self.volume_slider.get_value()}
-        if SettingsManager.save_settings(settings):
+        if self.settings_manager.save_settings(settings):
             self.show_save_message = True
             self.save_message_timer = 0

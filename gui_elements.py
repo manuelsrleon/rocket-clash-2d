@@ -15,15 +15,6 @@ class GUIElement:
         self.rect.left = posX
         self.rect.bottom = posY
 
-    def positionInElement(self, position):
-        (posX, posY) = position
-        return (
-            (posX >= self.rect.left)
-            and (posX <= self.rect.right)
-            and (posY >= self.rect.top)
-            and (posY <= self.rect.bottom)
-        )
-
     def render(self):
         raise NotImplemented("Render method not implemented")
 
@@ -44,8 +35,6 @@ class Button(GUIElement):
     ):
         self.screen = screen
         self.hover = False
-        self._converted = False
-        # non-image button: use a rect, optional text and font
         w, h = size
         rect = pygame.Rect(0, 0, w, h)
         GUIElement.__init__(self, screen, rect)
@@ -77,9 +66,6 @@ class Button(GUIElement):
             label_rect = label_surf.get_rect(center=self.base_rect.center)
             screen.blit(label_surf, label_rect)
 
-    def isHoverInButton(self, position):
-        self.hover = self.positionInElement(position)
-
 
 class GUIScreen:
     
@@ -89,29 +75,37 @@ class GUIScreen:
         self.GUIElements = []
         self.animations = []
         self.volume_controller = VolumeController()
+        self.selected_index = 0
+        self._update_selection()
+
+    def _update_selection(self):
+        # Desmarcar todos los botones
+        for element in self.GUIElements:
+            if isinstance(element, Button):
+                element.hover = False
+        # Marcar el botón seleccionado
+        if self.GUIElements and self.selected_index < len(self.GUIElements):
+            if isinstance(self.GUIElements[self.selected_index], Button):
+                self.GUIElements[self.selected_index].hover = True
 
     def events(self, event_list):
         for event in event_list:
-            if event.type == MOUSEBUTTONDOWN:
-                self.clickElement = None
-                for GUIElement in self.GUIElements:
-                    if GUIElement.positionInElement(event.pos):
-                        self.GUIElementClick = GUIElement
-
-            if event.type == MOUSEBUTTONUP:
-                for GUIElement in self.GUIElements:
-                    if GUIElement.positionInElement(event.pos):
-                        if GUIElement == self.GUIElementClick:
-                            try:
-                                sound = pygame.mixer.Sound.play(SFXAssets.silbato_corto)
-                                sound.set_volume(self.volume_controller.get_current_volume())
-                            except Exception:
-                                pass  # Sound not available
-                            GUIElement.action()
-
-            if event.type == MOUSEMOTION:
-                for GUIElement in self.GUIElements:
-                    GUIElement.isHoverInButton(event.pos)
+            if event.type == KEYDOWN:
+                if event.key == K_UP:
+                    self.selected_index = (self.selected_index - 1) % len(self.GUIElements)
+                    self._update_selection()
+                elif event.key == K_DOWN:
+                    self.selected_index = (self.selected_index + 1) % len(self.GUIElements)
+                    self._update_selection()
+                elif event.key == K_RETURN or event.key == K_KP_ENTER:
+                    # Activar el botón seleccionado
+                    if self.GUIElements and self.selected_index < len(self.GUIElements):
+                        try:
+                            sound = pygame.mixer.Sound.play(SFXAssets.silbato_corto)
+                            sound.set_volume(self.volume_controller.get_current_volume())
+                        except Exception:
+                            pass
+                        self.GUIElements[self.selected_index].action()
 
     def render(self, screen):
         if self.image is not None:

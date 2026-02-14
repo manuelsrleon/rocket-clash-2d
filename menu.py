@@ -68,12 +68,12 @@ class InitialGUIScreen(GUIScreen):
         GUIScreen.__init__(self, menu, bg_image)
 
         playButton = PlayButton(self)
-        exitButton = ExitButton(self)
         settingsButton = SettingsButton(self)
+        exitButton = ExitButton(self)
 
         self.GUIElements.append(playButton)
-        self.GUIElements.append(exitButton)
         self.GUIElements.append(settingsButton)
+        self.GUIElements.append(exitButton)
 
 class Menu(PyGameScene):
 
