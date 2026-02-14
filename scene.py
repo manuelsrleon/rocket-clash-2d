@@ -1,5 +1,5 @@
 
-from car import Car
+#from car import Car
 import pygame
 
 SCREEN_WIDTH = 800
