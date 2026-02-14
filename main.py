@@ -1,14 +1,11 @@
-
-import pygame
-
-from match_scene import MatchScene
 from director import Director
 from menu import Menu
 
+# Legacy global screen variable (not currently used)
 screen = None
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     director = Director()
-    escena = Menu(director)
-    director.apilarEscena(escena)
+    scene = Menu(director)
+    director.apilarEscena(scene)
     director.ejecutar()
