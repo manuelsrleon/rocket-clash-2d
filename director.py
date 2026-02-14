@@ -9,7 +9,6 @@ class Director:
         self.screen = None
         self.scene_stack = []
         self.exit_scene = False
-        self.volume_controller = VolumeController()
 
     def init_pygame(self):
         pygame.init()
@@ -20,7 +19,7 @@ class Director:
         pygame.display.set_caption("Rocket Clash")
         
         # Initialize volume from saved settings
-        self.volume_controller.initialize_from_settings()
+        VolumeController.initialize_from_settings()
 
     def buclePygame(self, scene):
         clock = pygame.time.Clock()

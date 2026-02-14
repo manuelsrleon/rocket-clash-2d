@@ -74,7 +74,6 @@ class GUIScreen:
         self.image = image
         self.GUIElements = []
         self.animations = []
-        self.volume_controller = VolumeController()
         self.selected_index = 0
         self._update_selection()
 
@@ -98,11 +97,10 @@ class GUIScreen:
                     self.selected_index = (self.selected_index + 1) % len(self.GUIElements)
                     self._update_selection()
                 elif event.key == K_RETURN or event.key == K_KP_ENTER:
-                    # Activar el botón seleccionado
                     if self.GUIElements and self.selected_index < len(self.GUIElements):
                         try:
                             sound = pygame.mixer.Sound.play(SFXAssets.silbato_corto)
-                            sound.set_volume(self.volume_controller.get_current_volume())
+                            sound.set_volume(VolumeController.get_current_volume())
                         except Exception:
                             pass
                         self.GUIElements[self.selected_index].action()

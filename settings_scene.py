@@ -101,13 +101,11 @@ class SettingsScene(PyGameScene):
         self.label_font = pygame.font.SysFont(GUISettings.FONT_TEXT, LABEL_FONT_SIZE)
         slider_x = ScreenSettings.SCREEN_WIDTH // 2 - 150
         
-        self.settings_manager = SettingsManager()
-        saved_volume = self.settings_manager.get_volume()
+        saved_volume = SettingsManager.get_volume()
         self.volume_slider = VolumeSlider(slider_x, VOLUME_SLIDER_Y, saved_volume)
 
         self.save_button = SaveButton(self)
-        self.volume_controller = VolumeController()
-        self.volume_controller.set_volume(self.volume_slider.get_value())
+        VolumeController.set_volume(self.volume_slider.get_value())
 
         self.show_save_message = False
         self.save_message_timer = 0
@@ -126,7 +124,7 @@ class SettingsScene(PyGameScene):
             self.save_button.hover = True
 
     def update(self, delta_time):
-        self.volume_controller.set_volume(self.volume_slider.get_value())
+        VolumeController.set_volume(self.volume_slider.get_value())
         if self.show_save_message:
             self.save_message_timer += delta_time
             if self.save_message_timer >= 2000:
@@ -207,6 +205,6 @@ class SettingsScene(PyGameScene):
 
     def save_settings(self):
         settings = {"volume": self.volume_slider.get_value()}
-        if self.settings_manager.save_settings(settings):
+        if SettingsManager.save_settings(settings):
             self.show_save_message = True
             self.save_message_timer = 0

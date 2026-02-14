@@ -1,6 +1,6 @@
 import pygame
 from scene import PyGameScene
-from settings import ScreenSettings
+from settings import ScreenSettings, GUISettings
 from pygame.locals import KEYDOWN, K_ESCAPE
 from ingame_menu_scene import IngameMenu
 
@@ -41,7 +41,7 @@ class MatchScene(PyGameScene):
             )
 
         # Draw instructions
-        font = pygame.font.SysFont("Arial", 30)
+        font = pygame.font.SysFont(GUISettings.FONT_TEXT, 30)
         text = font.render(
             "Match Scene - Press ESC for menu", True, (255, 255, 255)
         )
