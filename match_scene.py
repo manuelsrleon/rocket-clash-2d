@@ -1,48 +1,43 @@
 import pygame
+import Box2D
 from scene import PyGameScene
-from settings import ScreenSettings, GUISettings
-from pygame.locals import KEYDOWN, K_ESCAPE
-from ingame_menu_scene import IngameMenu
-
+from factory import RocketFactory
+from pygame.locals import *
 
 class MatchScene(PyGameScene):
-
     def __init__(self, director):
         super().__init__(director)
-        # Ball properties
-        self.ball_x = 100
-        self.ball_y = ScreenSettings.SCREEN_HEIGHT // 2
-        self.ball_radius = 20
-        self.ball_color = (255, 255, 0)
-        # Blinking properties
-        self.blink_timer = 0
-        self.ball_visible = True
+
+        self.world = Box2D.b2World(gravity=(0, 10), doSleep=True)
+
+        # Suelo estático
+        self.ground = self.world.CreateStaticBody(position=(0, 55))
+        self.ground.CreateEdgeFixture(vertices=[(0, 0), (80, 0)], friction=0.5)
+
+        # Crear jugador y pelota via factoría
+        self.jugador = RocketFactory.create_element("player", self.world, (100, 300))
+        self.pelota  = RocketFactory.create_element("ball",   self.world, (400, 300))
+
+        self.grupo_sprites = pygame.sprite.Group(self.jugador, self.pelota)
 
     def update(self, delta_time):
-        self.blink_timer += delta_time
-        if self.blink_timer >= 1000:
-            self.ball_visible = not self.ball_visible
-            self.blink_timer = 0
+        time_step = delta_time / 1000.0
+        self.world.Step(time_step, 6, 2)
+
+        # Sincronizar sprites con Box2D y llamar update
+        for sprite in self.grupo_sprites:
+            pos = sprite.body.position
+            sprite.establecerPosicion((pos.x * 10, pos.y * 10))
+            sprite.update(time_step)
 
     def events(self, event_list):
+        # Delegar input al PlayerCar
+        self.jugador.handle_input(event_list)
+
         for event in event_list:
             if event.type == KEYDOWN and event.key == K_ESCAPE:
-                # Open ingame menu instead of exiting directly
-                ingame_menu = IngameMenu(self.director)
-                self.director.apilarEscena(ingame_menu)
+                self.director.exitScene()
 
     def render(self, screen):
-        screen.fill((0, 0, 0))
-
-        # Draw blinking ball if visible
-        if self.ball_visible:
-            pygame.draw.circle(
-                screen, self.ball_color, (self.ball_x, self.ball_y), self.ball_radius
-            )
-
-        # Draw instructions
-        font = pygame.font.SysFont(GUISettings.FONT_TEXT, 30)
-        text = font.render(
-            "Match Scene - Press ESC for menu", True, (255, 255, 255)
-        )
-        screen.blit(text, (20, ScreenSettings.SCREEN_HEIGHT / 2 - 100))
+        screen.fill((20, 20, 25))
+        self.grupo_sprites.draw(screen)
