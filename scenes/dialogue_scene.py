@@ -7,6 +7,13 @@ class DialogueScene(PyGameScene):
     def __init__(self, director, json_path):
         super().__init__(director)
         self.manager = DialogManager(json_path)
+
+        # Asegurar que tenemos una Surface válida: preferir self (establecido por PyGameScene),
+        # luego director.screen, y finalmente pygame.display.get_surface() como fallback.
+        self.screen = getattr(self, "screen", None) or getattr(director, "screen", None) or pygame.display.get_surface()
+        if self.screen is None:
+            raise RuntimeError("No screen available for DialogueScene; initialize display first and set director.screen")
+
         self.ui = DialogueUI(self.screen)
         
         # Cargar el primer retrato si existe

@@ -3,8 +3,12 @@ from director import Director
 from scenes.dialogue_scene import DialogueScene
 
 def main():
-    # 1. Inicializar el Director
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
+    pygame.display.set_caption("Rocket Clash 2D - Dialog Test")
+
     dir = Director()
+    dir.screen = screen
 
     # 2. Crear la escena de diálogo con el JSON de ejemplo
     escena_test = DialogueScene(dir, "dialogues/example.json")
