@@ -1,110 +1,206 @@
-import pygame, sys, os
+import pygame
 from pygame.locals import *
+from settings import ScreenSettings
 
-# CONSTANTES FÍSICAS (Basadas en la teoría)
-GRAVEDAD = 0.0003  # Píxeles / ms² 
-MOVIMIENTOS = {'QUIETO': 0, 'IZQUIERDA': 1, 'DERECHA': 2, 'ARRIBA': 3}
-POSTURAS = {'QUIETO': 0, 'ANDANDO': 1, 'SALTANDO': 2}
+# Default stats (la física la gestiona Box2D, estos son para factory.py)
+DEFAULT_STATS = {
+    'move_speed': 5.0,
+    'jump_force': 80.0,
+    'mass': 1.0,
+    'scale': 1.0,
+}
+
+BOSS1_STATS = {
+    'move_speed': 10.0,
+    'jump_force': 70.0,
+    'mass': 0.8,
+    'scale': 0.9,
+}
+
+BOSS2_STATS = {
+    'move_speed': 3.0,
+    'jump_force': 100.0,
+    'mass': 3.0,
+    'scale': 1.8,
+}
+
+BOSS3_STATS = {
+    'move_speed': 6.0,
+    'jump_force': 120.0,
+    'mass': 1.0,
+    'scale': 1.0,
+}
+
+# Asset paths
+PLAYER_CAR_IMG = './assets/cars/player_car.png'
+BOSS_CAR_IMG   = './assets/cars/placeholder_car.png'
+WHEEL_IMG      = './assets/cars/car_wheel.png'
+
+# Wheel offsets como proporción del cuerpo (0.0 a 1.0)
+WHEEL_OFFSET_LEFT_X  = 0.06
+WHEEL_OFFSET_LEFT_Y  = 0.70
+WHEEL_OFFSET_RIGHT_X = 0.69
+WHEEL_OFFSET_RIGHT_Y = 0.70
+
 
 class MySprite(pygame.sprite.Sprite):
 
-    #body_img = None
-    #wheel_img = None
+    def __init__(self, body_path, carPos=(0, 0), scale=1.0):
+        super().__init__()
 
-    #body_img = pygame.image.load('./assets/cars/'+carType+'_car.png').convert_alpha()
-    #wheel_img = pygame.image.load('./assets/cars/wheels/wheel.y png').convert_alpha()
+        # Cargar cuerpo
+        try:
+            body = pygame.image.load(body_path).convert_alpha()
+        except:
+            body = pygame.Surface((80, 50), pygame.SRCALPHA)
+            body.fill((200, 50, 50))
 
-    def __init__(self, carPos, carType):
-        self.position = (0,0) #m * m 
-        self.velocity = (0,0) #m/s X, m/s Y
-        self.acceleration = (0,0) #m/s² X m/s Y
+        # Cargar rueda
+        try:
+            wheel = pygame.image.load(WHEEL_IMG).convert_alpha()
+            wheel_w = int(wheel.get_width() * scale)
+            wheel_h = int(wheel.get_height() * scale)
+            self.wheel_img = pygame.transform.scale(wheel, (wheel_w, wheel_h))
+        except:
+            self.wheel_img = pygame.Surface((20, 20), pygame.SRCALPHA)
+            pygame.draw.circle(self.wheel_img, (50, 50, 50), (10, 10), 10)
 
-    #This should be rewritten to be physics based
-    def computePosition(self,deltaPos):
-        (posX, posY) = self.position
-        (deltaX, deltaY) = deltaPos
-        self.setPosition((posX+deltaX, posY+deltaY))
-    def update(self, deltaTime):
-        deltaX = self.velocity[0]*deltaTime
-        deltaY = self.velocity[1]*deltaTime
-        self.computePosition((deltaX,deltaY))
+        # Escalar cuerpo
+        w = int(body.get_width() * scale)
+        h = int(body.get_height() * scale)
+        self.body_img = pygame.transform.scale(body, (w, h))
 
-    
-    def render(display): 
-        self.blit(wheel_img, (30,0))
-        self.blit(wheel_img, (70,0))
+        # Offsets proporcionales
+        left_x  = int(w * WHEEL_OFFSET_LEFT_X)
+        left_y  = int(h * WHEEL_OFFSET_LEFT_Y)
+        right_x = int(w * WHEEL_OFFSET_RIGHT_X)
+        right_y = int(h * WHEEL_OFFSET_RIGHT_Y)
+
+        # Superficie combinada (cuerpo + ruedas)
+        total_h = h + self.wheel_img.get_height() // 2
+        self.image = pygame.Surface((w, total_h), pygame.SRCALPHA)
+        self.image.blit(self.body_img, (0, 0))
+        self.image.blit(self.wheel_img, (left_x,  left_y))
+        self.image.blit(self.wheel_img, (right_x, right_y))
+
+        self.rect = self.image.get_rect()
+        self.establecerPosicion(carPos)
+
+        # Box2D body (asignado por factory.py)
+        self.body = None
+
+    def establecerPosicion(self, pos):
+        """Sincroniza el sprite con la posición central de Box2D."""
+        self.rect.centerx = int(pos[0])
+        self.rect.centery = int(pos[1])
+
+    def update(self, dt):
+        pass
+
+    def render(self, screen):
+        screen.blit(self.image, self.rect)
+
 
 class Car(MySprite):
-    def __init__(self, carType, pos_inicial):
-        super().__init__()
-        # Carga de imagen de coche (No sé si está aún)
-        ruta_img = os.path.join('assets', 'cars', f'{carType}_car.png')
-        self.image = pygame.image.load(ruta_img).convert_alpha()
-        self.rect = self.image.get_rect()
-        
-        self.establecerPosicion(pos_inicial)
-        
-        # Configuración de movimiento
-        self.velocidadCarrera = 0.3 
-        self.velocidadSalto = 0.4
-        self.numPostura = POSTURAS['QUIETO']
 
-    def mover(self, teclas, arriba, izquierda, derecha):
-        vx, vy = self.velocidad
+    def __init__(self, body_path, carPos=(0, 0), stats=None):
+        if stats is None:
+            stats = DEFAULT_STATS
 
-        # Movimiento Horizontal
-        if teclas[izquierda]:
-            vx = -self.velocidadCarrera
-        elif teclas[derecha]:
-            vx = self.velocidadCarrera
+        super().__init__(body_path, carPos, scale=stats.get('scale', 1.0))
+
+        self.move_speed = stats.get('move_speed', DEFAULT_STATS['move_speed'])
+        self.jump_force = stats.get('jump_force', DEFAULT_STATS['jump_force'])
+        self.mass       = stats.get('mass',       DEFAULT_STATS['mass'])
+        self.on_ground  = False
+
+    def jump(self):
+        if self.on_ground and self.body:
+            self.body.ApplyLinearImpulse(
+                impulse=(0, -self.jump_force),
+                point=self.body.worldCenter,
+                wake=True
+            )
+
+    def move_left(self):
+        if self.body:
+            self.body.ApplyForce(
+                force=(-self.move_speed * 10, 0),
+                point=self.body.worldCenter,
+                wake=True
+            )
+
+    def move_right(self):
+        if self.body:
+            self.body.ApplyForce(
+                force=(self.move_speed * 10, 0),
+                point=self.body.worldCenter,
+                wake=True
+            )
+
+    def stop_horizontal(self):
+        if self.body:
+            vel = self.body.linearVelocity
+            self.body.linearVelocity = (vel.x * 0.8, vel.y)
+
+    def update(self, dt):
+        pass
+
+
+class PlayerCar(Car):
+
+    def __init__(self, carPos=(100, 100)):
+        super().__init__(PLAYER_CAR_IMG, carPos, stats=DEFAULT_STATS)
+        self.moving_left  = False
+        self.moving_right = False
+
+    def handle_input(self, event_list):
+        for event in event_list:
+            if event.type == KEYDOWN:
+                if event.key == K_a:
+                    self.moving_left = True
+                elif event.key == K_d:
+                    self.moving_right = True
+                elif event.key == K_w:
+                    self.jump()
+            elif event.type == KEYUP:
+                if event.key == K_a:
+                    self.moving_left = False
+                elif event.key == K_d:
+                    self.moving_right = False
+
+        if self.moving_left:
+            self.move_left()
+        elif self.moving_right:
+            self.move_right()
         else:
-            vx = 0
+            self.stop_horizontal()
 
-        # Lógica de Salto (Solo si está en el suelo)
-        if teclas[arriba] and self.numPostura != POSTURAS['SALTANDO']:
-            vy = -self.velocidadSalto
-            self.numPostura = POSTURAS['SALTANDO']
+    def update(self, dt):
+        super().update(dt)
 
-        self.velocidad = [vx, vy]
 
-    def update(self, tiempo):
-        vx, vy = self.velocidad
+class BossCar(Car):
 
-        # Aplicar gravedad si está saltando 
-        if self.numPostura == POSTURAS['SALTANDO']:
-            vy += GRAVEDAD * tiempo
-            self.velocidad[1] = vy
+    def __init__(self, carPos=(0, 0), stats=None):
+        if stats is None:
+            stats = DEFAULT_STATS
+        super().__init__(BOSS_CAR_IMG, carPos, stats)
 
-        super().update(tiempo)
+    def update(self, dt):
+        super().update(dt)
 
-        # Simulación de suelo (Ajustar según altura de estadio el 550)
-        if self.posicion[1] >= 550:
-            self.establecerPosicion((self.posicion[0], 550))
-            self.velocidad[1] = 0
-            self.numPostura = POSTURAS['QUIETO']
 
-# Funcionalidad pelota
-class Ball(MySprite):
-    def __init__(self, pos_inicial):
-        super().__init__()
-        ruta_img = os.path.join('assets', 'ball', 'ball.png')
-        self.image = pygame.image.load(ruta_img).convert_alpha()
-        self.rect = self.image.get_rect()
-        
-        self.establecerPosicion(pos_inicial)
-        self.velocidad = [0, 0]
+class Bulldozer(BossCar):
+    def __init__(self, carPos=(0, 0)):
+        super().__init__(carPos, stats=BOSS1_STATS)
 
-    def update(self, tiempo):
-        vx, vy = self.velocidad
-        
-        # Física de la pelota: Gravedad y Rozamiento
-        vy += 0.0002 * tiempo #Nos interesa que caiga un pelin mas lento
-        vx *= 0.98 # Rozamiento para que se detenga
-        
-        self.velocidad = [vx, vy]
-        super().update(tiempo)
 
-        # Rebote en suelo
-        if self.posicion[1] >= 550:
-            self.establecerPosicion((self.posicion[0], 550))
-            self.velocidad[1] *= -0.6 # Pierde fuerza al botar
+class MotoMoto(BossCar):
+    def __init__(self, carPos=(0, 0)):
+        super().__init__(carPos, stats=BOSS2_STATS)
+
+
+class LaJenny(BossCar):
+    def __init__(self, carPos=(0, 0)):
+        super().__init__(carPos, stats=BOSS3_STATS)
