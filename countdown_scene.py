@@ -26,7 +26,6 @@ class CountdownScene(PyGameScene):
         self.overlay.set_alpha(OVERLAY_ALPHA)
         self.overlay.fill(OVERLAY_COLOR)
 
-        pygame.font.init()
         self.countdown_font = pygame.font.SysFont(
             GUISettings.FONT_TEXT, COUNTDOWN_FONT_SIZE, bold=True
         )

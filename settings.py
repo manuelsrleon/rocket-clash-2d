@@ -24,7 +24,7 @@ class GUISettings:
 
 class GameSettings:
     
-    MATCH_DURATION = 15 # in seconds
+    MATCH_DURATION = 180 # in seconds
 
 class VolumeController:
     # Implementado como classmethod para mantener el estado del volumen a nivel global

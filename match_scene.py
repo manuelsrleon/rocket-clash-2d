@@ -3,6 +3,7 @@ import Box2D
 from scene import PyGameScene
 from factory import RocketFactory
 from ingame_menu_scene import IngameMenu
+from end_scene import EndScene
 from settings import ScreenSettings, GUISettings, Colors, GameSettings
 from pygame.locals import *
 
@@ -23,7 +24,6 @@ class MatchScene(PyGameScene):
         self.grupo_sprites = pygame.sprite.Group(self.jugador, self.pelota)
 
         # Timer
-        pygame.font.init()
         self.timer_font = pygame.font.SysFont(GUISettings.FONT_TEXT, 48, bold=True)
         self.time_remaining_ms  = GameSettings.MATCH_DURATION * 1000
         self.match_over = False
@@ -44,7 +44,7 @@ class MatchScene(PyGameScene):
             if self.time_remaining_ms <= 0:
                 self.time_remaining_ms = 0
                 self.match_over = True
-                #TODO: add end scene here
+                self.director.apilarEscena(EndScene(self.director, result="game_over"))
 
     def events(self, event_list):
         # Delegar input al PlayerCar

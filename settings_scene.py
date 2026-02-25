@@ -96,7 +96,6 @@ class SettingsScene(PyGameScene):
 
     def __init__(self, director):
         super().__init__(director)
-        pygame.font.init()
         self.title_font = pygame.font.SysFont(GUISettings.FONT_TEXT, TITLE_FONT_SIZE, bold=True)
         self.label_font = pygame.font.SysFont(GUISettings.FONT_TEXT, LABEL_FONT_SIZE)
         slider_x = ScreenSettings.SCREEN_WIDTH // 2 - 150

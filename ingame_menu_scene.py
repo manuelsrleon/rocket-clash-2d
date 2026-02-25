@@ -102,7 +102,6 @@ class IngameMenu(PyGameScene):
             center=(ScreenSettings.SCREEN_WIDTH // 2, ScreenSettings.SCREEN_HEIGHT // 2)
         )
 
-        pygame.font.init()
         self.title_font = pygame.font.SysFont(GUISettings.FONT_TEXT, 36, bold=True)
         self.title_text = self.title_font.render("PAUSED", True, TITLE_COLOR)
         self.title_rect = self.title_text.get_rect(
