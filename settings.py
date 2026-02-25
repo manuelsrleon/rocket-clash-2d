@@ -12,6 +12,9 @@ class Colors:
     WHITE = (255, 255, 255)
     BLACK = (0, 0, 0)
     YELLOW = (255, 255, 0)
+    LIGHT_RED = (255, 80, 80)
+    GRAY_180 = (180, 180, 180)
+    GRAY_120 = (120, 120, 120)
 
 class GUISettings:
 
@@ -19,6 +22,9 @@ class GUISettings:
     FONT_SIZE = 20
     FONT_TEXT = "Arial"
 
+class GameSettings:
+    
+    MATCH_DURATION = 15 # in seconds
 
 class VolumeController:
     # Implementado como classmethod para mantener el estado del volumen a nivel global
