@@ -2,6 +2,7 @@ import pygame
 import Box2D
 from scene import PyGameScene
 from factory import RocketFactory
+from ingame_menu_scene import IngameMenu
 from settings import ScreenSettings, GUISettings, Colors, GameSettings
 from pygame.locals import *
 
@@ -51,7 +52,7 @@ class MatchScene(PyGameScene):
 
         for event in event_list:
             if event.type == KEYDOWN and event.key == K_ESCAPE:
-                self.director.exitScene()
+                self.director.apilarEscena(IngameMenu(self.director))
 
     def render(self, screen):
         screen.fill(Colors.BLACK)
