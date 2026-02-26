@@ -13,6 +13,7 @@ class RocketFactory:
         if tipo == "player":
             objeto = PlayerCar(pos)
             # Hitbox proporcional al sprite (140×70 px → 14×7 m → half 7×3.5)
+            # density baja para masa razonable: 14*7*0.08 = 7.84
             objeto.body = world.CreateDynamicBody(
                 position=pos_m,
                 fixedRotation=True,
