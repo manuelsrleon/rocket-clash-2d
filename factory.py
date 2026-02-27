@@ -12,15 +12,31 @@ class RocketFactory:
 
         if tipo == "player":
             objeto = PlayerCar(pos)
-            # Hitbox proporcional al sprite (140×70 px → 14×7 m → half 7×3.5)
-            # density baja para masa razonable: 14*7*0.08 = 7.84
+            # Hitbox de 2 fixtures ajustada píxel a píxel al sprite (78×20 px, PPM=10):
+            # El body.position corresponde al rect.center del sprite (centro geométrico).
+            # En coordenadas locales del body: Y+ apunta hacia abajo (igual que pantalla).
+
             objeto.body = world.CreateDynamicBody(
                 position=pos_m,
                 fixedRotation=True,
-                linearDamping=0.5
+                linearDamping=0.3
             )
+
+            # Fixture 1 – Chasis inferior (rectángulo completo, zona de ruedas)
+            # Extiende de y=0.0 a y=+1.0 m (borde inferior exacto del sprite 20px)
             objeto.body.CreatePolygonFixture(
-                box=(7.0, 3.5),
+                box=(3.85, 0.5, (0.0, 0.5), 0),
+                density=0.09,
+                friction=0.08,
+                restitution=0.12
+            )
+
+            # Fixture 2 – Cabina superior (trapezoide, zona del habitáculo/capó)
+            # vértices medidos del mapa de píxeles (coords locales Y-down):
+            #   techo:   x[-3.0..+0.0]  y=-1.0
+            #   base:    x[-3.9..+0.5]  y= 0.0  (fusiona con chasis sin hueco)
+            objeto.body.CreatePolygonFixture(
+                vertices=[(-3.0, -1.0), (0.0, -1.0), (0.5, 0.0), (-3.9, 0.0)],
                 density=0.08,
                 friction=0.4,
                 restitution=0.05
