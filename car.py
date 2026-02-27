@@ -98,3 +98,11 @@ class Bulldozer(Car):
         self.is_angry = False
         self.angry_timer = 0
         self.move_speed = self.stats_normal['move_speed']
+
+#TODO: clases fantasma. definidas para que el factory.py pueda instanciarlas sin errores, pero no tienen lógica ni assets propios.
+class MotoMoto(Car):
+    pass
+
+
+class LaJenny(Car):
+    pass
