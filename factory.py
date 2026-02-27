@@ -23,7 +23,6 @@ class RocketFactory:
             )
 
             # Fixture 1 – Chasis inferior (rectángulo completo, zona de ruedas)
-            # Extiende de y=0.0 a y=+1.0 m (borde inferior exacto del sprite 20px)
             objeto.body.CreatePolygonFixture(
                 box=(3.85, 0.5, (0.0, 0.5), 0),
                 density=0.09,
@@ -32,9 +31,6 @@ class RocketFactory:
             )
 
             # Fixture 2 – Cabina superior (trapezoide, zona del habitáculo/capó)
-            # vértices medidos del mapa de píxeles (coords locales Y-down):
-            #   techo:   x[-3.0..+0.0]  y=-1.0
-            #   base:    x[-3.9..+0.5]  y= 0.0  (fusiona con chasis sin hueco)
             objeto.body.CreatePolygonFixture(
                 vertices=[(-3.0, -1.0), (0.0, -1.0), (0.5, 0.0), (-3.9, 0.0)],
                 density=0.08,
@@ -51,14 +47,16 @@ class RocketFactory:
             }
             cls = boss_map.get(subtipo, Bulldozer)
             objeto = cls(pos)
+            hw = objeto.rect.width  / 2 / PPM   # mitad ancho en metros
+            hh = objeto.rect.height / 2 / PPM   # mitad alto  en metros
             objeto.body = world.CreateDynamicBody(
                 position=pos_m,
                 fixedRotation=True,
                 linearDamping=0.5
             )
             objeto.body.CreatePolygonFixture(
-                box=(2 * objeto.rect.width / 80, 1 * objeto.rect.height / 50),
-                density=objeto.mass, friction=0.3
+                box=(hw, hh / 2, (0, hh / 2), 0),
+                density=objeto.mass, friction=0.08, restitution=0.12
             )
             return objeto
 
