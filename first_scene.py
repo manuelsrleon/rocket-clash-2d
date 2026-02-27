@@ -59,7 +59,7 @@ GOAL_PAUSE_MS = 2000
 
 def create_boundaries(world):
     # Suelo
-    g = world.CreateStaticBody(position=(px2m(SW / 2), px2m(GROUND_Y)))
+    g = world.CreateStaticBody(position=(px2m(SW / 2), px2m(GROUND_Y + 5)))
     g.CreatePolygonFixture(box=(px2m(SW / 2), px2m(5)), friction=0.6)
     # Techo
     c = world.CreateStaticBody(position=(px2m(SW / 2), px2m(-5)))
@@ -73,12 +73,17 @@ def create_boundaries(world):
 def create_goal_bodies(world, side):
     gx = 0 if side == 'left' else SW - GOAL_W
     cx = px2m(gx + GOAL_W / 2)
+    # Red
     bar = world.CreateStaticBody(position=(cx, px2m(GOAL_TOP_Y - GOAL_POST / 2)))
     bar.CreatePolygonFixture(box=(px2m(GOAL_W / 2), px2m(GOAL_POST / 2)), friction=0.3, restitution=0.4)
-    px_post = (gx - GOAL_POST / 2) if side == 'left' else (gx + GOAL_W + GOAL_POST / 2)
-    back = world.CreateStaticBody(position=(px2m(px_post), px2m(GOAL_TOP_Y + GOAL_H / 2)))
-    back.CreatePolygonFixture(box=(px2m(GOAL_POST / 2), px2m(GOAL_H / 2)), friction=0.3, restitution=0.4)
-    floor = world.CreateStaticBody(position=(cx, px2m(GROUND_Y)))
+    # Poste trasero alineado al visual
+    post_half_h   = px2m((GOAL_H + GOAL_POST) / 2)
+    post_center_y = px2m(GOAL_TOP_Y - GOAL_POST + (GOAL_H + GOAL_POST) / 2)
+    post_center_x = px2m(GOAL_POST / 2) if side == 'left' else px2m(SW - GOAL_POST / 2)
+    back = world.CreateStaticBody(position=(post_center_x, post_center_y))
+    back.CreatePolygonFixture(box=(px2m(GOAL_POST / 2), post_half_h), friction=0.3, restitution=0.4)
+    # Suelo interior
+    floor = world.CreateStaticBody(position=(cx, px2m(GROUND_Y + 5)))
     floor.CreatePolygonFixture(box=(px2m(GOAL_W / 2), px2m(5)), friction=0.6)
     return pygame.Rect(gx, GOAL_TOP_Y, GOAL_W, GOAL_H)
 
@@ -297,14 +302,15 @@ class FirstScene(PyGameScene):
 
     def _draw_goal(self, screen, side):
         gx = 0 if side == 'left' else SW - GOAL_W
-        net = pygame.Surface((GOAL_W, GOAL_H), pygame.SRCALPHA)
+        net_h = GROUND_Y - GOAL_TOP_Y + 1
+        net = pygame.Surface((GOAL_W, net_h), pygame.SRCALPHA)
         net.fill(GOAL_NET_COLOR)
-        for i in range(0, GOAL_W, 10): pygame.draw.line(net, (200, 200, 200, 40), (i, 0), (i, GOAL_H), 1)
-        for j in range(0, GOAL_H, 10): pygame.draw.line(net, (200, 200, 200, 40), (0, j), (GOAL_W, j), 1)
+        for i in range(0, GOAL_W, 10): pygame.draw.line(net, (200, 200, 200, 40), (i, 0), (i, net_h), 1)
+        for j in range(0, net_h, 10): pygame.draw.line(net, (200, 200, 200, 40), (0, j), (GOAL_W, j), 1)
         screen.blit(net, (gx, GOAL_TOP_Y))
         pygame.draw.rect(screen, GOAL_COLOR, (gx, GOAL_TOP_Y - GOAL_POST, GOAL_W, GOAL_POST))
         px = gx if side == 'left' else gx + GOAL_W - GOAL_POST
-        pygame.draw.rect(screen, GOAL_COLOR, (px, GOAL_TOP_Y - GOAL_POST, GOAL_POST, GOAL_H + GOAL_POST))
+        pygame.draw.rect(screen, GOAL_COLOR, (px, GOAL_TOP_Y - GOAL_POST, GOAL_POST, GOAL_H + GOAL_POST + 1))
 
     def _draw_hud(self, screen):
         surf = self.font_score.render(f"{self.score_left}  -  {self.score_right}", True, Colors.WHITE)
