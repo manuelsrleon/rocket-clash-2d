@@ -1,6 +1,7 @@
 import pygame
 from director import Director
 from scenes.dialogue_scene import DialogueScene
+from scenes.intro_scene import IntroScene
 
 def main():
     pygame.init()
@@ -11,7 +12,8 @@ def main():
     dir.screen = screen
 
     # 2. Crear la escena de diálogo con el JSON de ejemplo
-    escena_test = DialogueScene(dir, "dialogues/example.json")
+    # escena_test = DialogueScene(dir, "dialogues/example.json")
+    escena_test = IntroScene(dir) 
 
     # 3. Apilar la escena para que el director la gestione
     dir.apilarEscena(escena_test)

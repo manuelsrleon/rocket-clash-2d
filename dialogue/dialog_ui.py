@@ -2,15 +2,19 @@ import pygame
 import os
 
 class DialogueUI:
-    def __init__(self, screen, font=None, box_rect=None, portrait_size=(96,96)):
+    def __init__(self, screen, font=None, box_rect=None,
+                 portrait_size=(96,96), show_portrait=True):
         self.screen = screen
         self.font = font or pygame.font.Font(None, 24)
-        self.box_rect = box_rect or pygame.Rect(50, screen.get_height()-170, screen.get_width()-100, 140)
+        self.box_rect = box_rect or pygame.Rect(50, screen.get_height()-170,
+                                                screen.get_width()-100, 140)
         self.portrait_size = portrait_size
         self.bg_color = (20,20,20)
         self.text_color = (255,255,255)
         self.name_color = (200,200,50)
         self.portrait = None
+        # controla si se pinta el retrato dentro de la caja
+        self.show_portrait = show_portrait
 
     def set_portrait(self, path):
         if not path:
@@ -29,7 +33,7 @@ class DialogueUI:
         x = self.box_rect.x + 10
         y = self.box_rect.y + 10
 
-        if self.portrait:
+        if self.portrait and self.show_portrait:
             self.screen.blit(self.portrait, (x, y))
             x += self.portrait_size[0] + 10
 

@@ -1,18 +1,38 @@
 {
   "scene": "opponent1_intro",
   "next_scene": "match_scene",
+  "base_speed": 25,
+  "characters": {
+    "left": {
+      "name": "Ruedaldinho",
+      "portrait": "assets/portraits/player.png"
+    },
+    "right": {
+      "name": "Bulldozer",
+      "portrait": "assets/portraits/opponent1.png"
+    }
+  },
   "lines": [
     {
-      "portrait": "assets/portraits/opponent1.png",
-      "name": "Rival",
-      "text": "¡Prepárate! Esto va a ser intenso...",
-      "speed": 60
+      "speaker": "Bulldozer",
+      "text": "Hola, aspirante. Soy Bulldozer, el campeón de esta arena. "
     },
     {
-      "portrait": "assets/portraits/player.png",
-      "name": "Tú",
-      "text": "Estoy más que preparado.",
-      "speed": 60
+      "speaker": "Bulldozer",
+      "text": "Me han dicho que estás buscando a Jenny, la mejor jugadora de Rocket Clash, cierto? Bueno, si quieres encontrarla, tendrás que derrotarme primero."
+
+    },
+    {
+      "speaker": "Ruedaldinho",
+      "text": "Estoy más que preparado. "
+    },
+    {
+      "speaker": "Bulldozer",
+      "text": "JA JA JA! Eso dijeron todos los que han venido antes que tú. Pero ninguno ha logrado vencerme. ¿Crees que tú serás diferente?"
+    },
+    {
+      "speaker": "Bulldozer",
+      "text": "Vamos allá!"
     }
   ]
 }

@@ -5,6 +5,7 @@ class DialogManager:
     def __init__(self, json_path, global_speed=40):
         self.json_path = json_path
         self.global_speed = global_speed
+        self.characters = {}          # información opcional de los dos hablantes
         self._load()
         self.current = 0
         self.char_index = 0
@@ -14,6 +15,8 @@ class DialogManager:
         with open(self.json_path, 'r', encoding='utf-8') as f:
             self.data = json.load(f)
         self.lines = self.data.get('lines', [])
+        # si el JSON define los personajes, los guardamos
+        self.characters = self.data.get('characters', {})
 
     def current_line(self):
         if self.current < len(self.lines):
