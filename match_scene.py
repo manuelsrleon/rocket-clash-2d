@@ -64,7 +64,7 @@ class MatchScene(PyGameScene):
         self.score_left  = 0
         self.score_right = 0
 
-        # Temporizador GameSettings.MATCH_DURATION (settings.py)
+        # Temporizador
         self.time_remaining_ms = GameSettings.MATCH_DURATION * 1000
         self.match_over = False
 
@@ -152,7 +152,6 @@ class MatchScene(PyGameScene):
         self.pelota.body.angularVelocity  = 0
         self.move_left_flag  = False
         self.move_right_flag = False
-
 
     def events(self, event_list):
         for ev in event_list:

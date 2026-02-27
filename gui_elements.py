@@ -55,11 +55,7 @@ class Button(GUIElement):
 
         if self.text:
             if self._font is None:
-                try:
-                    self._font = pygame.font.SysFont(self.font_name, self.font_size)
-                except Exception:
-                    pygame.font.init()
-                    self._font = pygame.font.SysFont(self.font_name, self.font_size)
+                self._font = pygame.font.SysFont(self.font_name, self.font_size)
 
             # Render text centered on button
             label_surf = self._font.render(self.text, True, self.border_color)
