@@ -8,6 +8,7 @@ BOSS1_STATS = {'move_speed': 10.0, 'jump_force': 70.0, 'mass': 0.8, 'scale': 0.9
 
 PLAYER_CAR_IMG = './assets/cars/player_car.png'
 WHEEL_IMG      = './assets/cars/car_wheel.png'
+BOSS1_IMG      = './assets/cars/player_car.png'
 
 class MySprite(pygame.sprite.Sprite):
     def __init__(self, body_path, carPos=(0, 0), scale=1.0):
@@ -68,3 +69,32 @@ class PlayerCar(Car):
         if self.moving_left: self.move_left()
         elif self.moving_right: self.move_right()
         else: self.stop_horizontal()
+
+class Bulldozer(Car):
+    def __init__(self, carPos=(600, 460)):
+        # Estadísticas: mayor masa para empujar al jugador
+        self.stats_normal = {'move_speed': 4.0, 'jump_force': 60.0, 'mass': 3.0, 'scale': 1.5}
+        self.stats_angry = {'move_speed': 12.0, 'jump_force': 60.0, 'mass': 4.0, 'scale': 1.5}
+        
+        super().__init__(BOSS1_IMG, carPos, stats=self.stats_normal)
+        self.angry_timer = 0
+        self.is_angry = False
+
+    def update_logic(self, dt_ms):
+        # Lógica de activación cada X tiempo (ej. cada 5 segundos se cabrea 2)
+        self.angry_timer += dt_ms
+        if not self.is_angry and self.angry_timer > 5000:
+            self.become_angry()
+        elif self.is_angry and self.angry_timer > 2000:
+            self.become_normal()
+
+    def become_angry(self):
+        self.is_angry = True
+        self.angry_timer = 0
+        self.move_speed = self.stats_angry['move_speed']
+        # Aplicamos un cambio de color o efecto visual aquí si queremos
+
+    def become_normal(self):
+        self.is_angry = False
+        self.angry_timer = 0
+        self.move_speed = self.stats_normal['move_speed']

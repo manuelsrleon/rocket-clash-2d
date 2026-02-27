@@ -63,3 +63,14 @@ class RocketFactory:
             return objeto
 
         return None
+    
+    @staticmethod
+    def create_mud(world, pos, size=(40, 20)):
+        pos_m = (pos[0] / 10.0, pos[1] / 10.0)
+        mud_body = world.CreateStaticBody(position=pos_m)
+        # isSensor=True hace que no haya choque físico, solo detección
+        mud_body.CreatePolygonFixture(box=(size[0]/20, 
+                                      size[1]/20), 
+                                      isSensor=True, 
+                                      userData={'type': 'mud'})
+        return mud_body
