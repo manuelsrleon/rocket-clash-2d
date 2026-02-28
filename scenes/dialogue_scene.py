@@ -19,22 +19,48 @@ class DialogueScene(PyGameScene):
         self.ui = DialogueUI(self.screen, show_portrait=False)
 
         # dimensiones de los retratos laterales
-        self.char_size = (180, 180)
+        self.char_size = (300, 150)
         self.left_name = None
         self.right_name = None
         self.left_surf = None
         self.right_surf = None
         self._setup_characters()
 
-        # fondo de prueba (puedes cargar un PNG en lugar de esto)
-        self.bg = pygame.Surface(self.screen.get_size())
-        self.bg.fill((30, 50, 90))
-        font = pygame.font.Font(None, 72)
-        txt = font.render("Fondo1", True, (200,200,200))
-        self.bg.blit(txt, txt.get_rect(center=self.bg.get_rect().center))
+        # Inicializar el fondo (desde JSON: imagen o color)
+        self.bg = None
+        self._update_background()
 
         # no hay retrato dentro de la caja
         self._update_portrait()
+
+    def _update_background(self):
+        """Carga el fondo desde el JSON (Imagen o Color). Soporta cambios por línea."""
+        line = self.manager.current_line()
+        # 1. Prioridad: Fondo específico de la línea -> Fondo general del JSON -> Color por defecto
+        bg_data = (line.get('background') if line else None) or \
+                  self.manager.data.get('background', [30, 50, 90])
+
+        screen_size = self.screen.get_size()
+
+        # Caso A: Es una lista o tupla (Color RGB)
+        if isinstance(bg_data, (list, tuple)):
+            self.bg = pygame.Surface(screen_size)
+            self.bg.fill(bg_data)
+        
+        # Caso B: Es un string (Ruta de imagen)
+        elif isinstance(bg_data, str):
+            try:
+                img = pygame.image.load(bg_data).convert()
+                self.bg = pygame.transform.smoothscale(img, screen_size)
+            except Exception as e:
+                print(f"Error cargando fondo {bg_data}: {e}")
+                self.bg = pygame.Surface(screen_size)
+                self.bg.fill((30, 50, 90)) # Fallback
+        
+        # Caso C: Fallback absoluto
+        else:
+            self.bg = pygame.Surface(screen_size)
+            self.bg.fill((30, 50, 90))
 
     def _setup_characters(self):
         chars = self.manager.data.get('characters', {})

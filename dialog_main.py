@@ -13,10 +13,12 @@ def main():
 
     # 2. Crear las escenas en orden: primero intro, luego dialog
     escena_intro = IntroScene(dir)
-    escena_dialog = DialogueScene(dir, "dialogues/example.json")
+    escena_dialog_1 = DialogueScene(dir, "dialogues/match1.json")
+    escena_dialog_2 = DialogueScene(dir, "dialogues/match2.json")  
 
     # 3. Apilar las escenas para que el director las gestione
-    dir.apilarEscena(escena_dialog)
+    dir.apilarEscena(escena_dialog_2)
+    dir.apilarEscena(escena_dialog_1)
     dir.apilarEscena(escena_intro)
     
 

@@ -2,6 +2,7 @@
   "scene": "opponent1_intro",
   "next_scene": "match_scene",
   "base_speed": 25,
+  "background": "assets/backgrounds/background.png",
   "characters": {
     "left": {
       "name": "Ruedaldinho",
@@ -9,7 +10,7 @@
     },
     "right": {
       "name": "Bulldozer",
-      "portrait": "assets/portraits/opponent1.png"
+      "portrait": "assets/portraits/Bulldozer.png"
     }
   },
   "lines": [

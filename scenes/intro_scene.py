@@ -15,7 +15,7 @@ class IntroScene(PyGameScene):
 
         # fondo simple
         try:
-            img = pygame.image.load("assets/backgrounds/intro_bg.png").convert()
+            img = pygame.image.load("assets/backgrounds/background.png").convert()
             self.bg = pygame.transform.scale(img, self.screen.get_size())
         except Exception:
             self.bg = pygame.Surface(self.screen.get_size())
