@@ -167,19 +167,60 @@ class FirstScene(MatchScene):
         self.stun_font = pygame.font.SysFont('Arial', STUN_FONT_SIZE, bold=True)
         self.angry_font = pygame.font.SysFont('Arial', 18, bold=True)
 
+        # Control de stun: solo un stun por episodio de enfado
+        self._stun_used_this_anger = False
+        self._boss_was_angry = False
+
     # ─── STUN ─────────────────────────────────────────────────
 
     def _on_boss_hit_player(self):
-        """Llamado por el ContactListener cuando el boss toca al jugador."""
+        """Llamado cuando el boss toca al jugador."""
         if not hasattr(self, 'boss'):
             return
-        # Solo aplica stun si el boss está enfadado y el jugador no está ya stunned
-        if self.boss.is_angry and not self.player_stunned:
+        # Solo aplica stun si el boss está enfadado, el jugador no está ya stunned
+        # y no se ha usado el stun en este episodio de enfado
+        if self.boss.is_angry and not self.player_stunned and not self._stun_used_this_anger:
             self.player_stunned = True
             self.stun_timer = STUN_DURATION
-            self.jugador.body.linearVelocity = (0, self.jugador.body.linearVelocity.y)
+            self._stun_used_this_anger = True  # Consumir el stun de este episodio
+            if self.jugador.body:
+                self.jugador.body.linearVelocity = (0, self.jugador.body.linearVelocity.y)
             self.move_left_flag = False
             self.move_right_flag = False
+            
+            
+    def _track_boss_anger(self):
+        """Resetea el flag de stun cuando el boss pasa de calmado a enfadado."""
+        if not hasattr(self, 'boss'):
+            return
+        currently_angry = self.boss.is_angry
+        # Si el boss acaba de calmarse, preparar el stun para el próximo enfado
+        if self._boss_was_angry and not currently_angry:
+            self._stun_used_this_anger = False
+        self._boss_was_angry = currently_angry
+            
+            
+    def _check_boss_player_proximity(self):
+        """Detección manual de proximidad boss-jugador como respaldo
+        por si Box2D no genera contacto (ej: movimiento por velocidad directa)."""
+        if not hasattr(self, 'boss') or not self.boss.body or not self.jugador.body:
+            return
+        if not self.boss.is_angry or self.player_stunned or self._stun_used_this_anger:
+            return
+
+        boss_pos = self.boss.body.position
+        player_pos = self.jugador.body.position
+
+        dx = abs(boss_pos.x - player_pos.x)
+        dy = abs(boss_pos.y - player_pos.y)
+
+        # Umbral de proximidad en metros (~sumando las mitades de ambos bodies)
+        threshold_x = 2.5  # metros
+        threshold_y = 2.0  # metros
+
+        if dx < threshold_x and dy < threshold_y:
+            self._on_boss_hit_player()
+            
 
     def _update_stun(self, delta_time):
         """Actualiza el timer de aturdimiento del jugador."""
@@ -382,16 +423,24 @@ class FirstScene(MatchScene):
         # Limpiar stun tras gol
         self.player_stunned = False
         self.stun_timer = 0
+        self._stun_used_this_anger = False
+        self._boss_was_angry = False
 
     # ─── UPDATE ───────────────────────────────────────────────
 
     def update(self, delta_time):
         super().update(delta_time)  # Aquí ocurre world.Step
 
-        # Procesar colisión boss-jugador DESPUÉS del step
+        # Procesar colisión boss-jugador DESPUÉS del step (via Box2D contact)
         if hasattr(self, 'contact_listener') and self.contact_listener.boss_hit_player:
             self.contact_listener.boss_hit_player = False
             self._on_boss_hit_player()
+
+        # Rastrear cambios de estado de enfado del boss
+        self._track_boss_anger()
+
+        # Detección manual de proximidad como respaldo
+        self._check_boss_player_proximity()
 
         self._update_boss_ai(delta_time)
         self._update_mud(delta_time)
