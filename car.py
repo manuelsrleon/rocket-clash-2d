@@ -74,7 +74,7 @@ class Bulldozer(Car):
     def __init__(self, carPos=(600, 460)):
         # Estadísticas: mayor masa para empujar al jugador
         self.stats_normal = {'move_speed': 4.0, 'jump_force': 60.0, 'mass': 3.0, 'scale': 1.5}
-        self.stats_angry = {'move_speed': 12.0, 'jump_force': 60.0, 'mass': 4.0, 'scale': 1.5}
+        self.stats_angry = {'move_speed': 62.0, 'jump_force': 60.0, 'mass': 4.0, 'scale': 1.5}
         
         super().__init__(BOSS1_IMG, carPos, stats=self.stats_normal)
         self.angry_timer = 0
@@ -85,7 +85,7 @@ class Bulldozer(Car):
         self.angry_timer += dt_ms
         if not self.is_angry and self.angry_timer > 5000:
             self.become_angry()
-        elif self.is_angry and self.angry_timer > 2000:
+        elif self.is_angry and self.angry_timer > 15000:
             self.become_normal()
 
     def become_angry(self):

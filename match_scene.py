@@ -60,6 +60,9 @@ class MatchScene(PyGameScene):
         self.move_left_flag  = False
         self.move_right_flag = False
 
+        # Hook para que subclases añadan elementos extra (boss, etc.)
+        self._init_extras()
+
         # Marcador
         self.score_left  = 0
         self.score_right = 0
@@ -77,7 +80,6 @@ class MatchScene(PyGameScene):
         self.font_timer = pygame.font.SysFont(GUISettings.FONT_TEXT, 28)
         self.font_goal  = pygame.font.SysFont(GUISettings.FONT_TEXT, 72, bold=True)
 
-
     def _get_config(self):
         """Devuelve dict con constantes del escenario."""
         return {}
@@ -94,6 +96,9 @@ class MatchScene(PyGameScene):
         """Dibuja el fondo y decoración del campo."""
         screen.fill(Colors.BLACK)
 
+    def _init_extras(self):
+        """Hook para subclases. Se llama tras crear jugador y pelota."""
+        pass
 
     def _body_px(self, body):
         return (m2px(body.position.x), m2px(body.position.y))
@@ -106,9 +111,20 @@ class MatchScene(PyGameScene):
     def _check_on_ground(self):
         if not self.jugador.body:
             return
-        bottom_m = self.jugador.body.position.y + self.player_hh
         ground_m = px2m(self.ground_y)
+
+        # Jugador
+        bottom_m = self.jugador.body.position.y + self.player_hh
         self.jugador.on_ground = bottom_m >= ground_m - 1.0
+
+        # Comprobar on_ground para todos los sprites con body (bosses incluidos)
+        for sprite in self.grupo_sprites:
+            if sprite is self.jugador or sprite is self.pelota:
+                continue
+            if hasattr(sprite, 'body') and sprite.body and hasattr(sprite, 'on_ground'):
+                hh = sprite.rect.height / 2 / PPM
+                bottom = sprite.body.position.y + hh
+                sprite.on_ground = bottom >= ground_m - 1.0
 
     def _apply_player_movement(self):
         if not self.jugador.body:
@@ -155,26 +171,22 @@ class MatchScene(PyGameScene):
 
     def events(self, event_list):
         for ev in event_list:
-            if ev.type == QUIT:
-                self.director.salirPrograma()
-            elif ev.type == KEYDOWN:
-                if ev.key == K_ESCAPE:
+            if ev.type == KEYDOWN:
+                if ev.key == K_LEFT or ev.key == K_a:
+                    self.move_left_flag = True
+                elif ev.key == K_RIGHT or ev.key == K_d:
+                    self.move_right_flag = True
+                elif ev.key == K_UP or ev.key == K_w or ev.key == K_SPACE:
+                    if self.jugador.on_ground and self.jugador.body:
+                        vel = self.jugador.body.linearVelocity
+                        self.jugador.body.linearVelocity = (vel.x, self.player_jump)
+                elif ev.key == K_ESCAPE:
                     self.director.apilarEscena(IngameMenu(self.director))
-                elif not self.goal_scored:
-                    if ev.key in (K_a, K_LEFT):
-                        self.move_left_flag = True
-                    elif ev.key in (K_d, K_RIGHT):
-                        self.move_right_flag = True
-                    elif ev.key in (K_w, K_UP, K_SPACE):
-                        if self.jugador.on_ground:
-                            vel = self.jugador.body.linearVelocity
-                            self.jugador.body.linearVelocity = (vel.x, self.player_jump)
             elif ev.type == KEYUP:
-                if ev.key in (K_a, K_LEFT):
+                if ev.key == K_LEFT or ev.key == K_a:
                     self.move_left_flag = False
-                elif ev.key in (K_d, K_RIGHT):
+                elif ev.key == K_RIGHT or ev.key == K_d:
                     self.move_right_flag = False
-
 
     def update(self, delta_time):
         if self.match_over:
@@ -195,7 +207,6 @@ class MatchScene(PyGameScene):
         dt = delta_time / 1000.0
         for sprite in self.grupo_sprites:
             self._sync_sprite(sprite)
-            sprite.update(dt)
 
         self._check_on_ground()
         self._check_goals()
@@ -204,20 +215,16 @@ class MatchScene(PyGameScene):
         if self.time_remaining_ms <= 0:
             self.time_remaining_ms = 0
             self.match_over = True
-            if self.score_left > self.score_right:
-                result = "winner_1"
-            elif self.score_right > self.score_left:
-                result = "winner_2"
-            else:
-                result = "tie"
-            self.director.apilarEscena(EndScene(self.director, result=result))
+            self.director.change_scene(EndScene(
+                self.director, self.score_left, self.score_right
+            ))
 
-    #  RENDER
+    # ─── RENDER ───────────────────────────────────────────────
     def render(self, screen):
         # Campo (implementado por subclase)
         self._render_field(screen)
 
-        # Sprites: PlayerCar + Ball
+        # Sprites: PlayerCar + Ball + Boss...
         self.grupo_sprites.draw(screen)
 
         # HUD
