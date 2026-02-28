@@ -3,7 +3,7 @@ from pygame.locals import *
 from settings import ScreenSettings
 
 # Estadísticas base para la física
-DEFAULT_STATS = {'move_speed': 5.0, 'jump_force': 80.0, 'mass': 1.0, 'scale': 1.0}
+DEFAULT_STATS = {'move_speed': 5.0, 'jump_force': 160.0, 'mass': 1.0, 'scale': 1.0}
 BOSS1_STATS = {'move_speed': 10.0, 'jump_force': 70.0, 'mass': 0.8, 'scale': 0.9}
 
 PLAYER_CAR_IMG = './assets/cars/player_car.png'

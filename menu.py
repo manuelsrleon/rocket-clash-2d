@@ -5,7 +5,7 @@ from gui_elements import Button, GUIScreen
 from assets_manager import GUIAssets
 from settings import ScreenSettings
 from settings_scene import SettingsScene
-from first_scene import FirstScene
+from firts_scene import FirstScene
 from pygame.locals import KEYDOWN, K_ESCAPE, QUIT
 
 class PlayButton(Button):
