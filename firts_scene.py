@@ -1,6 +1,7 @@
 import pygame
 import random
 import Box2D
+import math
 from match_scene import MatchScene, px2m, m2px, SW, SH, PPM
 from settings import ScreenSettings
 from factory import RocketFactory
@@ -47,6 +48,8 @@ AI_GOAL_X_RIGHT   = px2m(SW - GOAL_W)    # Límite X de la portería derecha (en
 STUN_DURATION     = 3000   # ms que dura el aturdimiento
 STUN_COLOR        = (255, 255, 0)
 STUN_FONT_SIZE    = 20
+ANGRY_INDICATOR_COLOR = (255, 50, 50)
+ANGRY_INDICATOR_POS   = (SW - 10, 10)  # esquina superior derecha
 
 
 # ─── CONTACT LISTENER ────────────────────────────────────────
@@ -63,6 +66,8 @@ class SceneContactListener(Box2D.b2ContactListener):
         # Barro
         self.bodies_in_mud = set()
         self._contact_count = {}
+        # Flag para procesar colisión boss-jugador FUERA del step
+        self.boss_hit_player = False
 
     def _get_mud_and_other(self, contact):
         fA = contact.fixtureA
@@ -103,9 +108,9 @@ class SceneContactListener(Box2D.b2ContactListener):
             self.bodies_in_mud.add(other_body)
             return
 
-        # Boss vs Jugador
+        # Boss vs Jugador — solo marcar flag, NO llamar lógica de juego
         if self._is_boss_player_collision(contact):
-            self.scene._on_boss_hit_player()
+            self.boss_hit_player = True
 
     def EndContact(self, contact):
         mud_fix, other_body = self._get_mud_and_other(contact)
@@ -160,18 +165,18 @@ class FirstScene(MatchScene):
         self.player_stunned = False
         self.stun_timer = 0
         self.stun_font = pygame.font.SysFont('Arial', STUN_FONT_SIZE, bold=True)
+        self.angry_font = pygame.font.SysFont('Arial', 18, bold=True)
 
     # ─── STUN ─────────────────────────────────────────────────
 
     def _on_boss_hit_player(self):
-        """Llamado por el ContactListener cuando el boss colisiona con el jugador."""
+        """Llamado por el ContactListener cuando el boss toca al jugador."""
         if not hasattr(self, 'boss'):
             return
         # Solo aplica stun si el boss está enfadado y el jugador no está ya stunned
         if self.boss.is_angry and not self.player_stunned:
             self.player_stunned = True
             self.stun_timer = STUN_DURATION
-            # Frenar al jugador de golpe
             self.jugador.body.linearVelocity = (0, self.jugador.body.linearVelocity.y)
             self.move_left_flag = False
             self.move_right_flag = False
@@ -194,12 +199,11 @@ class FirstScene(MatchScene):
         """Bloquea el movimiento del jugador si está stunned."""
         if self.player_stunned:
             # Solo permitir ESC (pausa) y QUIT, ignorar movimiento
-            from pygame.locals import KEYDOWN, KEYUP, K_ESCAPE
+            from pygame.locals import KEYDOWN, K_ESCAPE
+            from ingame_menu_scene import IngameMenu
             for ev in event_list:
                 if ev.type == KEYDOWN and ev.key == K_ESCAPE:
-                    self.director.apilarEscena(
-                        __import__('ingame_menu_scene', fromlist=['IngameMenu']).IngameMenu(self.director)
-                    )
+                    self.director.apilarEscena(IngameMenu(self.director))
             return
 
         # Si no está stunned, comportamiento normal
@@ -382,7 +386,13 @@ class FirstScene(MatchScene):
     # ─── UPDATE ───────────────────────────────────────────────
 
     def update(self, delta_time):
-        super().update(delta_time)
+        super().update(delta_time)  # Aquí ocurre world.Step
+
+        # Procesar colisión boss-jugador DESPUÉS del step
+        if hasattr(self, 'contact_listener') and self.contact_listener.boss_hit_player:
+            self.contact_listener.boss_hit_player = False
+            self._on_boss_hit_player()
+
         self._update_boss_ai(delta_time)
         self._update_mud(delta_time)
         self._apply_mud_friction()
@@ -443,10 +453,11 @@ class FirstScene(MatchScene):
                          (px, GOAL_TOP_Y - GOAL_POST, GOAL_POST, GOAL_H + GOAL_POST))
 
     def render(self, screen):
-        """Override para añadir indicador de stun."""
+        """Override para añadir indicadores de stun y enfado del boss."""
         super().render(screen)
         if self.player_stunned:
             self._draw_stun_indicator(screen)
+        self._draw_angry_indicator(screen)
 
     def _draw_stun_indicator(self, screen):
         """Dibuja un indicador visual de aturdimiento sobre el jugador."""
@@ -465,7 +476,6 @@ class FirstScene(MatchScene):
 
             # Estrellas giratorias alrededor del jugador
             t = pygame.time.get_ticks() / 200.0
-            import math
             for i in range(3):
                 angle = t + i * (2 * math.pi / 3)
                 sx = px + int(20 * math.cos(angle))
@@ -482,3 +492,30 @@ class FirstScene(MatchScene):
         fg_rect = pygame.Rect(px - bar_w // 2, py, int(bar_w * ratio), bar_h)
         pygame.draw.rect(screen, (80, 80, 80), bg_rect)
         pygame.draw.rect(screen, STUN_COLOR, fg_rect)
+
+    def _draw_angry_indicator(self, screen):
+        """Muestra un indicador en la esquina superior derecha si el boss está enfadado."""
+        if not hasattr(self, 'boss'):
+            return
+
+        if self.boss.is_angry:
+            # Fondo rojo parpadeante
+            blink = (pygame.time.get_ticks() // 400) % 2 == 0
+            color = ANGRY_INDICATOR_COLOR if blink else (200, 30, 30)
+
+            text = self.angry_font.render("⚠ BULLDOZER ENFADADO!", True, color)
+            rect = text.get_rect(topright=ANGRY_INDICATOR_POS)
+
+            # Fondo semitransparente
+            bg = pygame.Surface((rect.width + 16, rect.height + 8), pygame.SRCALPHA)
+            bg.fill((0, 0, 0, 160))
+            screen.blit(bg, (rect.x - 8, rect.y - 4))
+            screen.blit(text, rect)
+        else:
+            text = self.angry_font.render("Bulldozer: calmado", True, (150, 255, 150))
+            rect = text.get_rect(topright=ANGRY_INDICATOR_POS)
+
+            bg = pygame.Surface((rect.width + 16, rect.height + 8), pygame.SRCALPHA)
+            bg.fill((0, 0, 0, 100))
+            screen.blit(bg, (rect.x - 8, rect.y - 4))
+            screen.blit(text, rect)
