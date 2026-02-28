@@ -1,5 +1,6 @@
 import pygame
 import random
+import Box2D
 from match_scene import MatchScene, px2m, m2px, SW, SH, PPM
 from settings import ScreenSettings
 from factory import RocketFactory
@@ -36,6 +37,54 @@ BOSS_BLEND       = 0.15
 BOSS_CHASE_MARGIN = 0.5
 
 
+# ─── CONTACT LISTENER PARA BARRO ─────────────────────────────
+
+class MudContactListener(Box2D.b2ContactListener):
+    """Listener Box2D que detecta qué bodies están pisando sensores de barro."""
+
+    def __init__(self):
+        super().__init__()
+        # Set de bodies que actualmente tocan al menos un sensor de barro
+        self.bodies_in_mud = set()
+        # Conteo de contactos activos por body (para manejar múltiples charcas)
+        self._contact_count = {}
+
+    def _get_mud_and_other(self, contact):
+        """Devuelve (mud_fixture, other_body) si uno de los dos es sensor de barro."""
+        fA = contact.fixtureA
+        fB = contact.fixtureB
+        udA = fA.userData
+        udB = fB.userData
+
+        if isinstance(udA, dict) and udA.get('type') == 'mud':
+            return fA, fB.body
+        if isinstance(udB, dict) and udB.get('type') == 'mud':
+            return fB, fA.body
+        return None, None
+
+    def BeginContact(self, contact):
+        mud_fix, other_body = self._get_mud_and_other(contact)
+        if mud_fix and other_body:
+            body_id = id(other_body)
+            self._contact_count[body_id] = self._contact_count.get(body_id, 0) + 1
+            self.bodies_in_mud.add(other_body)
+
+    def EndContact(self, contact):
+        mud_fix, other_body = self._get_mud_and_other(contact)
+        if mud_fix and other_body:
+            body_id = id(other_body)
+            count = self._contact_count.get(body_id, 0) - 1
+            if count <= 0:
+                self._contact_count.pop(body_id, None)
+                self.bodies_in_mud.discard(other_body)
+            else:
+                self._contact_count[body_id] = count
+
+    def is_in_mud(self, body):
+        """Comprueba si un body de Box2D está actualmente en barro."""
+        return body in self.bodies_in_mud
+
+
 class FirstScene(MatchScene):
     """Escenario 1: Campo de fútbol clásico verde con Bulldozer."""
 
@@ -54,16 +103,21 @@ class FirstScene(MatchScene):
         }
 
     def _init_extras(self):
-        """Crea el Bulldozer y el sistema de barro dinámico."""
+        """Crea el Bulldozer, el contact listener y el sistema de barro dinámico."""
+        # Contact listener para sensores de barro
+        self.mud_listener = MudContactListener()
+        self.world.contactListener = self.mud_listener
+
+        # Boss
         self.boss = RocketFactory.create_element(
             "boss", self.world, BOSS_START, subtipo='bulldozer'
         )
         self.grupo_sprites.add(self.boss)
 
-        # Sistema de barro dinámico: lista de {rect, timer}
+        # Sistema de barro dinámico: lista de {rect, timer, body}
         self.mud_patches = []
         self.mud_spawn_timer = MUD_SPAWN_INTERVAL * 0.5
-        self._mud_next_side = random.choice(['left', 'right'])  # lado inicial aleatorio
+        self._mud_next_side = random.choice(['left', 'right'])
 
     # ─── BOUNDARIES & GOALS ──────────────────────────────────
 
@@ -112,7 +166,27 @@ class FirstScene(MatchScene):
 
         return pygame.Rect(gx, GOAL_TOP_Y, GOAL_W, GOAL_H)
 
-    # ─── BARRO DINÁMICO ──────────────────────────────────────
+    # ─── BARRO DINÁMICO CON BOX2D ────────────────────────────
+
+    def _create_mud_body(self, x_px, w_px):
+        """Crea un body estático sensor en Box2D para una charca de barro."""
+        cx_m = px2m(x_px + w_px / 2)
+        cy_m = px2m(GROUND_Y - MUD_HEIGHT / 2)
+        hw_m = px2m(w_px / 2)
+        hh_m = px2m(MUD_HEIGHT / 2)
+
+        body = self.world.CreateStaticBody(position=(cx_m, cy_m))
+        body.CreatePolygonFixture(
+            box=(hw_m, hh_m),
+            isSensor=True,
+            userData={'type': 'mud'}
+        )
+        return body
+
+    def _destroy_mud_body(self, body):
+        """Destruye un body de barro del mundo Box2D."""
+        if body:
+            self.world.DestroyBody(body)
 
     def _spawn_mud_patch(self):
         """Genera una nueva charca de barro alternando entre mitad izquierda y derecha."""
@@ -127,11 +201,13 @@ class FirstScene(MatchScene):
         else:
             x = random.randint(half + MUD_MARGIN, SW - MUD_MARGIN - w)
 
-        # Asegurar que x es válido (por si los márgenes son muy grandes)
+        # Asegurar que x es válido
         x = max(MUD_MARGIN, min(x, SW - MUD_MARGIN - w))
 
         rect = pygame.Rect(x, GROUND_Y - MUD_HEIGHT, w, MUD_HEIGHT)
-        self.mud_patches.append({'rect': rect, 'timer': 0})
+        body = self._create_mud_body(x, w)
+
+        self.mud_patches.append({'rect': rect, 'timer': 0, 'body': body})
 
         # Alternar lado para la próxima charca
         self._mud_next_side = 'right' if self._mud_next_side == 'left' else 'left'
@@ -143,26 +219,29 @@ class FirstScene(MatchScene):
             self.mud_spawn_timer = 0
             self._spawn_mud_patch()
 
-        # Envejecer y eliminar
+        # Envejecer
         for patch in self.mud_patches:
             patch['timer'] += delta_time
-        self.mud_patches = [p for p in self.mud_patches if p['timer'] < MUD_LIFETIME]
 
-    def _get_mud_rects(self):
-        """Devuelve los pygame.Rect de cada zona de barro activa."""
-        return [p['rect'] for p in self.mud_patches]
+        # Separar vivas y caducadas
+        alive = []
+        for p in self.mud_patches:
+            if p['timer'] < MUD_LIFETIME:
+                alive.append(p)
+            else:
+                self._destroy_mud_body(p['body'])
+        self.mud_patches = alive
 
-    def _sprite_in_mud(self, sprite):
-        """Comprueba si un sprite está dentro de alguna zona de barro."""
-        for mud_rect in self._get_mud_rects():
-            if sprite.rect.colliderect(mud_rect):
-                return True
+    def _body_in_mud(self, body):
+        """Comprueba via el ContactListener si un body está en barro."""
+        if body and hasattr(self, 'mud_listener'):
+            return self.mud_listener.is_in_mud(body)
         return False
 
     def _apply_mud_friction(self):
-        """Aplica frenado extra a la pelota si está en barro."""
+        """Aplica frenado extra a la pelota si está en barro (vía Box2D sensor)."""
         if hasattr(self, 'pelota') and self.pelota.body:
-            if self._sprite_in_mud(self.pelota):
+            if self._body_in_mud(self.pelota.body):
                 vel = self.pelota.body.linearVelocity
                 self.pelota.body.linearVelocity = (
                     vel.x * MUD_FRICTION_FACTOR,
@@ -170,9 +249,9 @@ class FirstScene(MatchScene):
                 )
 
     def _apply_mud_to_car(self, sprite, friction_factor):
-        """Aplica frenado extra a un coche/boss si está en barro."""
+        """Aplica frenado extra a un coche/boss si está en barro (vía Box2D sensor)."""
         if hasattr(sprite, 'body') and sprite.body:
-            if self._sprite_in_mud(sprite):
+            if self._body_in_mud(sprite.body):
                 vel = sprite.body.linearVelocity
                 sprite.body.linearVelocity = (
                     vel.x * friction_factor,
@@ -216,12 +295,19 @@ class FirstScene(MatchScene):
     # ─── RESET ────────────────────────────────────────────────
 
     def _reset_positions(self):
-        """Resetea posiciones incluyendo al boss."""
+        """Resetea posiciones incluyendo al boss. Limpia charcas de barro."""
         super()._reset_positions()
         if hasattr(self, 'boss') and self.boss.body:
             self.boss.body.position        = (px2m(BOSS_START[0]), px2m(BOSS_START[1]))
             self.boss.body.linearVelocity  = (0, 0)
             self.boss.body.angularVelocity = 0
+
+        # Destruir todas las charcas de barro activas tras gol
+        if hasattr(self, 'mud_patches'):
+            for p in self.mud_patches:
+                self._destroy_mud_body(p['body'])
+            self.mud_patches = []
+            self.mud_spawn_timer = MUD_SPAWN_INTERVAL * 0.5
 
     # ─── UPDATE ───────────────────────────────────────────────
 
@@ -264,8 +350,6 @@ class FirstScene(MatchScene):
             screen.blit(border_surf, (mud_rect.x, mud_rect.y))
 
             # Manchas decorativas
-            cx = mud_rect.centerx
-            cy = mud_rect.centery
             dec_surf = pygame.Surface((mud_rect.width, mud_rect.height), pygame.SRCALPHA)
             pygame.draw.ellipse(dec_surf, (*MUD_COLOR_DARK, alpha),
                                 (mud_rect.width // 2 - 15, mud_rect.height // 2 - 4, 30, 8))
