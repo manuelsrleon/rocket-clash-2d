@@ -73,11 +73,15 @@ class PlayerCar(Car):
 class Bulldozer(Car):
     def __init__(self, carPos=(600, 460)):
         self.stats_normal = {'move_speed': 4.0, 'jump_force': 60.0, 'mass': 3.0, 'scale': 1.5}
-        self.stats_angry = {'move_speed': 62.0, 'jump_force': 60.0, 'mass': 4.0, 'scale': 1.5}
+        # Bajamos la velocidad de 62.0 a 16.0. Sigue siendo más rápido que el jugador (12.0)
+        self.stats_angry = {'move_speed': 16.0, 'jump_force': 60.0, 'mass': 4.5, 'scale': 1.5}
         
         super().__init__(BOSS1_IMG, carPos, stats=self.stats_normal)
         self.angry_timer = 0
         self.is_angry = False
+        
+        # ─── Estado inicial de la FSM ───
+        self.state = "OFENSIVO"
 
     def update_logic(self, dt_ms):
         """Lógica interna: ciclos de enfado."""
@@ -97,30 +101,79 @@ class Bulldozer(Car):
         self.angry_timer = 0
         self.move_speed = self.stats_normal['move_speed']
 
-    def decide_movement(self, ball_pos, player_pos, goal_x_right, 
-                       ai_aggro_range=25.0, ai_ball_priority=12.0,
-                       boss_speed=6.0, boss_speed_angry=9.0, boss_blend=0.18):
-        """IA táctica: decide hacia dónde moverse.
-        
-        Retorna: target_x (posición X objetivo)
+    def update_fsm(self, ball_pos, player_pos, goal_x_right):
+        """
+        Cerebro FSM del Bulldozer.
+        (Reemplaza a decide_movement y apply_movement)
+        Evalúa el entorno y decide hacia dónde aplicar fuerza física.
         """
         if not self.body:
-            return self.body.position.x
+            return
+
+        my_pos = self.body.position
         
-        boss_x = self.body.position.x
-        dist_to_player = abs(boss_x - player_pos.x)
-        ball_dist_to_own_goal = abs(ball_pos.x - goal_x_right)
+        # Distancias (en metros de Box2D)
+        dist_to_goal = abs(ball_pos.x - goal_x_right)
+        dist_to_player = abs(player_pos.x - my_pos.x)
 
-        # Prioridad 1: Defender si la pelota está cerca de su portería
-        if ball_dist_to_own_goal < ai_ball_priority:
-            return ball_pos.x
+        # ─── 1. TRANSICIONES DE ESTADO (FSM) ──────────────────
+        if dist_to_goal < 25.0:
+            # Si el balón está muy cerca de su portería, defiende a muerte
+            self.state = "DEFENSIVO"
+        elif self.is_angry:
+            # Si se activa su Ultimate (manejado por update_logic), va a por el jugador
+            self.state = "LOCO"
+        else:
+            # Por defecto, intenta atacar y marcar gol
+            self.state = "OFENSIVO"
 
-        # Prioridad 2: Embestir jugador si está enfadado y cerca
-        if self.is_angry and dist_to_player < ai_aggro_range:
-            return player_pos.x
+        # ─── 2. CÁLCULO DEL OBJETIVO FÍSICO (Target X) ──────────
+        target_x = my_pos.x # Por defecto, frenar
 
-        # Prioridad 3: Perseguir pelota (atacar)
-        return ball_pos.x
+        if self.state == "DEFENSIVO":
+            # Va a posicionarse justo delante del balón para actuar de muro
+            target_x = ball_pos.x + 2.0 
+            
+        elif self.state == "LOCO":
+            # Va directo a las coordenadas del jugador para embestirlo
+            target_x = player_pos.x
+            
+        elif self.state == "OFENSIVO":
+            # Intenta empujar el balón hacia la izquierda
+            if ball_pos.x < my_pos.x:
+                target_x = ball_pos.x  # Acelera hacia el balón
+            else:
+                # Si el balón se queda atrás, retrocede un poco para rodearlo
+                target_x = ball_pos.x + 4.0
+
+       # ─── 3. MOTRICIDAD (Física Aplicada) ───────────────────
+        current_max_speed = self.move_speed 
+        
+        # ¡NUEVO!: Boost de velocidad al defender (solo si no está ya en modo LOCO/Enfadado)
+        if self.state == "DEFENSIVO" and not self.is_angry:
+            current_max_speed = self.move_speed * 2.0  # El doble de rápido para llegar a salvar el gol
+        
+        # Diferencia entre dónde está y a dónde quiere ir
+        diff = target_x - my_pos.x
+        vel = self.body.linearVelocity
+
+        # Margen muerto de 0.8 metros para que no vibre
+        if abs(diff) > 0.8:
+            target_vx = current_max_speed if diff > 0 else -current_max_speed
+        else:
+            target_vx = 0.0
+
+        # BLEND FÍSICO (Inercia): Simula el peso del Bulldozer
+        blend_factor = 0.15 
+        new_vx = vel.x + (target_vx - vel.x) * blend_factor
+        
+        # Aplicamos la velocidad resultante al chasis de Box2D
+        self.body.linearVelocity = (new_vx, vel.y)
+
+        # ─── 4. ESTADO SALTO (Reflejo Concurrente) ────────────
+        dist_x_ball = abs(ball_pos.x - my_pos.x)
+        if dist_x_ball < 4.0 and ball_pos.y < my_pos.y - 2.0 and self.on_ground:
+            self.jump()
 
     def apply_movement(self, target_x, ball_pos, player_pos,
                        boss_speed=6.0, boss_speed_angry=9.0, boss_blend=0.18,

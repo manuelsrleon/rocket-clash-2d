@@ -427,41 +427,24 @@ class FirstScene(MatchScene):
 
     # ─── IA DEL BOSS ─────────────────────────────────────────
 
+    # En firts_scene.py
     def _update_boss_ai(self, delta_time):
-        """IA del Bulldozer: orquesta las decisiones del boss."""
-        if not hasattr(self, 'boss') or not self.boss.body or not self.pelota.body:
-            return
+        """Delega la inteligencia a la Máquina de Estados (FSM) del Boss."""
+        if hasattr(self, 'boss') and self.boss.body and self.pelota.body and self.jugador.body:
+            
+            # 1. HACEMOS AVANZAR SU RELOJ INTERNO (Para que se cabree)
+            if hasattr(self.boss, 'update_logic'):
+                self.boss.update_logic(delta_time)
 
-        # Si el boss está stunneado por power-up, no se mueve
-        if self.boss_stunned:
-            return
-
-        # Actualizar lógica interna (enfado)
-        if hasattr(self.boss, 'update_logic'):
-            self.boss.update_logic(delta_time)
-
-        # Decidir objetivo
-        target_x = self.boss.decide_movement(
-            ball_pos=self.pelota.body.position,
-            player_pos=self.jugador.body.position,
-            goal_x_right=AI_GOAL_X_RIGHT,
-            ai_aggro_range=AI_AGGRO_RANGE,
-            ai_ball_priority=AI_BALL_PRIORITY,
-            boss_speed=BOSS_SPEED,
-            boss_speed_angry=BOSS_SPEED_ANGRY,
-            boss_blend=BOSS_BLEND
-        )
-
-        # Aplicar movimiento
-        self.boss.apply_movement(
-            target_x=target_x,
-            ball_pos=self.pelota.body.position,
-            player_pos=self.jugador.body.position,
-            boss_speed=BOSS_SPEED,
-            boss_speed_angry=BOSS_SPEED_ANGRY,
-            boss_blend=BOSS_BLEND,
-            boss_chase_margin=BOSS_CHASE_MARGIN
-        )
+            # 2. Calculamos dónde está la portería del jefe
+            goal_x_right = SW / PPM 
+            
+            # 3. Le pasamos la visión del entorno a la FSM del Bulldozer
+            self.boss.update_fsm(
+                ball_pos=self.pelota.body.position,
+                player_pos=self.jugador.body.position,
+                goal_x_right=goal_x_right
+            )
 
     # ─── RESET ────────────────────────────────────────────────
 
