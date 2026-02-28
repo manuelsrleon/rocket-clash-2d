@@ -72,7 +72,6 @@ class PlayerCar(Car):
 
 class Bulldozer(Car):
     def __init__(self, carPos=(600, 460)):
-        # Estadísticas: mayor masa para empujar al jugador
         self.stats_normal = {'move_speed': 4.0, 'jump_force': 60.0, 'mass': 3.0, 'scale': 1.5}
         self.stats_angry = {'move_speed': 62.0, 'jump_force': 60.0, 'mass': 4.0, 'scale': 1.5}
         
@@ -81,7 +80,7 @@ class Bulldozer(Car):
         self.is_angry = False
 
     def update_logic(self, dt_ms):
-        # Lógica de activación cada X tiempo (ej. cada 5 segundos se cabrea 2)
+        """Lógica interna: ciclos de enfado."""
         self.angry_timer += dt_ms
         if not self.is_angry and self.angry_timer > 5000:
             self.become_angry()
@@ -92,12 +91,61 @@ class Bulldozer(Car):
         self.is_angry = True
         self.angry_timer = 0
         self.move_speed = self.stats_angry['move_speed']
-        # Aplicamos un cambio de color o efecto visual aquí si queremos
 
     def become_normal(self):
         self.is_angry = False
         self.angry_timer = 0
         self.move_speed = self.stats_normal['move_speed']
+
+    def decide_movement(self, ball_pos, player_pos, goal_x_right, 
+                       ai_aggro_range=25.0, ai_ball_priority=12.0,
+                       boss_speed=6.0, boss_speed_angry=9.0, boss_blend=0.18):
+        """IA táctica: decide hacia dónde moverse.
+        
+        Retorna: target_x (posición X objetivo)
+        """
+        if not self.body:
+            return self.body.position.x
+        
+        boss_x = self.body.position.x
+        dist_to_player = abs(boss_x - player_pos.x)
+        ball_dist_to_own_goal = abs(ball_pos.x - goal_x_right)
+
+        # Prioridad 1: Defender si la pelota está cerca de su portería
+        if ball_dist_to_own_goal < ai_ball_priority:
+            return ball_pos.x
+
+        # Prioridad 2: Embestir jugador si está enfadado y cerca
+        if self.is_angry and dist_to_player < ai_aggro_range:
+            return player_pos.x
+
+        # Prioridad 3: Perseguir pelota (atacar)
+        return ball_pos.x
+
+    def apply_movement(self, target_x, ball_pos, player_pos,
+                       boss_speed=6.0, boss_speed_angry=9.0, boss_blend=0.18,
+                       boss_chase_margin=0.3):
+        """Aplica el movimiento hacia el objetivo."""
+        if not self.body:
+            return
+
+        speed = boss_speed_angry if self.is_angry else boss_speed
+        diff = target_x - self.body.position.x
+        vel = self.body.linearVelocity
+
+        if abs(diff) > boss_chase_margin:
+            target_vx = speed if diff > 0 else -speed
+        else:
+            target_vx = 0.0
+
+        new_vx = vel.x + (target_vx - vel.x) * boss_blend
+        self.body.linearVelocity = (new_vx, vel.y)
+
+        # Saltar si el objetivo está por encima
+        target_y = ball_pos.y
+        if target_y < self.body.position.y - 3.0 and abs(diff) < 8.0:
+            if self.on_ground:
+                self.jump()
 
 #TODO: clases fantasma. definidas para que el factory.py pueda instanciarlas sin errores, pero no tienen lógica ni assets propios.
 class MotoMoto(Car):

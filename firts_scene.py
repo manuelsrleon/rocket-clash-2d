@@ -21,53 +21,91 @@ GOAL_NET_COLOR = (180, 180, 180, 80)
 MUD_COLOR      = (101, 67, 33)
 MUD_COLOR_DARK = (80, 50, 20)
 MUD_HEIGHT     = 20
-MUD_FRICTION_FACTOR = 0.85       # Frenado de la pelota (más bajo = más freno)
-MUD_CAR_FRICTION    = 0.60       # Frenado del coche/boss al empujar en barro
-MUD_SPAWN_INTERVAL  = 6000       # ms entre apariciones de nuevas charcas
-MUD_LIFETIME        = 8000       # ms que dura cada charca
+MUD_FRICTION_FACTOR = 0.85
+MUD_CAR_FRICTION    = 0.60
+MUD_SPAWN_INTERVAL  = 6000
+MUD_LIFETIME        = 8000
 MUD_MIN_WIDTH       = 80
 MUD_MAX_WIDTH       = 140
-MUD_MARGIN          = 100        # Margen desde los bordes para no tapar porterías
-MUD_MAX_ACTIVE      = 3          # Máximo de charcas simultáneas
+MUD_MARGIN          = 100
+MUD_MAX_ACTIVE      = 3
 
 # Boss Bulldozer
-BOSS_START       = (SW - 200, GROUND_Y - 60)
-BOSS_SPEED       = 6.0
-BOSS_BLEND       = 0.15
-BOSS_CHASE_MARGIN = 0.5
+BOSS_START        = (SW - 200, GROUND_Y - 60)
+BOSS_SPEED        = 6.0
+BOSS_SPEED_ANGRY  = 9.0
+BOSS_BLEND        = 0.18
+BOSS_CHASE_MARGIN = 0.3
+
+# IA del Bulldozer
+AI_AGGRO_RANGE    = 25.0   # Distancia (m) a la que prioriza embestir al jugador
+AI_BALL_PRIORITY  = 12.0   # Si la pelota está más cerca de su portería que esto, va a por ella
+AI_GOAL_X_LEFT    = px2m(GOAL_W)         # Límite X de la portería izquierda (en m)
+AI_GOAL_X_RIGHT   = px2m(SW - GOAL_W)    # Límite X de la portería derecha (en m)
+
+# Stun
+STUN_DURATION     = 3000   # ms que dura el aturdimiento
+STUN_COLOR        = (255, 255, 0)
+STUN_FONT_SIZE    = 20
 
 
-# ─── CONTACT LISTENER PARA BARRO ─────────────────────────────
+# ─── CONTACT LISTENER ────────────────────────────────────────
 
-class MudContactListener(Box2D.b2ContactListener):
-    """Listener Box2D que detecta qué bodies están pisando sensores de barro."""
+class SceneContactListener(Box2D.b2ContactListener):
+    """Listener Box2D que detecta:
+       1. Qué bodies están pisando sensores de barro
+       2. Colisiones entre el boss y el jugador (para stun)
+    """
 
-    def __init__(self):
+    def __init__(self, scene):
         super().__init__()
-        # Set de bodies que actualmente tocan al menos un sensor de barro
+        self.scene = scene
+        # Barro
         self.bodies_in_mud = set()
-        # Conteo de contactos activos por body (para manejar múltiples charcas)
         self._contact_count = {}
 
     def _get_mud_and_other(self, contact):
-        """Devuelve (mud_fixture, other_body) si uno de los dos es sensor de barro."""
         fA = contact.fixtureA
         fB = contact.fixtureB
         udA = fA.userData
         udB = fB.userData
-
         if isinstance(udA, dict) and udA.get('type') == 'mud':
             return fA, fB.body
         if isinstance(udB, dict) and udB.get('type') == 'mud':
             return fB, fA.body
         return None, None
 
+    def _is_boss_player_collision(self, contact):
+        """Devuelve True si la colisión es entre el boss y el jugador."""
+        scene = self.scene
+        if not hasattr(scene, 'boss') or not scene.boss.body:
+            return False
+        if not scene.jugador.body:
+            return False
+
+        bodyA = contact.fixtureA.body
+        bodyB = contact.fixtureB.body
+        boss_body = scene.boss.body
+        player_body = scene.jugador.body
+
+        if (bodyA is boss_body and bodyB is player_body):
+            return True
+        if (bodyA is player_body and bodyB is boss_body):
+            return True
+        return False
+
     def BeginContact(self, contact):
+        # Barro
         mud_fix, other_body = self._get_mud_and_other(contact)
         if mud_fix and other_body:
             body_id = id(other_body)
             self._contact_count[body_id] = self._contact_count.get(body_id, 0) + 1
             self.bodies_in_mud.add(other_body)
+            return
+
+        # Boss vs Jugador
+        if self._is_boss_player_collision(contact):
+            self.scene._on_boss_hit_player()
 
     def EndContact(self, contact):
         mud_fix, other_body = self._get_mud_and_other(contact)
@@ -81,7 +119,6 @@ class MudContactListener(Box2D.b2ContactListener):
                 self._contact_count[body_id] = count
 
     def is_in_mud(self, body):
-        """Comprueba si un body de Box2D está actualmente en barro."""
         return body in self.bodies_in_mud
 
 
@@ -104,9 +141,9 @@ class FirstScene(MatchScene):
 
     def _init_extras(self):
         """Crea el Bulldozer, el contact listener y el sistema de barro dinámico."""
-        # Contact listener para sensores de barro
-        self.mud_listener = MudContactListener()
-        self.world.contactListener = self.mud_listener
+        # Contact listener unificado (barro + colisiones boss)
+        self.contact_listener = SceneContactListener(self)
+        self.world.contactListener = self.contact_listener
 
         # Boss
         self.boss = RocketFactory.create_element(
@@ -114,17 +151,64 @@ class FirstScene(MatchScene):
         )
         self.grupo_sprites.add(self.boss)
 
-        # Sistema de barro dinámico: lista de {rect, timer, body}
+        # Barro dinámico
         self.mud_patches = []
         self.mud_spawn_timer = MUD_SPAWN_INTERVAL * 0.5
         self._mud_next_side = random.choice(['left', 'right'])
 
+        # Stun del jugador
+        self.player_stunned = False
+        self.stun_timer = 0
+        self.stun_font = pygame.font.SysFont('Arial', STUN_FONT_SIZE, bold=True)
+
+    # ─── STUN ─────────────────────────────────────────────────
+
+    def _on_boss_hit_player(self):
+        """Llamado por el ContactListener cuando el boss colisiona con el jugador."""
+        if not hasattr(self, 'boss'):
+            return
+        # Solo aplica stun si el boss está enfadado y el jugador no está ya stunned
+        if self.boss.is_angry and not self.player_stunned:
+            self.player_stunned = True
+            self.stun_timer = STUN_DURATION
+            # Frenar al jugador de golpe
+            self.jugador.body.linearVelocity = (0, self.jugador.body.linearVelocity.y)
+            self.move_left_flag = False
+            self.move_right_flag = False
+
+    def _update_stun(self, delta_time):
+        """Actualiza el timer de aturdimiento del jugador."""
+        if self.player_stunned:
+            self.stun_timer -= delta_time
+            # Mantener al jugador frenado mientras esté stunned
+            if self.jugador.body:
+                vel = self.jugador.body.linearVelocity
+                self.jugador.body.linearVelocity = (vel.x * 0.85, vel.y)
+            if self.stun_timer <= 0:
+                self.player_stunned = False
+                self.stun_timer = 0
+
+    # ─── OVERRIDE EVENTS (bloquear input si stunned) ─────────
+
+    def events(self, event_list):
+        """Bloquea el movimiento del jugador si está stunned."""
+        if self.player_stunned:
+            # Solo permitir ESC (pausa) y QUIT, ignorar movimiento
+            from pygame.locals import KEYDOWN, KEYUP, K_ESCAPE
+            for ev in event_list:
+                if ev.type == KEYDOWN and ev.key == K_ESCAPE:
+                    self.director.apilarEscena(
+                        __import__('ingame_menu_scene', fromlist=['IngameMenu']).IngameMenu(self.director)
+                    )
+            return
+
+        # Si no está stunned, comportamiento normal
+        super().events(event_list)
+
     # ─── BOUNDARIES & GOALS ──────────────────────────────────
 
     def _create_boundaries(self):
-        """Suelo, techo y paredes con hueco para porterías."""
         w = self.world
-
         g = w.CreateStaticBody(position=(px2m(SW / 2), px2m(GROUND_Y)))
         g.CreatePolygonFixture(box=(px2m(SW / 2), px2m(5)), friction=0.6)
 
@@ -169,7 +253,6 @@ class FirstScene(MatchScene):
     # ─── BARRO DINÁMICO CON BOX2D ────────────────────────────
 
     def _create_mud_body(self, x_px, w_px):
-        """Crea un body estático sensor en Box2D para una charca de barro."""
         cx_m = px2m(x_px + w_px / 2)
         cy_m = px2m(GROUND_Y - MUD_HEIGHT / 2)
         hw_m = px2m(w_px / 2)
@@ -184,12 +267,10 @@ class FirstScene(MatchScene):
         return body
 
     def _destroy_mud_body(self, body):
-        """Destruye un body de barro del mundo Box2D."""
         if body:
             self.world.DestroyBody(body)
 
     def _spawn_mud_patch(self):
-        """Genera una nueva charca de barro alternando entre mitad izquierda y derecha."""
         if len(self.mud_patches) >= MUD_MAX_ACTIVE:
             return
 
@@ -201,29 +282,21 @@ class FirstScene(MatchScene):
         else:
             x = random.randint(half + MUD_MARGIN, SW - MUD_MARGIN - w)
 
-        # Asegurar que x es válido
         x = max(MUD_MARGIN, min(x, SW - MUD_MARGIN - w))
-
         rect = pygame.Rect(x, GROUND_Y - MUD_HEIGHT, w, MUD_HEIGHT)
         body = self._create_mud_body(x, w)
-
         self.mud_patches.append({'rect': rect, 'timer': 0, 'body': body})
-
-        # Alternar lado para la próxima charca
         self._mud_next_side = 'right' if self._mud_next_side == 'left' else 'left'
 
     def _update_mud(self, delta_time):
-        """Actualiza timers del barro: genera nuevas y elimina las caducadas."""
         self.mud_spawn_timer += delta_time
         if self.mud_spawn_timer >= MUD_SPAWN_INTERVAL:
             self.mud_spawn_timer = 0
             self._spawn_mud_patch()
 
-        # Envejecer
         for patch in self.mud_patches:
             patch['timer'] += delta_time
 
-        # Separar vivas y caducadas
         alive = []
         for p in self.mud_patches:
             if p['timer'] < MUD_LIFETIME:
@@ -233,123 +306,114 @@ class FirstScene(MatchScene):
         self.mud_patches = alive
 
     def _body_in_mud(self, body):
-        """Comprueba via el ContactListener si un body está en barro."""
-        if body and hasattr(self, 'mud_listener'):
-            return self.mud_listener.is_in_mud(body)
+        if body and hasattr(self, 'contact_listener'):
+            return self.contact_listener.is_in_mud(body)
         return False
 
     def _apply_mud_friction(self):
-        """Aplica frenado extra a la pelota si está en barro (vía Box2D sensor)."""
         if hasattr(self, 'pelota') and self.pelota.body:
             if self._body_in_mud(self.pelota.body):
                 vel = self.pelota.body.linearVelocity
                 self.pelota.body.linearVelocity = (
-                    vel.x * MUD_FRICTION_FACTOR,
-                    vel.y
+                    vel.x * MUD_FRICTION_FACTOR, vel.y
                 )
 
     def _apply_mud_to_car(self, sprite, friction_factor):
-        """Aplica frenado extra a un coche/boss si está en barro (vía Box2D sensor)."""
         if hasattr(sprite, 'body') and sprite.body:
             if self._body_in_mud(sprite.body):
                 vel = sprite.body.linearVelocity
                 sprite.body.linearVelocity = (
-                    vel.x * friction_factor,
-                    vel.y
+                    vel.x * friction_factor, vel.y
                 )
 
     # ─── IA DEL BOSS ─────────────────────────────────────────
 
     def _update_boss_ai(self, delta_time):
-        """IA simple del Bulldozer: persigue la pelota horizontalmente."""
+        """IA del Bulldozer: orquesta las decisiones del boss."""
         if not hasattr(self, 'boss') or not self.boss.body or not self.pelota.body:
             return
 
+        # Actualizar lógica interna (enfado)
         if hasattr(self.boss, 'update_logic'):
             self.boss.update_logic(delta_time)
 
-        boss_x = self.boss.body.position.x
-        ball_x = self.pelota.body.position.x
+        # Decidir objetivo
+        target_x = self.boss.decide_movement(
+            ball_pos=self.pelota.body.position,
+            player_pos=self.jugador.body.position,
+            goal_x_right=AI_GOAL_X_RIGHT,
+            ai_aggro_range=AI_AGGRO_RANGE,
+            ai_ball_priority=AI_BALL_PRIORITY,
+            boss_speed=BOSS_SPEED,
+            boss_speed_angry=BOSS_SPEED_ANGRY,
+            boss_blend=BOSS_BLEND
+        )
 
-        speed = BOSS_SPEED
-        if hasattr(self.boss, 'is_angry') and self.boss.is_angry:
-            speed = BOSS_SPEED * 1.5
-
-        diff = ball_x - boss_x
-        vel = self.boss.body.linearVelocity
-
-        if abs(diff) > BOSS_CHASE_MARGIN:
-            target_vx = speed if diff > 0 else -speed
-        else:
-            target_vx = 0.0
-
-        new_vx = vel.x + (target_vx - vel.x) * BOSS_BLEND
-        self.boss.body.linearVelocity = (new_vx, vel.y)
-
-        ball_y = self.pelota.body.position.y
-        boss_y = self.boss.body.position.y
-        if ball_y < boss_y - 3.0 and abs(diff) < 8.0:
-            if hasattr(self.boss, 'on_ground') and self.boss.on_ground:
-                self.boss.jump()
+        # Aplicar movimiento
+        self.boss.apply_movement(
+            target_x=target_x,
+            ball_pos=self.pelota.body.position,
+            player_pos=self.jugador.body.position,
+            boss_speed=BOSS_SPEED,
+            boss_speed_angry=BOSS_SPEED_ANGRY,
+            boss_blend=BOSS_BLEND,
+            boss_chase_margin=BOSS_CHASE_MARGIN
+        )
 
     # ─── RESET ────────────────────────────────────────────────
 
     def _reset_positions(self):
-        """Resetea posiciones incluyendo al boss. Limpia charcas de barro."""
         super()._reset_positions()
         if hasattr(self, 'boss') and self.boss.body:
             self.boss.body.position        = (px2m(BOSS_START[0]), px2m(BOSS_START[1]))
             self.boss.body.linearVelocity  = (0, 0)
             self.boss.body.angularVelocity = 0
 
-        # Destruir todas las charcas de barro activas tras gol
         if hasattr(self, 'mud_patches'):
             for p in self.mud_patches:
                 self._destroy_mud_body(p['body'])
             self.mud_patches = []
             self.mud_spawn_timer = MUD_SPAWN_INTERVAL * 0.5
 
+        # Limpiar stun tras gol
+        self.player_stunned = False
+        self.stun_timer = 0
+
     # ─── UPDATE ───────────────────────────────────────────────
 
     def update(self, delta_time):
-        """Override para añadir IA del boss, barro dinámico y fricción."""
         super().update(delta_time)
         self._update_boss_ai(delta_time)
         self._update_mud(delta_time)
         self._apply_mud_friction()
-        # Frenado al jugador y al boss si están en barro
         self._apply_mud_to_car(self.jugador, MUD_CAR_FRICTION)
         if hasattr(self, 'boss'):
             self._apply_mud_to_car(self.boss, MUD_CAR_FRICTION)
+        self._update_stun(delta_time)
 
     # ─── RENDER ───────────────────────────────────────────────
 
     def _render_field(self, screen):
-        """Campo verde clásico con decoración, barro dinámico y porterías."""
         screen.fill(BG_COLOR)
         pygame.draw.rect(screen, GROUND_COLOR, (0, GROUND_Y, SW, SH - GROUND_Y))
 
-        # Línea central y círculo
         pygame.draw.line(screen, (255, 255, 255), (SW // 2, 0), (SW // 2, GROUND_Y), 1)
         pygame.draw.circle(screen, (255, 255, 255), (SW // 2, GROUND_Y - 120), 60, 1)
 
-        # Zonas de barro activas (con efecto de fade según vida restante)
+        # Barro
         for patch in self.mud_patches:
             mud_rect = patch['rect']
             life_ratio = 1.0 - (patch['timer'] / MUD_LIFETIME)
             alpha = max(40, int(220 * life_ratio))
 
-            # Superficie con transparencia para fade-out
             mud_surf = pygame.Surface((mud_rect.width, mud_rect.height), pygame.SRCALPHA)
             mud_surf.fill((*MUD_COLOR, alpha))
             screen.blit(mud_surf, (mud_rect.x, mud_rect.y))
 
-            # Borde oscuro
             border_surf = pygame.Surface((mud_rect.width, mud_rect.height), pygame.SRCALPHA)
             pygame.draw.rect(border_surf, (*MUD_COLOR_DARK, alpha), (0, 0, mud_rect.width, mud_rect.height), 2)
             screen.blit(border_surf, (mud_rect.x, mud_rect.y))
 
-            # Manchas decorativas
             dec_surf = pygame.Surface((mud_rect.width, mud_rect.height), pygame.SRCALPHA)
             pygame.draw.ellipse(dec_surf, (*MUD_COLOR_DARK, alpha),
                                 (mud_rect.width // 2 - 15, mud_rect.height // 2 - 4, 30, 8))
@@ -357,7 +421,6 @@ class FirstScene(MatchScene):
                                 (10, mud_rect.height // 2 - 2, 20, 6))
             screen.blit(dec_surf, (mud_rect.x, mud_rect.y))
 
-        # Porterías
         self._draw_goal(screen, 'left')
         self._draw_goal(screen, 'right')
 
@@ -378,3 +441,44 @@ class FirstScene(MatchScene):
         px = gx if side == 'left' else gx + GOAL_W - GOAL_POST
         pygame.draw.rect(screen, GOAL_COLOR,
                          (px, GOAL_TOP_Y - GOAL_POST, GOAL_POST, GOAL_H + GOAL_POST))
+
+    def render(self, screen):
+        """Override para añadir indicador de stun."""
+        super().render(screen)
+        if self.player_stunned:
+            self._draw_stun_indicator(screen)
+
+    def _draw_stun_indicator(self, screen):
+        """Dibuja un indicador visual de aturdimiento sobre el jugador."""
+        if not self.jugador.body:
+            return
+
+        # Texto "STUNNED!" parpadeante
+        blink = (pygame.time.get_ticks() // 300) % 2 == 0
+        if blink:
+            px = int(m2px(self.jugador.body.position.x))
+            py = int(m2px(self.jugador.body.position.y)) - 40
+
+            text = self.stun_font.render("STUNNED!", True, STUN_COLOR)
+            rect = text.get_rect(center=(px, py))
+            screen.blit(text, rect)
+
+            # Estrellas giratorias alrededor del jugador
+            t = pygame.time.get_ticks() / 200.0
+            import math
+            for i in range(3):
+                angle = t + i * (2 * math.pi / 3)
+                sx = px + int(20 * math.cos(angle))
+                sy = py + 15 + int(8 * math.sin(angle))
+                pygame.draw.circle(screen, STUN_COLOR, (sx, sy), 3)
+
+        # Barra de tiempo restante de stun
+        bar_w = 50
+        bar_h = 5
+        px = int(m2px(self.jugador.body.position.x))
+        py = int(m2px(self.jugador.body.position.y)) - 50
+        ratio = self.stun_timer / STUN_DURATION
+        bg_rect = pygame.Rect(px - bar_w // 2, py, bar_w, bar_h)
+        fg_rect = pygame.Rect(px - bar_w // 2, py, int(bar_w * ratio), bar_h)
+        pygame.draw.rect(screen, (80, 80, 80), bg_rect)
+        pygame.draw.rect(screen, STUN_COLOR, fg_rect)
