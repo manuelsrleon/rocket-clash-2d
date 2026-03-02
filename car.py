@@ -8,7 +8,7 @@ BOSS1_STATS = {'move_speed': 10.0, 'jump_force': 70.0, 'mass': 0.8, 'scale': 0.9
 
 PLAYER_CAR_IMG = './assets/cars/player_car.png'
 WHEEL_IMG      = './assets/cars/car_wheel.png'
-BOSS1_IMG      = './assets/cars/player_car.png'
+BOSS1_IMG      = './assets/cars/bulldozer.png'
 
 class MySprite(pygame.sprite.Sprite):
     def __init__(self, body_path, carPos=(0, 0), scale=1.0):
