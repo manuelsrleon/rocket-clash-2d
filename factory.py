@@ -18,7 +18,7 @@ class RocketFactory:
 
             objeto.body = world.CreateDynamicBody(
                 position=pos_m,
-                fixedRotation=True,
+                fixedRotation=False,
                 linearDamping=0.3
             )
 
@@ -51,7 +51,7 @@ class RocketFactory:
             hh = objeto.rect.height / 2 / PPM   # mitad alto  en metros
             objeto.body = world.CreateDynamicBody(
                 position=pos_m,
-                fixedRotation=True,
+                fixedRotation=False,
                 linearDamping=0.5
             )
             objeto.body.CreatePolygonFixture(

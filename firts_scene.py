@@ -327,7 +327,15 @@ class FirstScene(MatchScene):
         gx = 0 if side == 'left' else SW - GOAL_W
         cx = px2m(gx + GOAL_W / 2)
 
-        px_post = (gx - GOAL_W - GOAL_POST / 2) if side == 'left' else (gx + GOAL_W + GOAL_POST / 2)
+        bar = self.world.CreateStaticBody(
+            position=(cx, px2m(GOAL_TOP_Y - GOAL_POST / 2))
+        )
+        bar.CreatePolygonFixture(
+            box=(px2m(GOAL_W / 2), px2m(GOAL_POST / 2)),
+            friction=0.3, restitution=0.4
+        )
+
+        px_post = (gx - GOAL_POST / 2) if side == 'left' else (gx + GOAL_W + GOAL_POST / 2)
         back = self.world.CreateStaticBody(
             position=(px2m(px_post), px2m(GOAL_TOP_Y + GOAL_H / 2))
         )
