@@ -376,9 +376,13 @@ class MatchScene(PyGameScene):
             ))
 
     # ─── RENDER ───────────────────────────────────────────────
+    def _render_field_fg(self, screen):
+        pass
+
     def render(self, screen):
         self._render_field(screen)
         self.grupo_sprites.draw(screen)
+        self._render_field_fg(screen)
         self._draw_hud(screen)
         self._render_powerup_hud(screen)
 

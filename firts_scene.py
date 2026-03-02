@@ -8,10 +8,10 @@ from factory import RocketFactory
 
 # Constantes visuales del escenario 1
 GROUND_Y   = 520
-GOAL_W     = 80
-GOAL_H     = 140
+GOAL_W     = 160
+GOAL_H     = 320
 GOAL_POST  = 6
-GOAL_TOP_Y = GROUND_Y - GOAL_H
+GOAL_TOP_Y = GROUND_Y - GOAL_H-30
 
 BG_COLOR       = (30, 120, 60)
 GROUND_COLOR   = (20, 100, 50)
@@ -327,15 +327,7 @@ class FirstScene(MatchScene):
         gx = 0 if side == 'left' else SW - GOAL_W
         cx = px2m(gx + GOAL_W / 2)
 
-        bar = self.world.CreateStaticBody(
-            position=(cx, px2m(GOAL_TOP_Y - GOAL_POST / 2))
-        )
-        bar.CreatePolygonFixture(
-            box=(px2m(GOAL_W / 2), px2m(GOAL_POST / 2)),
-            friction=0.3, restitution=0.4
-        )
-
-        px_post = (gx - GOAL_POST / 2) if side == 'left' else (gx + GOAL_W + GOAL_POST / 2)
+        px_post = (gx - GOAL_W - GOAL_POST / 2) if side == 'left' else (gx + GOAL_W + GOAL_POST / 2)
         back = self.world.CreateStaticBody(
             position=(px2m(px_post), px2m(GOAL_TOP_Y + GOAL_H / 2))
         )
@@ -527,26 +519,26 @@ class FirstScene(MatchScene):
                                 (10, mud_rect.height // 2 - 2, 20, 6))
             screen.blit(dec_surf, (mud_rect.x, mud_rect.y))
 
-        self._draw_goal(screen, 'left')
-        self._draw_goal(screen, 'right')
+        if not hasattr(self, '_goalpost_bg'):
+            img = pygame.image.load('./assets/stadiums/excavator_shovel_goalpost_bg.png').convert_alpha()
+            scaled = pygame.transform.scale(img, (GOAL_W, GOAL_H))
+            self._goalpost_bg_l = scaled
+            self._goalpost_bg_r = pygame.transform.flip(scaled, True, False)
+        screen.blit(self._goalpost_bg_l, (0, GOAL_TOP_Y))
+        screen.blit(self._goalpost_bg_r, (SW - GOAL_W, GOAL_TOP_Y))
 
     def _draw_goal(self, screen, side):
-        gx = 0 if side == 'left' else SW - GOAL_W
-
-        net = pygame.Surface((GOAL_W, GOAL_H), pygame.SRCALPHA)
-        net.fill(GOAL_NET_COLOR)
-        for i in range(0, GOAL_W, 10):
-            pygame.draw.line(net, (200, 200, 200, 40), (i, 0), (i, GOAL_H), 1)
-        for j in range(0, GOAL_H, 10):
-            pygame.draw.line(net, (200, 200, 200, 40), (0, j), (GOAL_W, j), 1)
-        screen.blit(net, (gx, GOAL_TOP_Y))
-
-        pygame.draw.rect(screen, GOAL_COLOR,
-                         (gx, GOAL_TOP_Y - GOAL_POST, GOAL_W, GOAL_POST))
-
-        px = gx if side == 'left' else gx + GOAL_W - GOAL_POST
         pygame.draw.rect(screen, GOAL_COLOR,
                          (px, GOAL_TOP_Y - GOAL_POST, GOAL_POST, GOAL_H + GOAL_POST))
+
+    def _render_field_fg(self, screen):
+        if not hasattr(self, '_goalpost_fg'):
+            img = pygame.image.load('./assets/stadiums/excavator_shovel_goalpost_fg.png').convert_alpha()
+            scaled = pygame.transform.scale(img, (GOAL_W, GOAL_H))
+            self._goalpost_fg_l = scaled
+            self._goalpost_fg_r = pygame.transform.flip(scaled, True, False)
+        screen.blit(self._goalpost_fg_l, (0, GOAL_TOP_Y))
+        screen.blit(self._goalpost_fg_r, (SW - GOAL_W, GOAL_TOP_Y))
 
     def render(self, screen):
         """Override para añadir indicadores de stun y enfado del boss."""
