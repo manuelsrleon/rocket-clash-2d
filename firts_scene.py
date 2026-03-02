@@ -501,11 +501,10 @@ class FirstScene(MatchScene):
     # ─── RENDER ───────────────────────────────────────────────
 
     def _render_field(self, screen):
-        screen.fill(BG_COLOR)
-        pygame.draw.rect(screen, GROUND_COLOR, (0, GROUND_Y, SW, SH - GROUND_Y))
-
-        pygame.draw.line(screen, (255, 255, 255), (SW // 2, 0), (SW // 2, GROUND_Y), 1)
-        pygame.draw.circle(screen, (255, 255, 255), (SW // 2, GROUND_Y - 120), 60, 1)
+        if not hasattr(self, '_stadium_bg'):
+            bg = pygame.image.load('./assets/stadiums/stadium1_bg.png').convert()
+            self._stadium_bg = pygame.transform.scale(bg, (SW, SH))
+        screen.blit(self._stadium_bg, (0, 0))
 
         # Barro
         for patch in self.mud_patches:
