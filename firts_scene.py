@@ -535,10 +535,6 @@ class FirstScene(MatchScene):
         screen.blit(self._goalpost_bg_l, (0, GOAL_TOP_Y))
         screen.blit(self._goalpost_bg_r, (SW - GOAL_W, GOAL_TOP_Y))
 
-    def _draw_goal(self, screen, side):
-        pygame.draw.rect(screen, GOAL_COLOR,
-                         (px, GOAL_TOP_Y - GOAL_POST, GOAL_POST, GOAL_H + GOAL_POST))
-
     def _render_field_fg(self, screen):
         if not hasattr(self, '_goalpost_fg'):
             img = pygame.image.load('./assets/stadiums/excavator_shovel_goalpost_fg.png').convert_alpha()
