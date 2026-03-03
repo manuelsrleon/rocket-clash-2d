@@ -32,50 +32,115 @@ TELEPORT_COLOR          = (0, 255, 255)
 
 # ─── NUBES (obstáculos con rebote) ───────────────────────────
 
-CLOUD_SPAWN_INTERVAL = 5000         # ms entre spawns de nubes
-CLOUD_LIFETIME       = 10000        # ms que dura una nube
-CLOUD_MAX_ACTIVE     = 4
-CLOUD_MIN_W          = 80           # px ancho mínimo
-CLOUD_MAX_W          = 150          # px ancho máximo
-CLOUD_H              = 35           # px alto
-CLOUD_MARGIN_X       = 120          # px margen lateral
-CLOUD_MIN_Y          = 60           # px Y mínimo (arriba)
-CLOUD_MAX_Y          = GROUND_Y // 2 - 20  # px Y máximo (mitad superior)
-CLOUD_RESTITUTION    = 2.5          # rebote muy alto
-CLOUD_FRICTION       = 0.0
-CLOUD_COLOR          = (220, 220, 255)
-CLOUD_BORDER_COLOR   = (180, 190, 220)
-CLOUD_FADE_TIME      = 1500         # ms de fade-in/fade-out
+CLOUD_SPAWN_INTERVAL  = 6000              # ms entre spawns de nubes
+CLOUD_LIFETIME        = 12000             # ms que dura una nube
+CLOUD_MAX_ACTIVE      = 5
+CLOUD_MIN_W           = 70               # px ancho mínimo
+CLOUD_MAX_W           = 140              # px ancho máximo
+CLOUD_H               = 30              # px alto
+CLOUD_MARGIN_X        = 100              # px margen lateral
+CLOUD_MIN_Y           = int(SH * 0.05)  # 5% desde arriba
+CLOUD_MAX_Y           = int(SH * 0.75)  # hasta 3/4 de pantalla (evita el suelo)
+CLOUD_RESTITUTION     = 3.0             # rebote alto en la fixture Box2D
+CLOUD_FRICTION        = 0.0
+CLOUD_COLOR           = (0, 0, 0)        # negro
+CLOUD_BORDER_COLOR    = (40, 40, 40)     # negro ligeramente más claro para el borde
+CLOUD_FADE_TIME       = 1500             # ms de fade-in/fade-out
+CLOUD_BOUNCE_IMPULSE  = 25.0            # impulso extra aplicado al colisionar
 
 # ─── POWER-UP: PELOTAZO ──────────────────────────────────────
 
-POWERUP_KICK_RANGE     = 5.0        # metros de distancia al balón para activar
-POWERUP_KICK_SPEED     = 1000.0       # m/s velocidad del pelotazo
+POWERUP_KICK_RANGE     = 5.0            # metros de distancia al balón para activar
+POWERUP_KICK_SPEED     = 1000.0         # m/s velocidad del pelotazo
 POWERUP_KICK_COLOR     = (255, 100, 0)
-POWERUP_FLASH_DURATION = 400        # ms del efecto visual del pelotazo
+POWERUP_FLASH_DURATION = 400            # ms del efecto visual del pelotazo
 POWERUP_READY_COLOR    = (0, 255, 200)
 
 
 # ─── CONTACT LISTENER ────────────────────────────────────────
 
 class Scene2ContactListener(Box2D.b2ContactListener):
-    """Listener Box2D para el escenario 2."""
+    """
+    Listener Box2D para el escenario 2.
+    Detecta colisiones con nubes y encola impulsos de rebote extra
+    que se aplican DESPUÉS del world.Step (nunca dentro del callback).
+    """
 
     def __init__(self, scene):
         super().__init__()
         self.scene = scene
+        self._pending_bounces = []  # lista de (body, normal_x, normal_y)
+
+    def _get_cloud_contact(self, contact):
+        """
+        Devuelve (dynamic_body, normal_x, normal_y) si un fixture es nube
+        y el otro es un cuerpo dinámico. Si no, devuelve None.
+        """
+        fA = contact.fixtureA
+        fB = contact.fixtureB
+        udA = fA.userData
+        udB = fB.userData
+
+        cloud_is_A = isinstance(udA, dict) and udA.get('type') == 'cloud'
+        cloud_is_B = isinstance(udB, dict) and udB.get('type') == 'cloud'
+
+        if not (cloud_is_A or cloud_is_B):
+            return None
+
+        dynamic_body = fB.body if cloud_is_A else fA.body
+        if dynamic_body.type != Box2D.b2_dynamicBody:
+            return None
+
+        # Normal apunta de la nube hacia el cuerpo dinámico
+        try:
+            nx, ny = contact.worldManifold.normal
+        except Exception:
+            nx, ny = 0.0, -1.0
+
+        # Si la nube es bodyB, la normal apunta de A→B, hay que invertirla
+        if cloud_is_B:
+            nx, ny = -nx, -ny
+
+        return (dynamic_body, nx, ny)
 
     def BeginContact(self, contact):
-        pass
+        result = self._get_cloud_contact(contact)
+        if result:
+            body, nx, ny = result
+            self._pending_bounces.append((body, nx, ny))
 
     def EndContact(self, contact):
         pass
+
+    def apply_pending_bounces(self):
+        """
+        Aplica los impulsos de rebote pendientes.
+        Debe llamarse DESPUÉS de world.Step(), nunca dentro del callback.
+        """
+        for body, nx, ny in self._pending_bounces:
+            try:
+                ix = nx * CLOUD_BOUNCE_IMPULSE
+                iy = ny * CLOUD_BOUNCE_IMPULSE
+
+                # Si el golpe es mayormente lateral, añadir empuje vertical
+                # para que el rebote sea más espectacular
+                if abs(ny) < 0.3:
+                    iy = -abs(CLOUD_BOUNCE_IMPULSE) * 0.6
+
+                body.ApplyLinearImpulse(
+                    impulse=(ix, iy),
+                    point=body.worldCenter,
+                    wake=True
+                )
+            except Exception:
+                pass
+        self._pending_bounces.clear()
 
 
 # ─── SECOND SCENE ────────────────────────────────────────────
 
 class SecondScene(MatchScene):
-    """Escenario 2: MotoMoto + nubes rebotadoras + power-up pelotazo."""
+    """Escenario 2: MotoMoto + nubes negras rebotadoras + power-up pelotazo."""
 
     def _get_config(self):
         return {
@@ -95,7 +160,7 @@ class SecondScene(MatchScene):
 
     def _init_extras(self):
         """Crea a MotoMoto, el contact listener, las nubes y el sistema de pelotazo."""
-        # Contact listener
+        # Contact listener con detección de nubes
         self.contact_listener = Scene2ContactListener(self)
         self.world.contactListener = self.contact_listener
 
@@ -128,13 +193,19 @@ class SecondScene(MatchScene):
     # ─── NUBES: OBSTÁCULOS BOX2D ─────────────────────────────
 
     def _spawn_cloud(self):
-        """Crea una nube como cuerpo estático Box2D con alto rebote."""
+        """Crea una nube negra como cuerpo estático Box2D con alto rebote."""
         if len(self.clouds) >= CLOUD_MAX_ACTIVE:
             return
 
         w_px = random.randint(CLOUD_MIN_W, CLOUD_MAX_W)
         x_px = random.randint(CLOUD_MARGIN_X, SW - CLOUD_MARGIN_X - w_px)
         y_px = random.randint(CLOUD_MIN_Y, CLOUD_MAX_Y)
+
+        # Evitar solapamiento con nubes existentes
+        new_rect = pygame.Rect(x_px, y_px, w_px, CLOUD_H)
+        for c in self.clouds:
+            if new_rect.colliderect(c['rect'].inflate(20, 20)):
+                return  # reintentar en el próximo intervalo
 
         cx_m = px2m(x_px + w_px / 2)
         cy_m = px2m(y_px + CLOUD_H / 2)
@@ -149,13 +220,15 @@ class SecondScene(MatchScene):
             userData={'type': 'cloud'}
         )
 
-        rect = pygame.Rect(x_px, y_px, w_px, CLOUD_H)
-        self.clouds.append({'rect': rect, 'body': body, 'timer': 0})
+        self.clouds.append({'rect': new_rect, 'body': body, 'timer': 0})
 
     def _destroy_cloud_body(self, body):
         """Elimina un cuerpo de nube del mundo Box2D."""
         if body:
-            self.world.DestroyBody(body)
+            try:
+                self.world.DestroyBody(body)
+            except Exception:
+                pass
 
     def _update_clouds(self, delta_time):
         """Spawn, envejecimiento y eliminación de nubes."""
@@ -283,7 +356,6 @@ class SecondScene(MatchScene):
         # 2. Rastrear transición enfadado → calmado para resetear flag de TP
         currently_angry = self.boss.is_angry
         if self._boss_was_angry and not currently_angry:
-            # Acaba de calmarse: próximo episodio tendrá TP disponible
             self._teleport_used_this_anger = False
         self._boss_was_angry = currently_angry
 
@@ -330,9 +402,12 @@ class SecondScene(MatchScene):
             self.clouds            = []
             self.cloud_spawn_timer = CLOUD_SPAWN_INTERVAL * 0.3
 
-        # Resetear flags de teletransporte
-        self._teleport_used_this_anger = False
-        self._boss_was_angry           = False
+        # Solo resetear el flag de TP si el boss ya NO está enfadado
+        if not (hasattr(self, 'boss') and self.boss.is_angry):
+            self._teleport_used_this_anger = False
+
+        # _boss_was_angry debe reflejar el estado actual
+        self._boss_was_angry = self.boss.is_angry if hasattr(self, 'boss') else False
 
         # Limpiar efectos visuales
         self.teleport_flash_timer = 0
@@ -344,6 +419,10 @@ class SecondScene(MatchScene):
 
     def update(self, delta_time):
         super().update(delta_time)
+
+        # Aplicar impulsos de rebote de nubes DESPUÉS del world.Step (que ocurre en super)
+        if hasattr(self, 'contact_listener'):
+            self.contact_listener.apply_pending_bounces()
 
         self._update_boss_ai(delta_time)
         self._update_clouds(delta_time)
@@ -383,7 +462,7 @@ class SecondScene(MatchScene):
         screen.blit(self._goalpost_bg_l, (0, GOAL_TOP_Y))
         screen.blit(self._goalpost_bg_r, (SW - GOAL_W, GOAL_TOP_Y))
 
-        # Nubes (detrás de los sprites)
+        # Nubes negras (detrás de los sprites)
         self._draw_clouds(screen)
 
     def _render_field_fg(self, screen):
@@ -411,41 +490,42 @@ class SecondScene(MatchScene):
     # ─── DIBUJO DE NUBES ─────────────────────────────────────
 
     def _draw_clouds(self, screen):
-        """Dibuja las nubes con fade-in y fade-out."""
+        """Dibuja las nubes negras con fade-in y fade-out."""
         for cloud in self.clouds:
             rect  = cloud['rect']
             timer = cloud['timer']
 
             # Alpha según ciclo de vida
             if timer < CLOUD_FADE_TIME:
-                alpha = int(200 * (timer / CLOUD_FADE_TIME))
+                alpha = int(220 * (timer / CLOUD_FADE_TIME))
             elif timer > CLOUD_LIFETIME - CLOUD_FADE_TIME:
-                alpha = int(200 * ((CLOUD_LIFETIME - timer) / CLOUD_FADE_TIME))
+                alpha = int(220 * ((CLOUD_LIFETIME - timer) / CLOUD_FADE_TIME))
             else:
-                alpha = 200
-            alpha = max(0, min(200, alpha))
+                alpha = 220
+            alpha = max(0, min(220, alpha))
 
             cloud_surf = pygame.Surface((rect.width, rect.height), pygame.SRCALPHA)
 
-            # Cuerpo redondeado
+            # Cuerpo negro redondeado
             pygame.draw.rect(cloud_surf, (*CLOUD_COLOR, alpha),
                              (0, 0, rect.width, rect.height), border_radius=16)
-            # Borde
-            pygame.draw.rect(cloud_surf, (*CLOUD_BORDER_COLOR, alpha // 2),
+
+            # Borde gris muy oscuro para distinguir el contorno
+            pygame.draw.rect(cloud_surf, (*CLOUD_BORDER_COLOR, min(alpha + 40, 255)),
                              (0, 0, rect.width, rect.height), 2, border_radius=16)
 
-            # Bultos decorativos
-            bulge_alpha = max(0, alpha - 30)
-            num_bulges  = rect.width // 30
+            # Bultos negros decorativos
+            bulge_alpha = max(0, alpha - 20)
+            num_bulges  = max(2, rect.width // 30)
             for i in range(num_bulges):
                 bx = 15 + i * (rect.width - 30) // max(1, num_bulges - 1)
                 by = rect.height // 2 - 5
                 pygame.draw.circle(cloud_surf, (*CLOUD_COLOR, bulge_alpha), (bx, by), 15)
 
-            # Símbolo de rebote
+            # Símbolo de rebote en blanco para que sea visible sobre el negro
             if alpha > 100:
                 warn_font = pygame.font.SysFont('Arial', 14, bold=True)
-                warn_text = warn_font.render("⚡", True, (*CLOUD_BORDER_COLOR, alpha))
+                warn_text = warn_font.render("⚡", True, (255, 255, 255, alpha))
                 cloud_surf.blit(warn_text, warn_text.get_rect(
                     center=(rect.width // 2, rect.height // 2)))
 
@@ -461,12 +541,10 @@ class SecondScene(MatchScene):
         if self.boss.is_angry:
             blink = (pygame.time.get_ticks() // 400) % 2 == 0
             color = ANGRY_INDICATOR_COLOR if blink else (200, 60, 30)
-            # Mostrar si ya usó el TP
             tp_tag = " [TP USADO]" if self._teleport_used_this_anger else " [TP LISTO]"
             label  = "⚠ MOTOMOTO ENFADADO!" + tp_tag
             text   = self.angry_font.render(label, True, color)
         else:
-            # Mostrar cuenta atrás hasta el próximo enfado
             remaining_s = max(0, (30000 - self.boss.angry_timer) / 1000)
             label = f"MotoMoto: calmado  ({remaining_s:.0f}s)"
             text  = self.angry_font.render(label, True, (150, 255, 150))
