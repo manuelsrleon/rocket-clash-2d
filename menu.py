@@ -6,6 +6,7 @@ from assets_manager import GUIAssets
 from settings import ScreenSettings
 from settings_scene import SettingsScene
 from first_scene import FirstScene
+from second_scene import SecondScene
 from pygame.locals import KEYDOWN, K_ESCAPE, QUIT
 
 class PlayButton(Button):
@@ -105,7 +106,7 @@ class Menu(PyGameScene):
         self.director.exitScene()
 
     def playCampaign(self):
-        campaignScene = FirstScene(self.director)
+        campaignScene = SecondScene(self.director)
         self.director.apilarEscena(campaignScene)
         self.currentScreen = len(self.screenList) - 1
 
