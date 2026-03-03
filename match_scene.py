@@ -22,7 +22,7 @@ SH = ScreenSettings.SCREEN_HEIGHT
 # ─── POWER-UP BASE ───────────────────────────────────────────
 POWERUP_BOX_SIZE     = 30       # px lado de la caja
 POWERUP_FALL_SPEED   = 3.0     # m/s velocidad de caída
-POWERUP_SPAWN_INTERVAL = 30000 # ms entre spawns
+POWERUP_SPAWN_INTERVAL = 10000 # ms entre spawns
 POWERUP_COLOR        = (255, 200, 0)
 POWERUP_BORDER_COLOR = (200, 150, 0)
 POWERUP_GLOW_COLOR   = (255, 255, 100, 80)

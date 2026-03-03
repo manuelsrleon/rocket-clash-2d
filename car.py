@@ -223,7 +223,7 @@ class MotoMoto(Car):
     def update_logic(self, dt_ms):
         """Lógica interna: ciclos de enfado y cooldown de teletransporte."""
         self.angry_timer += dt_ms
-        if not self.is_angry and self.angry_timer > 4000:
+        if not self.is_angry and self.angry_timer > 30000:   # 30 segundos calmado
             self.become_angry()
         elif self.is_angry and self.angry_timer > 12000:
             self.become_normal()
