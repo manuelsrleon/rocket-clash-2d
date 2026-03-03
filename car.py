@@ -206,4 +206,41 @@ class MotoMoto(Car):
 
 
 class LaJenny(Car):
-    pass
+    FLASH_INTERVAL = 8000   # tiempo recarga flash (ms)
+    FLASH_DURATION = 900    # en ms
+    FLASH_RANGE_X = 35.0   # en metros
+
+    def __init__(self, carPos=(600, 460)):
+        self._jenny_stats = {'move_speed': 16.0, 'jump_force': 60.0, 'mass': 0.9, 'scale': 1.1}
+        # TODO: Cambiar PLAYER_CAR_IMG por una imagen específica de Jenny
+        super().__init__(PLAYER_CAR_IMG, carPos, stats=self._jenny_stats)
+
+        # Temporizador de flash
+        self._flash_timer = int(self.FLASH_INTERVAL * 0.6)
+        self.is_flashing = False 
+        self._flash_vis_timer = 0
+        self.state = "OFENSIVO"
+
+    def update_logic(self, dt_ms):
+        self._flash_timer += dt_ms
+
+        if self.is_flashing:
+            self._flash_vis_timer -= dt_ms
+            if self._flash_vis_timer <= 0:
+                self.is_flashing = False
+                self._flash_vis_timer = 0
+
+    def should_flash(self):
+        return self._flash_timer >= self.FLASH_INTERVAL
+
+    def trigger_flash(self):
+        self.is_flashing = True
+        self._flash_vis_timer = self.FLASH_DURATION
+        self._flash_timer = 0
+
+    def can_reach_player(self, player_pos):
+        if not self.body:
+            return False
+        my_x = self.body.position.x
+        dist = my_x - player_pos.x
+        return 0 < dist < self.FLASH_RANGE_X
