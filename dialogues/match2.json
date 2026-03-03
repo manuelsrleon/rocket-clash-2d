@@ -16,30 +16,37 @@
   "lines": [
     {
       "speaker": "MotoMoto",
+      "side": "left",
       "text": "Vaya, parece que una rueda ha logrado subir hasta aquí. Bienvenido a las plataformas, novato."
     },
     {
       "speaker": "MotoMoto",
+      "side": "left",
       "text": "En este nivel el aire es mi terreno. Si quieres llegar a la fase final, vas a tener que aprender a volar... o a caerte con estilo."
     },
     {
       "speaker": "Ruedaldinho",
+      "side": "right",
       "text": "He superado desafíos peores en los suburbios de Elviña. Estoy más que listo para el juego vertical."
     },
     {
       "speaker": "MotoMoto",
+      "side": "left",
       "text": "Bulldozer era muy previsible. Aquí no verás ni por dónde te llega el balón."
     },
     {
       "speaker": "MotoMoto",
+      "side": "left",
       "text": "Ten cuidado con las trampas de neón, o volverás al suelo antes de que puedas decir 'gol'."
     },
     {
       "speaker": "Ruedaldinho",
+      "side": "right",
       "text": "No necesito alas para derrotarte."
     },
     {
       "speaker": "MotoMoto",
+      "side": "left",
       "text": "¡Me gusta esa confianza! Pero aquí arriba yo soy el que manda. ¡Que empiece el juego!"
     }
   ]

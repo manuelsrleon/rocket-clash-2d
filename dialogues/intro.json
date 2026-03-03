@@ -14,44 +14,43 @@
   "lines": [
     {
       "speaker": "Tenazas",
-      "text": "¡Hola, aspirante! Bienvenido a Rocket Clash.",
-      "expression": "idle"
+      "side": "left",
+      "text": "¡Hola, aspirante! Bienvenido a Rocket Clash."
     },
     {
       "speaker": "Tenazas",
-      "text": "Mi nombre es Tenazas, y seré tu guía. Antes de comenzar, quiero contarte un poco sobre este mundo y lo que te espera.",
-      "expression": "talk"
+      "side": "left",
+      "text": "Mi nombre es Tenazas, y seré tu guía. Antes de comenzar, quiero contarte un poco sobre este mundo y lo que te espera."
     },
     {
       "speaker": "Tenazas",
-      "text": "Desde hace mucho tiempo, los mejores jugadores de Rocket Clash han competido para demostrar su habilidad y destreza. Cada uno de ellos tiene su propia historia y estilo de juego único.",
-      "expression": "talk"
+      "side": "left",
+      "text": "Desde hace mucho tiempo, los mejores jugadores de Rocket Clash han competido para demostrar su habilidad y destreza. Cada uno de ellos tiene su propia historia y estilo de juego único."
     },
     {
       "speaker": "Tenazas",
-      "text": "En este juego encarnarás a Ruedaldinho. Descendiente de los astros más grandes del fútbol brasileño de antaño, su misión es demostrar que el talento de los cracks de antes corre por sus venas... y por sus ruedas.",
-      "expression": "talk"
+      "side": "left",
+      "text": "En este juego encarnarás a Ruedaldinho. Descendiente de los astros más grandes del fútbol brasileño de antaño, su misión es demostrar que el talento de los cracks de antes corre por sus venas... y por sus ruedas."
     },
     {
       "speaker": "Tenazas",
-      "text": "Tu objetivo es convertirte en el campeón y ganar la Torre de Oro, enfrentándote a oponentes cada vez más desafiantes. Para lograrlo, tendrás que mejorar tus habilidades, aprender nuevas estrategias y, sobre todo, vengarte de tu exnovia.",
-      "expression": "idle"
+      "side": "left",
+      "text": "Tu objetivo es convertirte en el campeón y ganar la Torre de Oro, enfrentándote a oponentes cada vez más desafiantes. Para lograrlo, tendrás que mejorar tus habilidades, aprender nuevas estrategias y, sobre todo, vengarte de tu exnovia."
     },
     {
       "speaker": "Tenazas",
-      "text": "Jenny, la mejor jugadora de Rocket Clash, te dejó por otro jugador y te robó tu carrocería más valiosa.",
-      "expression": "talk"
+      "side": "left",
+      "text": "Jenny, la mejor jugadora de Rocket Clash, te dejó por otro jugador y te robó tu carrocería más valiosa."
     },
     {
       "speaker": "Tenazas",
-      "text": "Así que tu misión no solo es ganar, sino también recuperar lo que es tuyo por derecho y hacer justicia.",
-      "expression": "talk"
+      "side": "left",
+      "text": "Así que tu misión no solo es ganar, sino también recuperar lo que es tuyo por derecho y hacer justicia."
     },
     {
       "speaker": "Tenazas",
-      "text": "¡Vamos, Ruedaldinho! El mundo de Rocket Clash te espera.",
-      "expression": "talk"
+      "side": "left",
+      "text": "¡Vamos, Ruedaldinho! El mundo de Rocket Clash te espera."
     }
-
   ]
 }

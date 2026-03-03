@@ -1,5 +1,5 @@
 import pygame
-from scene import *
+from scene import PyGameScene
 from dialogue.dialog_manager import DialogManager
 from dialogue.dialog_ui import DialogueUI
 
@@ -7,98 +7,133 @@ class IntroScene(PyGameScene):
     def __init__(self, director):
         super().__init__(director)
         self.screen = getattr(director, "screen", None) or pygame.display.get_surface()
-        if self.screen is None:
-            raise RuntimeError("IntroScene necesita una pantalla activa")
+        
+        # --- CONFIGURACIÓN DE POSICIÓN ---
+        self.fixed_x = 100 
+        self.fixed_y = 10   
+        self.sprite_size = (604, 326)
 
+        # Carga de datos
         self.manager = DialogManager("dialogues/intro.json")
-        self.ui = DialogueUI(self.screen, show_portrait=False)
+        self.history = []
+        self.max_messages = 2 
+        self.font = pygame.font.Font(None, 28)
 
-        # fondo simple
+        # --- CARGA DE ASSETS (Background) ---
         try:
             img = pygame.image.load("assets/backgrounds/background.png").convert()
             self.bg = pygame.transform.scale(img, self.screen.get_size())
-        except Exception:
+        except:
             self.bg = pygame.Surface(self.screen.get_size())
-            self.bg.fill((150, 150, 150))
+            self.bg.fill((45, 45, 45))
 
-        # cargar mapa de sprites para Tenazas (soporta "portraits" dict o "portrait" single)
-        chars = self.manager.data.get('characters', {})
-        left = chars.get('left', {}) or {}
-        portraits = left.get('portraits') or {}
+        # --- CARGA DE SPRITES (Tenazas) ---
         self.tenazas_sprites = {}
-        sprite_size = (704, 376)
-        if isinstance(portraits, dict) and portraits:
-            for key, path in portraits.items():
-                self.tenazas_sprites[key] = self._load_image(path, sprite_size)
-        else:
-            # fallback a single portrait key
-            p = left.get('portrait') or left.get('image')
-            if p:
-                self.tenazas_sprites['default'] = self._load_image(p, sprite_size)
+        chars = self.manager.data.get('characters', {})
+        left_data = chars.get('left', {})
+        portraits = left_data.get('portraits', {})
+        
+        if portraits:
+            for k, v in portraits.items():
+                self.tenazas_sprites[k] = self._load_image(v, self.sprite_size)
+        elif left_data.get('portrait'):
+            self.tenazas_sprites['idle'] = self._load_image(left_data['portrait'], self.sprite_size)
 
-        # posición centrada sobre la caja de diálogo
-        self.tenazas_key_default = 'idle' if 'idle' in self.tenazas_sprites else next(iter(self.tenazas_sprites.keys()), 'default')
-        ten = self.tenazas_sprites.get(self.tenazas_key_default)
-        if ten:
-            self.tenazas_pos = ((self.screen.get_width() - ten.get_width())//2,
-                                self.ui.box_rect.y - ten.get_height() - 10)
-        else:
-            self.tenazas_pos = (self.screen.get_width()//2, self.ui.box_rect.y - 200)
-
-        # aplicar multiplicador de settings si existe
-        sm = getattr(director, 'settings_manager', None)
-        if sm is not None and hasattr(sm, 'get_dialogue_speed_multiplier'):
-            self.manager.set_speed_multiplier(sm.get_dialogue_speed_multiplier())
+        self._spawn_current_bubble()
 
     def _load_image(self, path, size):
         try:
             img = pygame.image.load(path).convert_alpha()
             return pygame.transform.smoothscale(img, size)
-        except Exception:
-            surf = pygame.Surface(size, pygame.SRCALPHA)
-            surf.fill((100,100,100))
-            f = pygame.font.Font(None, 24)
-            t = f.render("NO IMG", True, (255,255,255))
-            surf.blit(t, t.get_rect(center=surf.get_rect().center))
-            return surf
+        except:
+            s = pygame.Surface(size, pygame.SRCALPHA)
+            s.fill((100, 100, 100, 150)) 
+            return s
+
+    def _spawn_current_bubble(self):
+        line = self.manager.current_line()
+        if not line: return
+        
+        # 1. Crear instancia temporal para medir altura
+        new_bubble = DialogueUI(
+            line.get('speaker', 'Tenazas'),
+            line.get('text', ''),
+            None, # Portrait None porque el sprite grande va arriba
+            line.get('side', 'left'),
+            self.font
+        )
+
+        # 2. Calcular espacio ocupado actual
+        start_y = self.fixed_y + self.sprite_size[1] + 10
+        current_occupied_y = start_y
+        for b in self.history:
+            current_occupied_y += b.get_expected_height() + 10
+        
+        # 3. Lógica de Ciclo
+        if current_occupied_y + new_bubble.get_expected_height() > self.screen.get_height() - 20:
+            self.history = [] # Limpiar pantalla si no hay espacio
+
+        self.history.append(new_bubble)
+        
+        # Backup: Limitar por cantidad máxima de mensajes
+        if len(self.history) > self.max_messages:
+            self.history.pop(0)
 
     def events(self, events):
         for event in events:
-            if event.type == pygame.QUIT:
+            if event.type == pygame.QUIT: 
                 self.director.salirPrograma()
-            if event.type == pygame.KEYDOWN and (event.key == pygame.K_SPACE or event.key == pygame.K_RETURN):
-                result = self.manager.advance()
-                if result == 'finished':
-                    self.director.exitScene()
+                
+            if event.type == pygame.KEYDOWN and event.key in [pygame.K_SPACE, pygame.K_RETURN]:
+                if self.manager.is_line_complete():
+                    # Avanzar a la siguiente línea
+                    status = self.manager.advance()
+                    if status == 'next':
+                        self._spawn_current_bubble()
+                    else:
+                        self.director.exitScene()
+                else:
+                    # Autocompletar texto animado
+                    l = self.manager.current_line()
+                    if l:
+                        self.manager.char_index = len(l.get('text', ''))
 
     def update(self, dt):
+        dt_seconds = dt / 1000.0
         sm = getattr(self.director, 'settings_manager', None)
-        if sm is not None and hasattr(sm, 'get_dialogue_speed_multiplier'):
+        if sm: 
             self.manager.set_speed_multiplier(sm.get_dialogue_speed_multiplier())
-        self.manager.update(dt / 1000.0)
+        
+        # --- ACTUALIZAR ANIMACIÓN DE LAS BURBUJAS ---
+        for bubble in self.history:
+            bubble.update_anim(dt_seconds)
+        
+        self.manager.update(dt_seconds)
 
     def render(self, screen):
+        # 1. Fondo
         screen.blit(self.bg, (0, 0))
-        line = self.manager.current_line()
-        active = line.get('speaker') if line else None
+        
+        # 2. Decidir Sprite de Tenazas
+        chosen = 'talk' if not self.manager.is_line_complete() else 'idle'
+        ten_surf = self.tenazas_sprites.get(chosen)
+        if not ten_surf:
+            ten_surf = next(iter(self.tenazas_sprites.values()), None)
+            
+        if ten_surf: 
+            screen.blit(ten_surf, (self.fixed_x, self.fixed_y))
 
-        # decidir sprite: prioridad: line["expression"] -> si no, usar talk/idle/default
-        chosen_key = None
-        if line:
-            expr = line.get('expression')
-            if expr and expr in self.tenazas_sprites:
-                chosen_key = expr
-        if chosen_key is None:
-            chosen_key = 'talk' if 'talk' in self.tenazas_sprites else self.tenazas_key_default
-
-        ten_surf = self.tenazas_sprites.get(chosen_key) or next(iter(self.tenazas_sprites.values()), None)
-        if ten_surf:
-            # pintar Tenazas tal cual (no iluminar/oscurecer)
-            screen.blit(ten_surf, self.tenazas_pos)
-
-        # caja de diálogo
-        if line:
-            name = line.get('speaker') or line.get('name', '')
-            text = self.manager.get_shown_text()
-            finished = self.manager.is_finished()
-            self.ui.draw(name, text, is_complete=finished)
+        # 3. Dibujar Burbujas acumuladas
+        current_y = self.fixed_y + self.sprite_size[1] + 10
+        for i, bubble in enumerate(self.history):
+            # Determinamos si es la burbuja activa (la última de la lista)
+            is_last = (i == len(self.history) - 1)
+            
+            # Solo animamos el texto (typewriter) si es la última
+            if is_last:
+                txt = self.manager.get_shown_text()
+            else:
+                txt = bubble.full_text
+                
+            y_inc = bubble.draw(screen, current_y, txt, self.fixed_x, is_last=is_last)
+            current_y += y_inc
