@@ -246,7 +246,7 @@ class LaJenny(Car):
         return 0 < dist < self.FLASH_RANGE_X
     
     # state machine logic
-    def update_fsm(self, ball_pos, goal_x_right):
+    def update_fsm(self, ball_pos, player_pos, goal_x_right):
         if not self.body:
             return
 
