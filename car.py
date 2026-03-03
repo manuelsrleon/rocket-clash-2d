@@ -244,3 +244,39 @@ class LaJenny(Car):
         my_x = self.body.position.x
         dist = my_x - player_pos.x
         return 0 < dist < self.FLASH_RANGE_X
+    
+    # state machine logic
+    def update_fsm(self, ball_pos, goal_x_right):
+        if not self.body:
+            return
+
+        my_pos = self.body.position
+        dist_to_goal = abs(ball_pos.x - goal_x_right)
+
+        if dist_to_goal < 20.0:
+            self.state = "DEFENSIVO"
+        else:
+            self.state = "OFENSIVO"
+
+        if self.state == "DEFENSIVO":
+            target_x = ball_pos.x + 2.0
+        else:
+            if ball_pos.x < my_pos.x:
+                target_x = ball_pos.x
+            else:
+                target_x = ball_pos.x + 3.0
+
+        diff = target_x - my_pos.x
+        vel  = self.body.linearVelocity
+
+        if abs(diff) > 0.8:
+            target_vx = self.move_speed if diff > 0 else -self.move_speed
+        else:
+            target_vx = 0.0
+
+        new_vx = vel.x + (target_vx - vel.x) * 0.18
+        self.body.linearVelocity = (new_vx, vel.y)
+
+        # jump if ball is above and close
+        if abs(ball_pos.x - my_pos.x) < 4.0 and ball_pos.y < my_pos.y - 2.0 and self.on_ground:
+            self.jump()
