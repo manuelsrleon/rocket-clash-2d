@@ -13,7 +13,7 @@ JENNY_START = (SW - 200, GROUND_Y - 60)
 JENNY_INDICATOR_POS = (SW - 10, 10)
 
 # Flash
-FLASH_STUN_DURATION   = 3000   # ms
+FLASH_STUN_DURATION   = 2000   # ms
 FLASH_COLOR           = (255, 255, 240)
 FLASH_STUN_TXT_COLOR  = (255, 230, 0)
 FLASH_FONT_SIZE       = 20
@@ -42,7 +42,7 @@ class ThirdScene(MatchScene):
     Escenario: La Jenny.
     Mecánicas:
       - Jenny es más rápida que el jugador.
-      - Cada ~8 s lanza un flash de faros que ciega al jugador 3 s (si no lleva gafas).
+      - Cada ~20 s lanza un flash de faros que ciega al jugador 2 s (si no lleva gafas).
       - Hay 3 trampillas en el suelo que lanzan al jugador hacia arriba.
       - Power-up: Gafas de sol: protegen del flash mientras están activas.
     """
@@ -391,7 +391,7 @@ class ThirdScene(MatchScene):
     def _draw_protected_indicator(self, screen):
         blink = (pygame.time.get_ticks() // 220) % 2 == 0
         if blink:
-            text = self.flash_font.render("😎 ¡FLASH BLOQUEADO!", True, SUNGLASSES_COLOR)
+            text = self.flash_font.render("¡FLASH BLOQUEADO!", True, SUNGLASSES_COLOR)
             rect = text.get_rect(center=(SW // 2, SH // 2 - 60))
             bg = pygame.Surface((rect.width + 16, rect.height + 8), pygame.SRCALPHA)
             bg.fill((0, 0, 0, 150))

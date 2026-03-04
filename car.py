@@ -206,8 +206,8 @@ class MotoMoto(Car):
 
 
 class LaJenny(Car):
-    FLASH_INTERVAL = 8000   # tiempo recarga flash (ms)
-    FLASH_DURATION = 900    # en ms
+    FLASH_INTERVAL = 20000   # tiempo recarga flash (ms)
+    FLASH_DURATION = 900    # animacion de flash en ms
     FLASH_RANGE_X = 35.0   # en metros
 
     def __init__(self, carPos=(600, 460)):
