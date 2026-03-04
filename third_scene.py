@@ -22,7 +22,7 @@ FLASH_FONT_SIZE       = 20
 FLASH_OVERLAY_ALPHA   = 210
 
 # Sunglasses power-up duration in ms
-SUNGLASSES_DURATION  = 10000
+SUNGLASSES_DURATION  = 5000
 SUNGLASSES_COLOR     = (0, 200, 255)
 SUNGLASSES_HUD_COLOR = (0, 220, 180)
 
@@ -35,8 +35,8 @@ TRAPDOOR_BORDER_COLOR = (80, 80, 120)
 TRAPDOOR_ACTIVE_COLOR = (255, 80, 0)   # when activated (visual)
 TRAPDOOR_LAUNCH_VY    = -37.0          # m/s vertical when launched (negative = up)
 TRAPDOOR_ACTIVE_MS    = 400            # ms duration of orange activation color
-TRAPDOOR_VISIBLE_MS_RANGE = (1800, 4200)
-TRAPDOOR_HIDDEN_MS_RANGE  = (1000, 2600)
+TRAPDOOR_VISIBLE_MS_RANGE = (2000, 5000)
+TRAPDOOR_HIDDEN_MS_RANGE  = (15000, 25000)
 
 TRAPDOOR_X_CENTERS = [
     270,
