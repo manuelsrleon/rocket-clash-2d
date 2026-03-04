@@ -20,9 +20,10 @@ FLASH_COLOR           = (255, 255, 240)
 FLASH_STUN_TXT_COLOR  = (255, 230, 0)
 FLASH_FONT_SIZE       = 20
 FLASH_OVERLAY_ALPHA   = 210
+FLASH_HOLD_BEFORE_FADE_MS = 2000
 
 # Sunglasses power-up duration in ms
-SUNGLASSES_DURATION  = 5000
+SUNGLASSES_DURATION  = 10000
 SUNGLASSES_COLOR     = (0, 200, 255)
 SUNGLASSES_HUD_COLOR = (0, 220, 180)
 
@@ -143,6 +144,7 @@ class ThirdScene(MatchScene):
         self.flash_font = pygame.font.SysFont('Arial', FLASH_FONT_SIZE, bold=True)
         self.jenny_font = pygame.font.SysFont('Arial', 18, bold=True)
         self._flash_overlay_alpha = 0
+        self._flash_hold_timer = 0
         self._flash_protected_timer = 0
         self._sunglasses_timer = 0
         self._trapdoors = []
@@ -275,6 +277,7 @@ class ThirdScene(MatchScene):
             return
 
         self._flash_overlay_alpha = FLASH_OVERLAY_ALPHA
+        self._flash_hold_timer = FLASH_HOLD_BEFORE_FADE_MS
 
         if self.player_has_powerup:
             self._flash_protected_timer = 1500
@@ -303,7 +306,12 @@ class ThirdScene(MatchScene):
                 self.player_flashed   = False
                 self.flash_stun_timer = 0
 
-        if self._flash_overlay_alpha > 0:
+        if self._flash_hold_timer > 0:
+            self._flash_hold_timer -= delta_time
+            self._flash_overlay_alpha = FLASH_OVERLAY_ALPHA
+            if self._flash_hold_timer < 0:
+                self._flash_hold_timer = 0
+        elif self._flash_overlay_alpha > 0:
             self._flash_overlay_alpha = max(0, self._flash_overlay_alpha - delta_time * 0.38)
 
         if hasattr(self, '_flash_protected_timer') and self._flash_protected_timer > 0:
@@ -388,6 +396,7 @@ class ThirdScene(MatchScene):
         self.player_flashed   = False
         self.flash_stun_timer = 0
         self._flash_overlay_alpha = 0
+        self._flash_hold_timer = 0
         self._flash_protected_timer = 0
         self._sunglasses_timer = 0
         self.player_has_powerup = False
