@@ -33,7 +33,7 @@ TRAPDOOR_H            = 14     # px
 TRAPDOOR_COLOR        = (50, 50, 70)
 TRAPDOOR_BORDER_COLOR = (80, 80, 120)
 TRAPDOOR_ACTIVE_COLOR = (255, 80, 0)   # when activated (visual)
-TRAPDOOR_LAUNCH_VY    = -34.0          # m/s vertical when launched (negative = up)
+TRAPDOOR_LAUNCH_VY    = -37.0          # m/s vertical when launched (negative = up)
 TRAPDOOR_ACTIVE_MS    = 400            # ms duration of orange activation color
 TRAPDOOR_VISIBLE_MS_RANGE = (1800, 4200)
 TRAPDOOR_HIDDEN_MS_RANGE  = (1000, 2600)
@@ -89,7 +89,6 @@ class ThirdSceneContactListener(Box2D.b2ContactListener):
 
         if count == 1 and 0 <= trapdoor_idx < len(self.scene._trapdoors):
             self.scene._trapdoors[trapdoor_idx]['player_inside'] = True
-            self.scene._trapdoor_pending_launch.add(trapdoor_idx)
 
     def EndContact(self, contact):
         trapdoor_idx, player_body = self._get_trapdoor_player_pair(contact)
@@ -146,7 +145,6 @@ class ThirdScene(MatchScene):
         self._flash_overlay_alpha = 0
         self._flash_protected_timer = 0
         self._sunglasses_timer = 0
-        self._trapdoor_pending_launch = set()
         self._trapdoors = []
         self._create_trapdoors()
 
@@ -199,7 +197,6 @@ class ThirdScene(MatchScene):
         if body:
             body.active = visible
 
-        self._trapdoor_pending_launch.discard(idx)
         if hasattr(self, 'contact_listener') and hasattr(self.contact_listener, 'clear_trapdoor_contacts'):
             self.contact_listener.clear_trapdoor_contacts(idx)
 
@@ -219,7 +216,6 @@ class ThirdScene(MatchScene):
                 self.world.DestroyBody(body)
                 td['sensor_body'] = None
         self._trapdoors = []
-        self._trapdoor_pending_launch.clear()
 
     def _update_trapdoors(self, delta_time):
         player_body = self.jugador.body
@@ -227,6 +223,7 @@ class ThirdScene(MatchScene):
             return
 
         self._update_trapdoor_visibility(delta_time)
+        player_cx_m = player_body.position.x
 
         for td in self._trapdoors:
             # Update active timer
@@ -234,33 +231,22 @@ class ThirdScene(MatchScene):
                 td['active_timer'] -= delta_time
                 if td['active_timer'] <= 0:
                     td['active'] = False
+            if not td['visible'] or td['active']:
+                continue
+            # Position-based check: player center within trapdoor X bounds
+            rect = td['rect']
+            td_left_m  = px2m(rect.left)
+            td_right_m = px2m(rect.right)
+            player_over = td_left_m <= player_cx_m <= td_right_m
 
-        if not self._trapdoor_pending_launch:
-            return
-
-        pending = list(self._trapdoor_pending_launch)
-        for idx in pending:
-            if not (0 <= idx < len(self._trapdoors)):
-                self._trapdoor_pending_launch.discard(idx)
-                continue
-            if not self._trapdoors[idx]['visible']:
-                self._trapdoor_pending_launch.discard(idx)
-                continue
-            if not self._trapdoors[idx]['player_inside']:
-                self._trapdoor_pending_launch.discard(idx)
-                continue
-            if not self.jugador.on_ground:
-                continue
-            self._launch_player_up(player_body)
-            self._trapdoors[idx]['active'] = True
-            self._trapdoors[idx]['active_timer'] = TRAPDOOR_ACTIVE_MS
-            self._trapdoor_pending_launch.discard(idx)
+            if player_over and self.jugador.on_ground:
+                self._launch_player_up(player_body)
+                td['active'] = True
+                td['active_timer'] = TRAPDOOR_ACTIVE_MS
 
     def _launch_player_up(self, body):
         vel = body.linearVelocity
-        delta_v = TRAPDOOR_LAUNCH_VY - vel.y
-        impulse_y = body.mass * delta_v
-        body.ApplyLinearImpulse((0, impulse_y), body.worldCenter, True)
+        body.linearVelocity = (vel.x, TRAPDOOR_LAUNCH_VY)
 
     # Jenny AI logic
     def _update_jenny_ai(self, delta_time):
@@ -331,7 +317,6 @@ class ThirdScene(MatchScene):
 
     def _on_powerup_collected(self):
         self._sunglasses_timer = SUNGLASSES_DURATION
-        self.player_has_powerup = True
 
     def _on_powerup_activate(self):
         pass #no active action, passive powerup
@@ -406,7 +391,6 @@ class ThirdScene(MatchScene):
         self._flash_protected_timer = 0
         self._sunglasses_timer = 0
         self.player_has_powerup = False
-        self._trapdoor_pending_launch.clear()
 
         if hasattr(self, 'contact_listener') and hasattr(self.contact_listener, 'reset_flags'):
             self.contact_listener.reset_flags()

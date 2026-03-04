@@ -211,7 +211,7 @@ class LaJenny(Car):
     FLASH_RANGE_X = 35.0   # en metros
 
     def __init__(self, carPos=(600, 460)):
-        self._jenny_stats = {'move_speed': 16.0, 'jump_force': 60.0, 'mass': 0.9, 'scale': 1.1}
+        self._jenny_stats = {'move_speed': 16.0, 'jump_force': 350.0, 'mass': 0.9, 'scale': 1.1}
         # TODO: Cambiar PLAYER_CAR_IMG por una imagen específica de Jenny
         super().__init__(PLAYER_CAR_IMG, carPos, stats=self._jenny_stats)
 
