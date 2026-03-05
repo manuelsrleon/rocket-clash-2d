@@ -2,205 +2,208 @@ import pygame
 from pygame.locals import *
 from settings import ScreenSettings
 
-# Default stats (la física la gestiona Box2D, estos son para factory.py)
-DEFAULT_STATS = {
-    'move_speed': 5.0,
-    'jump_force': 80.0,
-    'mass': 1.0,
-    'scale': 1.0,
-}
+# Estadísticas base para la física
+DEFAULT_STATS = {'move_speed': 5.0, 'jump_force': 160.0, 'mass': 100.0, 'scale': 1.0}
+BOSS1_STATS = {'move_speed': 10.0, 'jump_force': 70.0, 'mass': 0.8, 'scale': 0.9}
 
-BOSS1_STATS = {
-    'move_speed': 10.0,
-    'jump_force': 70.0,
-    'mass': 0.8,
-    'scale': 0.9,
-}
-
-BOSS2_STATS = {
-    'move_speed': 3.0,
-    'jump_force': 100.0,
-    'mass': 3.0,
-    'scale': 1.8,
-}
-
-BOSS3_STATS = {
-    'move_speed': 6.0,
-    'jump_force': 120.0,
-    'mass': 1.0,
-    'scale': 1.0,
-}
-
-# Asset paths
 PLAYER_CAR_IMG = './assets/cars/player_car.png'
-BOSS_CAR_IMG   = './assets/cars/placeholder_car.png'
 WHEEL_IMG      = './assets/cars/car_wheel.png'
-
-# Wheel offsets como proporción del cuerpo (0.0 a 1.0)
-WHEEL_OFFSET_LEFT_X  = 0.06
-WHEEL_OFFSET_LEFT_Y  = 0.70
-WHEEL_OFFSET_RIGHT_X = 0.69
-WHEEL_OFFSET_RIGHT_Y = 0.70
-
+BOSS1_IMG      = './assets/cars/bulldozer.png'
 
 class MySprite(pygame.sprite.Sprite):
-
     def __init__(self, body_path, carPos=(0, 0), scale=1.0):
         super().__init__()
-
-        # Cargar cuerpo
         try:
             body = pygame.image.load(body_path).convert_alpha()
         except:
             body = pygame.Surface((80, 50), pygame.SRCALPHA)
             body.fill((200, 50, 50))
-
-        # Cargar rueda
-        try:
-            wheel = pygame.image.load(WHEEL_IMG).convert_alpha()
-            wheel_w = int(wheel.get_width() * scale)
-            wheel_h = int(wheel.get_height() * scale)
-            self.wheel_img = pygame.transform.scale(wheel, (wheel_w, wheel_h))
-        except:
-            self.wheel_img = pygame.Surface((20, 20), pygame.SRCALPHA)
-            pygame.draw.circle(self.wheel_img, (50, 50, 50), (10, 10), 10)
-
-        # Escalar cuerpo
-        w = int(body.get_width() * scale)
-        h = int(body.get_height() * scale)
-        self.body_img = pygame.transform.scale(body, (w, h))
-
-        # Offsets proporcionales
-        left_x  = int(w * WHEEL_OFFSET_LEFT_X)
-        left_y  = int(h * WHEEL_OFFSET_LEFT_Y)
-        right_x = int(w * WHEEL_OFFSET_RIGHT_X)
-        right_y = int(h * WHEEL_OFFSET_RIGHT_Y)
-
-        # Superficie combinada (cuerpo + ruedas)
-        total_h = h + self.wheel_img.get_height() // 2
-        self.image = pygame.Surface((w, total_h), pygame.SRCALPHA)
-        self.image.blit(self.body_img, (0, 0))
-        self.image.blit(self.wheel_img, (left_x,  left_y))
-        self.image.blit(self.wheel_img, (right_x, right_y))
-
+        
+        w, h = int(body.get_width() * scale), int(body.get_height() * scale)
+        self.image = pygame.transform.scale(body, (w, h))
         self.rect = self.image.get_rect()
         self.establecerPosicion(carPos)
-
-        # Box2D body (asignado por factory.py)
         self.body = None
 
     def establecerPosicion(self, pos):
-        """Sincroniza el sprite con la posición central de Box2D."""
-        self.rect.centerx = int(pos[0])
-        self.rect.centery = int(pos[1])
-
-    def update(self, dt):
-        pass
-
-    def render(self, screen):
-        screen.blit(self.image, self.rect)
-
+        self.rect.centerx, self.rect.centery = int(pos[0]), int(pos[1])
 
 class Car(MySprite):
-
     def __init__(self, body_path, carPos=(0, 0), stats=None):
-        if stats is None:
-            stats = DEFAULT_STATS
-
+        stats = stats or DEFAULT_STATS
         super().__init__(body_path, carPos, scale=stats.get('scale', 1.0))
-
         self.move_speed = stats.get('move_speed', DEFAULT_STATS['move_speed'])
         self.jump_force = stats.get('jump_force', DEFAULT_STATS['jump_force'])
-        self.mass       = stats.get('mass',       DEFAULT_STATS['mass'])
-        self.on_ground  = False
+        self.mass = stats.get('mass', DEFAULT_STATS['mass'])
+        self.on_ground = False
 
     def jump(self):
         if self.on_ground and self.body:
-            self.body.ApplyLinearImpulse(
-                impulse=(0, -self.jump_force),
-                point=self.body.worldCenter,
-                wake=True
-            )
+            self.body.ApplyLinearImpulse(impulse=(0, -self.jump_force), point=self.body.worldCenter, wake=True)
 
     def move_left(self):
-        if self.body:
-            self.body.ApplyForce(
-                force=(-self.move_speed * 10, 0),
-                point=self.body.worldCenter,
-                wake=True
-            )
+        if self.body: self.body.ApplyForce(force=(-self.move_speed * 10, 0), point=self.body.worldCenter, wake=True)
 
     def move_right(self):
-        if self.body:
-            self.body.ApplyForce(
-                force=(self.move_speed * 10, 0),
-                point=self.body.worldCenter,
-                wake=True
-            )
+        if self.body: self.body.ApplyForce(force=(self.move_speed * 10, 0), point=self.body.worldCenter, wake=True)
 
     def stop_horizontal(self):
         if self.body:
             vel = self.body.linearVelocity
             self.body.linearVelocity = (vel.x * 0.8, vel.y)
 
-    def update(self, dt):
-        pass
-
-
 class PlayerCar(Car):
-
     def __init__(self, carPos=(100, 100)):
         super().__init__(PLAYER_CAR_IMG, carPos, stats=DEFAULT_STATS)
-        self.moving_left  = False
-        self.moving_right = False
+        self.moving_left = self.moving_right = False
 
     def handle_input(self, event_list):
+        keys = pygame.key.get_pressed()
+        self.moving_left = keys[K_a]
+        self.moving_right = keys[K_d]
+        
         for event in event_list:
-            if event.type == KEYDOWN:
-                if event.key == K_a:
-                    self.moving_left = True
-                elif event.key == K_d:
-                    self.moving_right = True
-                elif event.key == K_w:
-                    self.jump()
-            elif event.type == KEYUP:
-                if event.key == K_a:
-                    self.moving_left = False
-                elif event.key == K_d:
-                    self.moving_right = False
+            if event.type == KEYDOWN and event.key == K_w:
+                self.jump()
 
-        if self.moving_left:
-            self.move_left()
-        elif self.moving_right:
-            self.move_right()
+        if self.moving_left: self.move_left()
+        elif self.moving_right: self.move_right()
+        else: self.stop_horizontal()
+
+class Bulldozer(Car):
+    def __init__(self, carPos=(600, 460)):
+        self.stats_normal = {'move_speed': 4.0, 'jump_force': 60.0, 'mass': 3.0, 'scale': 1.5}
+        # Bajamos la velocidad de 62.0 a 16.0. Sigue siendo más rápido que el jugador (12.0)
+        self.stats_angry = {'move_speed': 16.0, 'jump_force': 60.0, 'mass': 4.5, 'scale': 1.5}
+        
+        super().__init__(BOSS1_IMG, carPos, stats=self.stats_normal)
+        self.angry_timer = 0
+        self.is_angry = False
+        
+        # ─── Estado inicial de la FSM ───
+        self.state = "OFENSIVO"
+
+    def update_logic(self, dt_ms):
+        """Lógica interna: ciclos de enfado."""
+        self.angry_timer += dt_ms
+        if not self.is_angry and self.angry_timer > 5000:
+            self.become_angry()
+        elif self.is_angry and self.angry_timer > 15000:
+            self.become_normal()
+
+    def become_angry(self):
+        self.is_angry = True
+        self.angry_timer = 0
+        self.move_speed = self.stats_angry['move_speed']
+
+    def become_normal(self):
+        self.is_angry = False
+        self.angry_timer = 0
+        self.move_speed = self.stats_normal['move_speed']
+
+    def update_fsm(self, ball_pos, player_pos, goal_x_right):
+        """
+        Cerebro FSM del Bulldozer.
+        (Reemplaza a decide_movement y apply_movement)
+        Evalúa el entorno y decide hacia dónde aplicar fuerza física.
+        """
+        if not self.body:
+            return
+
+        my_pos = self.body.position
+        
+        # Distancias (en metros de Box2D)
+        dist_to_goal = abs(ball_pos.x - goal_x_right)
+        dist_to_player = abs(player_pos.x - my_pos.x)
+
+        # ─── 1. TRANSICIONES DE ESTADO (FSM) ──────────────────
+        if dist_to_goal < 25.0:
+            # Si el balón está muy cerca de su portería, defiende a muerte
+            self.state = "DEFENSIVO"
+        elif self.is_angry:
+            # Si se activa su Ultimate (manejado por update_logic), va a por el jugador
+            self.state = "LOCO"
         else:
-            self.stop_horizontal()
+            # Por defecto, intenta atacar y marcar gol
+            self.state = "OFENSIVO"
 
-    def update(self, dt):
-        super().update(dt)
+        # ─── 2. CÁLCULO DEL OBJETIVO FÍSICO (Target X) ──────────
+        target_x = my_pos.x # Por defecto, frenar
+
+        if self.state == "DEFENSIVO":
+            # Va a posicionarse justo delante del balón para actuar de muro
+            target_x = ball_pos.x + 2.0 
+            
+        elif self.state == "LOCO":
+            # Va directo a las coordenadas del jugador para embestirlo
+            target_x = player_pos.x
+            
+        elif self.state == "OFENSIVO":
+            # Intenta empujar el balón hacia la izquierda
+            if ball_pos.x < my_pos.x:
+                target_x = ball_pos.x  # Acelera hacia el balón
+            else:
+                # Si el balón se queda atrás, retrocede un poco para rodearlo
+                target_x = ball_pos.x + 4.0
+
+       # ─── 3. MOTRICIDAD (Física Aplicada) ───────────────────
+        current_max_speed = self.move_speed 
+        
+        # ¡NUEVO!: Boost de velocidad al defender (solo si no está ya en modo LOCO/Enfadado)
+        if self.state == "DEFENSIVO" and not self.is_angry:
+            current_max_speed = self.move_speed * 2.0  # El doble de rápido para llegar a salvar el gol
+        
+        # Diferencia entre dónde está y a dónde quiere ir
+        diff = target_x - my_pos.x
+        vel = self.body.linearVelocity
+
+        # Margen muerto de 0.8 metros para que no vibre
+        if abs(diff) > 0.8:
+            target_vx = current_max_speed if diff > 0 else -current_max_speed
+        else:
+            target_vx = 0.0
+
+        # BLEND FÍSICO (Inercia): Simula el peso del Bulldozer
+        blend_factor = 0.15 
+        new_vx = vel.x + (target_vx - vel.x) * blend_factor
+        
+        # Aplicamos la velocidad resultante al chasis de Box2D
+        self.body.linearVelocity = (new_vx, vel.y)
+
+        # ─── 4. ESTADO SALTO (Reflejo Concurrente) ────────────
+        dist_x_ball = abs(ball_pos.x - my_pos.x)
+        if dist_x_ball < 4.0 and ball_pos.y < my_pos.y - 2.0 and self.on_ground:
+            self.jump()
+
+    def apply_movement(self, target_x, ball_pos, player_pos,
+                       boss_speed=6.0, boss_speed_angry=9.0, boss_blend=0.18,
+                       boss_chase_margin=0.3):
+        """Aplica el movimiento hacia el objetivo."""
+        if not self.body:
+            return
+
+        speed = boss_speed_angry if self.is_angry else boss_speed
+        diff = target_x - self.body.position.x
+        vel = self.body.linearVelocity
+
+        if abs(diff) > boss_chase_margin:
+            target_vx = speed if diff > 0 else -speed
+        else:
+            target_vx = 0.0
+
+        new_vx = vel.x + (target_vx - vel.x) * boss_blend
+        self.body.linearVelocity = (new_vx, vel.y)
+
+        # Saltar si el objetivo está por encima
+        target_y = ball_pos.y
+        if target_y < self.body.position.y - 3.0 and abs(diff) < 8.0:
+            if self.on_ground:
+                self.jump()
+
+#TODO: clases fantasma. definidas para que el factory.py pueda instanciarlas sin errores, pero no tienen lógica ni assets propios.
+class MotoMoto(Car):
+    pass
 
 
-class BossCar(Car):
-
-    def __init__(self, carPos=(0, 0), stats=None):
-        if stats is None:
-            stats = DEFAULT_STATS
-        super().__init__(BOSS_CAR_IMG, carPos, stats)
-
-    def update(self, dt):
-        super().update(dt)
-
-
-class Bulldozer(BossCar):
-    def __init__(self, carPos=(0, 0)):
-        super().__init__(carPos, stats=BOSS1_STATS)
-
-
-class MotoMoto(BossCar):
-    def __init__(self, carPos=(0, 0)):
-        super().__init__(carPos, stats=BOSS2_STATS)
-
-
-class LaJenny(BossCar):
-    def __init__(self, carPos=(0, 0)):
-        super().__init__(carPos, stats=BOSS3_STATS)
+class LaJenny(Car):
+    pass
