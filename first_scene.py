@@ -86,7 +86,6 @@ class SceneContactListener(Box2D.b2ContactListener):
         return None, None
 
     def _is_boss_player_collision(self, contact):
-        """Devuelve True si la colisión es entre el boss y el jugador."""
         scene = self.scene
         if not hasattr(scene, 'boss') or not scene.boss.body:
             return False
@@ -113,7 +112,7 @@ class SceneContactListener(Box2D.b2ContactListener):
             self.bodies_in_mud.add(other_body)
             return
 
-        # Boss vs Jugador — solo marcar flag, NO llamar lógica de juego
+        # Boss vs Jugador
         if self._is_boss_player_collision(contact):
             self.boss_hit_player = True
 
@@ -187,11 +186,8 @@ class FirstScene(MatchScene):
         """Llamado cuando el boss toca al jugador."""
         if not hasattr(self, 'boss'):
             return
-        # No aplica stun si el boss está stunneado por el power-up
         if self.boss_stunned:
             return
-        # Solo aplica stun si el boss está enfadado, el jugador no está ya stunned
-        # y no se ha usado el stun en este episodio de enfado
         if self.boss.is_angry and not self.player_stunned and not self._stun_used_this_anger:
             self.player_stunned = True
             self.stun_timer = STUN_DURATION
@@ -246,7 +242,6 @@ class FirstScene(MatchScene):
 
     def _on_powerup_collected(self):
         """Se llama cuando el jugador recoge la caja de power-up."""
-        # player_has_powerup ya se pone a True en MatchScene
         pass
 
     def _on_powerup_activate(self):
@@ -254,26 +249,23 @@ class FirstScene(MatchScene):
         if not self.player_has_powerup:
             return
         if self.boss_stunned:
-            return  # ya está stunneado
+            return
         if not hasattr(self, 'boss') or not self.boss.body:
             return
 
-        # Comprobar proximidad al boss para activar
         player_pos = self.jugador.body.position
         boss_pos = self.boss.body.position
         dx = abs(player_pos.x - boss_pos.x)
         dy = abs(player_pos.y - boss_pos.y)
 
-        # Rango de activación generoso
-        activate_range_x = 4.0  # metros
+        activate_range_x = 4.0
         activate_range_y = 3.0
 
         if dx < activate_range_x and dy < activate_range_y:
             self.boss_stunned = True
             self.boss_stun_timer = BOSS_STUN_DURATION
-            self.player_has_powerup = False  # consumir el power-up
+            self.player_has_powerup = False
 
-            # Frenar al boss
             if self.boss.body:
                 self.boss.body.linearVelocity = (0, self.boss.body.linearVelocity.y)
 
@@ -281,7 +273,6 @@ class FirstScene(MatchScene):
         """Actualiza el stun aplicado al boss por el power-up."""
         if self.boss_stunned:
             self.boss_stun_timer -= delta_time
-            # Mantener al boss frenado
             if self.boss.body:
                 vel = self.boss.body.linearVelocity
                 self.boss.body.linearVelocity = (vel.x * 0.85, vel.y)
@@ -304,70 +295,23 @@ class FirstScene(MatchScene):
 
         super().events(event_list)
 
-    # ─── BOUNDARIES & GOALS ──────────────────────────────────
+    # ─── BOUNDARIES & GOALS (delegado a RocketFactory) ───────
 
     def _create_boundaries(self):
-        w = self.world
-        g = w.CreateStaticBody(position=(px2m(SW / 2), px2m(GROUND_Y)))
-        g.CreatePolygonFixture(box=(px2m(SW / 2), px2m(5)), friction=0.6)
-
-        c = w.CreateStaticBody(position=(px2m(SW / 2), px2m(-5)))
-        c.CreatePolygonFixture(box=(px2m(SW / 2), px2m(5)), friction=0.2)
-
-        wl = w.CreateStaticBody(position=(px2m(-5), px2m(GOAL_TOP_Y / 2)))
-        wl.CreatePolygonFixture(box=(px2m(5), px2m(GOAL_TOP_Y / 2)), friction=0.1)
-
-        wr = w.CreateStaticBody(position=(px2m(SW + 5), px2m(GOAL_TOP_Y / 2)))
-        wr.CreatePolygonFixture(box=(px2m(5), px2m(GOAL_TOP_Y / 2)), friction=0.1)
+        RocketFactory.create_boundaries(self.world, SW, GROUND_Y, GOAL_TOP_Y)
 
     def _create_goals(self):
-        return (self._make_goal('left'), self._make_goal('right'))
-
-    def _make_goal(self, side):
-        gx = 0 if side == 'left' else SW - GOAL_W
-        cx = px2m(gx + GOAL_W / 2)
-
-        bar = self.world.CreateStaticBody(
-            position=(cx, px2m(GOAL_TOP_Y - GOAL_POST / 2))
-        )
-        bar.CreatePolygonFixture(
-            box=(px2m(GOAL_W / 2), px2m(GOAL_POST / 2)),
-            friction=0.3, restitution=0.4
+        return RocketFactory.create_goals(
+            self.world, SW, GROUND_Y, GOAL_W, GOAL_H, GOAL_POST, GOAL_TOP_Y
         )
 
-        px_post = (gx - GOAL_POST / 2) if side == 'left' else (gx + GOAL_W + GOAL_POST / 2)
-        back = self.world.CreateStaticBody(
-            position=(px2m(px_post), px2m(GOAL_TOP_Y + GOAL_H / 2))
-        )
-        back.CreatePolygonFixture(
-            box=(px2m(GOAL_POST / 2), px2m(GOAL_H / 2)),
-            friction=0.3, restitution=0.4
-        )
-
-        floor = self.world.CreateStaticBody(position=(cx, px2m(GROUND_Y)))
-        floor.CreatePolygonFixture(box=(px2m(GOAL_W / 2), px2m(5)), friction=0.6)
-
-        return pygame.Rect(gx, GOAL_TOP_Y, GOAL_W, GOAL_H)
-
-    # ─── BARRO DINÁMICO CON BOX2D ────────────────────────────
+    # ─── BARRO DINÁMICO (delegado a RocketFactory) ───────────
 
     def _create_mud_body(self, x_px, w_px):
-        cx_m = px2m(x_px + w_px / 2)
-        cy_m = px2m(GROUND_Y - MUD_HEIGHT / 2)
-        hw_m = px2m(w_px / 2)
-        hh_m = px2m(MUD_HEIGHT / 2)
-
-        body = self.world.CreateStaticBody(position=(cx_m, cy_m))
-        body.CreatePolygonFixture(
-            box=(hw_m, hh_m),
-            isSensor=True,
-            userData={'type': 'mud'}
-        )
-        return body
+        return RocketFactory.create_mud(self.world, x_px, w_px, GROUND_Y, MUD_HEIGHT)
 
     def _destroy_mud_body(self, body):
-        if body:
-            self.world.DestroyBody(body)
+        RocketFactory.destroy_body(self.world, body)
 
     def _spawn_mud_patch(self):
         if len(self.mud_patches) >= MUD_MAX_ACTIVE:
@@ -427,19 +371,15 @@ class FirstScene(MatchScene):
 
     # ─── IA DEL BOSS ─────────────────────────────────────────
 
-    # En firts_scene.py
     def _update_boss_ai(self, delta_time):
         """Delega la inteligencia a la Máquina de Estados (FSM) del Boss."""
         if hasattr(self, 'boss') and self.boss.body and self.pelota.body and self.jugador.body:
             
-            # 1. HACEMOS AVANZAR SU RELOJ INTERNO (Para que se cabree)
             if hasattr(self.boss, 'update_logic'):
                 self.boss.update_logic(delta_time)
 
-            # 2. Calculamos dónde está la portería del jefe
             goal_x_right = SW / PPM 
             
-            # 3. Le pasamos la visión del entorno a la FSM del Bulldozer
             self.boss.update_fsm(
                 ball_pos=self.pelota.body.position,
                 player_pos=self.jugador.body.position,
@@ -476,17 +416,14 @@ class FirstScene(MatchScene):
     # ─── UPDATE ───────────────────────────────────────────────
 
     def update(self, delta_time):
-        super().update(delta_time)  # world.Step + power-up base
+        super().update(delta_time)
 
         # Procesar colisión boss-jugador DESPUÉS del step
         if hasattr(self, 'contact_listener') and self.contact_listener.boss_hit_player:
             self.contact_listener.boss_hit_player = False
             self._on_boss_hit_player()
 
-        # Rastrear cambios de estado de enfado del boss
         self._track_boss_anger()
-
-        # Detección manual de proximidad como respaldo
         self._check_boss_player_proximity()
 
         self._update_boss_ai(delta_time)
@@ -605,7 +542,6 @@ class FirstScene(MatchScene):
                 sy = by + 15 + int(10 * math.sin(angle))
                 pygame.draw.circle(screen, BOSS_STUN_COLOR, (sx, sy), 4)
 
-        # Barra de tiempo restante
         bar_w = 60
         bar_h = 6
         py = by - 15

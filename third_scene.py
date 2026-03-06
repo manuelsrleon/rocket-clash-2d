@@ -33,9 +33,9 @@ TRAPDOOR_W            = 80     # px
 TRAPDOOR_H            = 14     # px
 TRAPDOOR_COLOR        = (50, 50, 70)
 TRAPDOOR_BORDER_COLOR = (80, 80, 120)
-TRAPDOOR_ACTIVE_COLOR = (255, 80, 0)   # when activated (visual)
-TRAPDOOR_LAUNCH_VY    = -37.0          # m/s vertical when launched (negative = up)
-TRAPDOOR_ACTIVE_MS    = 400            # ms duration of orange activation color
+TRAPDOOR_ACTIVE_COLOR = (255, 80, 0)
+TRAPDOOR_LAUNCH_VY    = -37.0
+TRAPDOOR_ACTIVE_MS    = 400
 TRAPDOOR_VISIBLE_MS_RANGE = (2000, 5000)
 TRAPDOOR_HIDDEN_MS_RANGE  = (15000, 25000)
 
@@ -72,7 +72,6 @@ class ThirdSceneContactListener(Box2D.b2ContactListener):
         if player_body is None:
             return None, None
 
-        # Check if either fixture is a trapdoor and the other is the player
         if isinstance(data_a, dict) and data_a.get('type') == 'trapdoor' and fixture_b.body is player_body:
             return data_a.get('index'), player_body
         if isinstance(data_b, dict) and data_b.get('type') == 'trapdoor' and fixture_a.body is player_body:
@@ -151,19 +150,14 @@ class ThirdScene(MatchScene):
         self._create_trapdoors()
 
     def _create_trapdoors(self):
-        """Creates 3 visual trapdoors and their Box2D sensor."""
+        """Creates 3 visual trapdoors and their Box2D sensor via RocketFactory."""
         for idx, cx_px in enumerate(TRAPDOOR_X_CENTERS):
             x_px = cx_px - TRAPDOOR_W // 2
             y_px = GROUND_Y - TRAPDOOR_H
             rect = pygame.Rect(x_px, y_px, TRAPDOOR_W, TRAPDOOR_H)
 
-            sensor_body = self.world.CreateStaticBody(
-                position=(px2m(cx_px), px2m(y_px + TRAPDOOR_H / 2))
-            )
-            sensor_body.CreatePolygonFixture(
-                box=(px2m(TRAPDOOR_W / 2), px2m(TRAPDOOR_H / 2)),
-                isSensor=True,
-                userData={'type': 'trapdoor', 'index': idx}
+            sensor_body = RocketFactory.create_trapdoor_sensor(
+                self.world, cx_px, y_px, TRAPDOOR_W, TRAPDOOR_H, idx
             )
 
             self._trapdoors.append({
@@ -215,7 +209,7 @@ class ThirdScene(MatchScene):
         for td in self._trapdoors:
             body = td.get('sensor_body')
             if body:
-                self.world.DestroyBody(body)
+                RocketFactory.destroy_body(self.world, body)
                 td['sensor_body'] = None
         self._trapdoors = []
 
@@ -228,14 +222,12 @@ class ThirdScene(MatchScene):
         player_cx_m = player_body.position.x
 
         for td in self._trapdoors:
-            # Update active timer
             if td['active']:
                 td['active_timer'] -= delta_time
                 if td['active_timer'] <= 0:
                     td['active'] = False
             if not td['visible'] or td['active']:
                 continue
-            # Position-based check: player center within trapdoor X bounds
             rect = td['rect']
             td_left_m  = px2m(rect.left)
             td_right_m = px2m(rect.right)
@@ -289,7 +281,6 @@ class ThirdScene(MatchScene):
         self.player_flashed   = True
         self.flash_stun_timer = FLASH_STUN_DURATION
 
-        # Stop player if flashed
         if self.jugador.body:
             vel = self.jugador.body.linearVelocity
             self.jugador.body.linearVelocity = (vel.x * 0.2, vel.y)
@@ -327,7 +318,7 @@ class ThirdScene(MatchScene):
         self._sunglasses_timer = SUNGLASSES_DURATION
 
     def _on_powerup_activate(self):
-        pass #no active action, passive powerup
+        pass
 
     def events(self, event_list):
         if self.player_flashed:
@@ -339,48 +330,15 @@ class ThirdScene(MatchScene):
             return
         super().events(event_list)
 
+    # ─── BOUNDARIES & GOALS (delegado a RocketFactory) ───────
+
     def _create_boundaries(self):
-        w = self.world
-        g = w.CreateStaticBody(position=(px2m(SW / 2), px2m(GROUND_Y)))
-        g.CreatePolygonFixture(box=(px2m(SW / 2), px2m(5)), friction=0.6)
-
-        c = w.CreateStaticBody(position=(px2m(SW / 2), px2m(-5)))
-        c.CreatePolygonFixture(box=(px2m(SW / 2), px2m(5)), friction=0.2)
-
-        wl = w.CreateStaticBody(position=(px2m(-5), px2m(GOAL_TOP_Y / 2)))
-        wl.CreatePolygonFixture(box=(px2m(5), px2m(GOAL_TOP_Y / 2)), friction=0.1)
-
-        wr = w.CreateStaticBody(position=(px2m(SW + 5), px2m(GOAL_TOP_Y / 2)))
-        wr.CreatePolygonFixture(box=(px2m(5), px2m(GOAL_TOP_Y / 2)), friction=0.1)
+        RocketFactory.create_boundaries(self.world, SW, GROUND_Y, GOAL_TOP_Y)
 
     def _create_goals(self):
-        return (self._make_goal('left'), self._make_goal('right'))
-
-    def _make_goal(self, side):
-        gx = 0 if side == 'left' else SW - GOAL_W
-        cx = px2m(gx + GOAL_W / 2)
-
-        bar = self.world.CreateStaticBody(
-            position=(cx, px2m(GOAL_TOP_Y - GOAL_POST / 2))
+        return RocketFactory.create_goals(
+            self.world, SW, GROUND_Y, GOAL_W, GOAL_H, GOAL_POST, GOAL_TOP_Y
         )
-        bar.CreatePolygonFixture(
-            box=(px2m(GOAL_W / 2), px2m(GOAL_POST / 2)),
-            friction=0.3, restitution=0.4
-        )
-
-        px_post = (gx - GOAL_POST / 2) if side == 'left' else (gx + GOAL_W + GOAL_POST / 2)
-        back = self.world.CreateStaticBody(
-            position=(px2m(px_post), px2m(GOAL_TOP_Y + GOAL_H / 2))
-        )
-        back.CreatePolygonFixture(
-            box=(px2m(GOAL_POST / 2), px2m(GOAL_H / 2)),
-            friction=0.3, restitution=0.4
-        )
-
-        floor = self.world.CreateStaticBody(position=(cx, px2m(GROUND_Y)))
-        floor.CreatePolygonFixture(box=(px2m(GOAL_W / 2), px2m(5)), friction=0.6)
-
-        return pygame.Rect(gx, GOAL_TOP_Y, GOAL_W, GOAL_H)
 
     def _reset_positions(self):
         super()._reset_positions()
@@ -389,7 +347,6 @@ class ThirdScene(MatchScene):
             self.boss.body.position        = (px2m(JENNY_START[0]), px2m(JENNY_START[1]))
             self.boss.body.linearVelocity  = (0, 0)
             self.boss.body.angularVelocity = 0
-            # reset flash timer
             if hasattr(self.boss, '_flash_timer'):
                 self.boss._flash_timer = int(self.boss.FLASH_INTERVAL * 0.6)
 
@@ -473,7 +430,6 @@ class ThirdScene(MatchScene):
         if self.player_has_powerup:
             secs_left = max(0, math.ceil(self._sunglasses_timer / 1000))
             label = f" GAFAS  {secs_left}s"
-            # Blinks in the last second
             if secs_left <= 1 and (pygame.time.get_ticks() // 300) % 2 == 0:
                 color = (255, 80, 80)
             else:

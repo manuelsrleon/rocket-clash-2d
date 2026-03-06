@@ -107,7 +107,7 @@ class Menu(PyGameScene):
         self.director.exitScene()
 
     def playCampaign(self):
-        campaignScene = SecondScene(self.director)
+        campaignScene = ThirdScene(self.director)
         self.director.apilarEscena(campaignScene)
         self.currentScreen = len(self.screenList) - 1
 
