@@ -1,0 +1,141 @@
+@startuml ProjectStructure
+title Project Structure Diagram
+allowmixing
+package "rocket-clash-2d" {
+
+    package "core" {
+        class Director
+        class Scene
+        class PyGameScene
+        class Node
+    }
+
+    package "scenes" {
+        class MatchScene
+        class FirstScene
+        class CountdownScene
+        class EndScene
+        class SettingsScene
+        class IngameMenu
+        class Menu
+        class IntroScene
+        class DialogueScene
+    }
+
+    package "entities" {
+        class Ball
+        class Car
+        class PlayerCar
+        class Bulldozer
+        class MotoMoto
+        class LaJenny
+    }
+
+    package "gui" {
+        class GUIElement
+        class Button
+        class GUIScreen
+
+        class PlayButton
+        class SettingsButton
+        class ExitButton
+        class ResumeButton
+        class ExitToMenuButton
+    }
+
+    package "dialogue_system" {
+        class DialogManager
+        class DialogueUI
+    }
+
+    package "gameplay_systems" {
+        class RocketFactory
+        class PowerUpBox
+        class SceneContactListener
+    }
+
+    package "assets_manager" {
+        class BallsAssets
+        class CarsAssets
+        class GUIAssets
+        class SFXAssets
+    }
+
+    package "settings_system" {
+        class GameSettings
+        class ScreenSettings
+        class GUISettings
+        class Colors
+        class SettingsManager
+        class VolumeController
+    }
+
+    package "external_data" {
+
+        folder assets {
+            folder backgrounds
+            folder balls
+            folder cars
+            folder gui
+            folder portraits
+            folder sfx
+            folder stadiums
+        }
+
+        folder dialogues {
+            file intro.json
+            file match1.json
+            file match2.json
+            file match3.json
+        }
+
+        folder configs {
+            file requirements.txt
+            file config_info.txt
+        }
+
+        file "game_settings.json" as game_settings
+    }
+
+}
+
+Director --> Scene
+Scene <|-- PyGameScene
+
+PyGameScene <|-- MatchScene
+PyGameScene <|-- CountdownScene
+PyGameScene <|-- EndScene
+PyGameScene <|-- SettingsScene
+PyGameScene <|-- IngameMenu
+PyGameScene <|-- Menu
+PyGameScene <|-- IntroScene
+PyGameScene <|-- DialogueScene
+
+MatchScene <|-- FirstScene
+
+MatchScene --> Ball
+MatchScene --> Car
+MatchScene --> PowerUpBox
+MatchScene --> RocketFactory
+
+Car <|-- PlayerCar
+Car <|-- Bulldozer
+Car <|-- MotoMoto
+Car <|-- LaJenny
+
+GUIElement <|-- Button
+Button <|-- PlayButton
+Button <|-- SettingsButton
+Button <|-- ExitButton
+Button <|-- ResumeButton
+Button <|-- ExitToMenuButton
+
+DialogueScene --> DialogManager
+DialogueScene --> DialogueUI
+
+
+assets_manager ..> assets
+DialogManager ..> dialogues
+SettingsManager ..> game_settings
+
+@enduml
