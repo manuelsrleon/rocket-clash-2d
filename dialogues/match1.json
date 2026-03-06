@@ -1,0 +1,52 @@
+{
+  "scene": "opponent1_intro",
+  "next_scene": "match_scene",
+  "base_speed": 25,
+  "background": "assets/backgrounds/background.png",
+  "characters": {
+    "left": {
+      "name": "Ruedaldinho",
+      "portrait": "assets/portraits/player.png"
+    },
+    "right": {
+      "name": "Bulldozer",
+      "portrait": "assets/portraits/Bulldozer.png"
+    }
+  },
+  "lines": [
+    {
+      "speaker": "Bulldozer",
+      "side": "left",
+      "text": "Hola, aspirante. Soy Bulldozer, el campeón de esta arena. "
+    },
+    {
+      "speaker": "Bulldozer",
+      "side": "left",
+      "text": "Me han dicho que estás buscando a Jenny, la mejor jugadora de Rocket Clash, cierto? Bueno, si quieres encontrarla, tendrás que derrotarme primero."
+    },
+    {
+      "speaker": "Ruedaldinho",
+      "side": "right",
+      "text": "Estoy más que preparado. "
+    },
+    {
+      "speaker": "Bulldozer",
+      "side": "left",
+      "text": "JA JA JA! Eso dijeron todos los que han venido antes que tú. Pero ninguno ha logrado vencerme. ¿Crees que tú serás diferente?",
+      "events": [
+        { "type": "shake", "intensity": 15 }]
+    },
+    {
+      "speaker": "Ruedaldinho",
+      "side": "right",
+      "text": "No lo sé, pero lo que sí sé es que no voy a rendirme sin intentarlo. Estoy aquí para jugar, y eso es exactamente lo que haré."
+    },
+    {
+      "speaker": "Bulldozer",
+      "side": "left",
+      "text": "JA JA JA! Vamos allá!",
+      "events": [
+        { "type": "shake", "intensity": 15 }]
+    }
+  ]
+}

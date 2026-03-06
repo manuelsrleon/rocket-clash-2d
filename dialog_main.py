@@ -1,6 +1,7 @@
 import pygame
 from director import Director
 from scenes.dialogue_scene import DialogueScene
+from scenes.intro_scene import IntroScene
 
 def main():
     pygame.init()
@@ -10,11 +11,18 @@ def main():
     dir = Director()
     dir.screen = screen
 
-    # 2. Crear la escena de diálogo con el JSON de ejemplo
-    escena_test = DialogueScene(dir, "dialogues/example.json")
+    # 2. Crear las escenas en orden: primero intro, luego dialog
+    escena_intro = IntroScene(dir)
+    escena_dialog_1 = DialogueScene(dir, "dialogues/match1.json")
+    escena_dialog_2 = DialogueScene(dir, "dialogues/match2.json")
+    escena_dialog_3 = DialogueScene(dir, "dialogues/match3.json")  
 
-    # 3. Apilar la escena para que el director la gestione
-    dir.apilarEscena(escena_test)
+    # 3. Apilar las escenas para que el director las gestione
+    dir.apilarEscena(escena_dialog_3)
+    dir.apilarEscena(escena_dialog_2)
+    dir.apilarEscena(escena_dialog_1)
+    dir.apilarEscena(escena_intro)
+    
 
     # 4. Lanzar el bucle principal
     dir.ejecutar()
