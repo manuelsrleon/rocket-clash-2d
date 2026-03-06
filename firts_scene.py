@@ -8,7 +8,7 @@ from factory import RocketFactory
 
 # Constantes visuales del escenario 1
 GROUND_Y   = 520
-GOAL_W     = 160
+GOAL_W     = 80
 GOAL_H     = 320
 GOAL_POST  = 6
 GOAL_TOP_Y = GROUND_Y - GOAL_H+30
@@ -529,20 +529,20 @@ class FirstScene(MatchScene):
 
         if not hasattr(self, '_goalpost_bg'):
             img = pygame.image.load('./assets/stadiums/excavator_shovel_goalpost_bg.png').convert_alpha()
-            scaled = pygame.transform.scale(img, (GOAL_W, GOAL_H))
+            scaled = pygame.transform.scale(img, (GOAL_W*2, GOAL_H))
             self._goalpost_bg_l = scaled
             self._goalpost_bg_r = pygame.transform.flip(scaled, True, False)
         screen.blit(self._goalpost_bg_l, (0, GOAL_TOP_Y))
-        screen.blit(self._goalpost_bg_r, (SW - GOAL_W, GOAL_TOP_Y))
+        screen.blit(self._goalpost_bg_r, (SW - GOAL_W*2, GOAL_TOP_Y))
 
     def _render_field_fg(self, screen):
         if not hasattr(self, '_goalpost_fg'):
             img = pygame.image.load('./assets/stadiums/excavator_shovel_goalpost_fg.png').convert_alpha()
-            scaled = pygame.transform.scale(img, (GOAL_W, GOAL_H))
+            scaled = pygame.transform.scale(img, (GOAL_W*2, GOAL_H))
             self._goalpost_fg_l = scaled
             self._goalpost_fg_r = pygame.transform.flip(scaled, True, False)
         screen.blit(self._goalpost_fg_l, (0, GOAL_TOP_Y))
-        screen.blit(self._goalpost_fg_r, (SW - GOAL_W, GOAL_TOP_Y))
+        screen.blit(self._goalpost_fg_r, (SW - GOAL_W*2, GOAL_TOP_Y))
 
     def render(self, screen):
         """Override para añadir indicadores de stun y enfado del boss."""
