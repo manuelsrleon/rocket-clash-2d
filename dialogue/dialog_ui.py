@@ -12,7 +12,7 @@ class DialogueUI:
         # --- SISTEMA DE ANIMACIÓN ---
         self.anim_progress = 0.0 
         self.anim_speed = 8.0   
-        self.entry_mode = "pop" # Cambia a "pop" para el efecto de salto
+        self.entry_mode = "slide" 
 
         # Diccionario de funciones de animación
         self.animations = {
@@ -21,7 +21,7 @@ class DialogueUI:
         }
         
         # --- Configuración Visual ---
-        self.box_width = 604 
+        self.box_width = 600 
         self.bg_color = (255, 255, 255)
         self.border_color = (0, 0, 0)
         self.text_color = (0, 0, 0)
@@ -110,9 +110,9 @@ class DialogueUI:
             hint_surf = small_font.render("Presiona 'ESPACIO' para continuar", True, (140, 140, 140))
             
             if self.side == 'right':
-                hint_x = rect.x + 15
-            else:
                 hint_x = rect.right - hint_surf.get_width() - 15
+            else:
+                hint_x = rect.x + 15
                 
             hint_y = rect.bottom - hint_surf.get_height() - 10
             screen.blit(hint_surf, (hint_x, hint_y))
