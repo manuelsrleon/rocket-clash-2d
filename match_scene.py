@@ -22,7 +22,7 @@ SH = ScreenSettings.SCREEN_HEIGHT
 # ─── POWER-UP BASE ───────────────────────────────────────────
 POWERUP_BOX_SIZE     = 30       # px lado de la caja
 POWERUP_FALL_SPEED   = 3.0     # m/s velocidad de caída
-POWERUP_SPAWN_INTERVAL = 30000 # ms entre spawns
+POWERUP_SPAWN_INTERVAL = 10000 # ms entre spawns
 POWERUP_COLOR        = (255, 200, 0)
 POWERUP_BORDER_COLOR = (200, 150, 0)
 POWERUP_GLOW_COLOR   = (255, 255, 100, 80)
@@ -143,6 +143,19 @@ class MatchScene(PyGameScene):
         self.goal_pause_timer = 0
         self.goal_scored      = False
 
+        # --- Ball stuck detection (si la pelota queda atrapada encima de la portería)
+        # Temporizador en ms que acumula cuando la pelota está dentro de la zona
+        # de portería y prácticamente parada. Si alcanza el umbral, se resetea
+        # la posición y se lanza la pelota desde el centro (saque tipo futbolín).
+        self._ball_stuck_timer_ms = 0
+        self._ball_stuck_threshold_ms = 3000  # 3 segundos
+        # Velocidad en m/s por debajo de la cual consideramos la pelota "parada".
+        # Se sube ligeramente para atrapar pequeños "jitters" que impiden
+        # que el contador suba cuando la pelota está apoyada sobre el travesaño.
+        self._ball_stuck_speed_threshold = 1.0
+        # Velocidad del saque desde el centro (m/s)
+        self._kickoff_speed = 6.0
+
         # GUISettings.FONT_TEXT (settings.py)
         self.font_score = pygame.font.SysFont(GUISettings.FONT_TEXT, 48, bold=True)
         self.font_timer = pygame.font.SysFont(GUISettings.FONT_TEXT, 28)
@@ -211,6 +224,74 @@ class MatchScene(PyGameScene):
         elif self.goal_r_rect.collidepoint(bx, by):
             self.score_left += 1
             self._on_goal()
+
+    # ─── BALL STUCK / KICKOFF HELPERS ─────────────────────────
+    def _is_ball_in_goal_zone(self):
+        """Devuelve True si el centro de la pelota está dentro del rect
+        que representa cualquiera de las dos porterías."""
+        bx, by = self._body_px(self.pelota.body)
+        # Si está dentro del rect clásico, ok
+        if self.goal_l_rect.collidepoint(bx, by) or self.goal_r_rect.collidepoint(bx, by):
+            return True
+
+        # Si la pelota está apoyada EN la parte superior (travesaño / techo)
+        # puede quedar fuera del rect interior: detectar también una franja
+        # rectangular sobre cada portería (zona "roof").
+        roof_margin_y = 40  # px por encima del top de la portería
+        roof_margin_x = 12  # px de margen horizontal fuera/encima del post
+
+        gl = self.goal_l_rect
+        gr = self.goal_r_rect
+
+        # izquierda
+        if (gl.left - roof_margin_x) <= bx <= (gl.right + roof_margin_x) and by <= (gl.top + roof_margin_y):
+            return True
+        # derecha
+        if (gr.left - roof_margin_x) <= bx <= (gr.right + roof_margin_x) and by <= (gr.top + roof_margin_y):
+            return True
+
+        return False
+
+    def _do_kickoff(self):
+        """Reposiciona la pelota en el centro y le da una velocidad inicial
+        aleatoria horizontal (estilo saque de futbolín)."""
+        # Parar y reposicionar
+        if not self.pelota.body:
+            return
+        center_x = px2m(SW // 2)
+        center_y = px2m(self.ground_y - 220)  # usar posicion de ball_start aproximada
+        self.pelota.body.position = (center_x, center_y)
+        self.pelota.body.linearVelocity = (0, 0)
+        self.pelota.body.angularVelocity = 0
+
+        # Determinar dirección horizontal aleatoria (izq/dcha) y pequeño componente vertical
+        dir_x = random.choice([-1.0, 1.0])
+        vy = random.uniform(-0.5, 0.5)
+        vx = dir_x * self._kickoff_speed
+        self.pelota.body.linearVelocity = (vx, vy)
+
+    def _check_ball_stuck(self, delta_time):
+        """Lógica que detecta si la pelota está atrapada sobre una portería y
+        prácticamente parada durante un tiempo. delta_time en ms."""
+        if not hasattr(self, 'pelota') or not self.pelota.body:
+            return
+
+        # Si la pelota está dentro de un rect de portería, revisar velocidad
+        if self._is_ball_in_goal_zone():
+            vel = self.pelota.body.linearVelocity
+            speed = (vel.x ** 2 + vel.y ** 2) ** 0.5
+            if speed <= self._ball_stuck_speed_threshold:
+                self._ball_stuck_timer_ms += delta_time
+                if self._ball_stuck_timer_ms >= self._ball_stuck_threshold_ms:
+                    # Hacer kickoff desde el centro
+                    self._ball_stuck_timer_ms = 0
+                    self._do_kickoff()
+            else:
+                # Se ha movido: resetear
+                self._ball_stuck_timer_ms = 0
+        else:
+            # No está en la zona de porterías: resetear
+            self._ball_stuck_timer_ms = 0
 
     def _on_goal(self):
         self.goal_scored      = True
@@ -365,6 +446,8 @@ class MatchScene(PyGameScene):
 
         self._check_on_ground()
         self._check_goals()
+        # Comprobar si la pelota está atrapada encima de la portería
+        self._check_ball_stuck(delta_time)
         self._update_powerup(delta_time)
 
         self.time_remaining_ms -= delta_time

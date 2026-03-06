@@ -202,7 +202,127 @@ class Bulldozer(Car):
 
 #TODO: clases fantasma. definidas para que el factory.py pueda instanciarlas sin errores, pero no tienen lógica ni assets propios.
 class MotoMoto(Car):
-    pass
+    """Boss del escenario 2: pequeño y rápido. Se teletransporta a la portería si el balón está cerca."""
+
+    def __init__(self, carPos=(600, 460)):
+        self.stats_normal = {'move_speed': 7.0, 'jump_force': 55.0, 'mass': 1.5, 'scale': 0.8}
+        self.stats_angry = {'move_speed': 22.0, 'jump_force': 55.0, 'mass': 2.0, 'scale': 0.8}
+
+        super().__init__(BOSS1_IMG, carPos, stats=self.stats_normal)
+        self.angry_timer = 0
+        self.is_angry = False
+
+        # FSM
+        self.state = "OFENSIVO"
+
+        # Teletransporte
+        self.teleport_cooldown = 0       # ms restantes de cooldown
+        self.teleport_cooldown_max = 4000 # ms entre teletransportes
+        self.teleport_range = 20.0       # distancia (m) del balón a portería para activar TP
+
+    def update_logic(self, dt_ms):
+        """Lógica interna: ciclos de enfado y cooldown de teletransporte."""
+        self.angry_timer += dt_ms
+        if not self.is_angry and self.angry_timer > 30000:   # 30 segundos calmado
+            self.become_angry()
+        elif self.is_angry and self.angry_timer > 12000:
+            self.become_normal()
+
+        # Reducir cooldown de TP
+        if self.teleport_cooldown > 0:
+            self.teleport_cooldown -= dt_ms
+            if self.teleport_cooldown < 0:
+                self.teleport_cooldown = 0
+
+    def become_angry(self):
+        self.is_angry = True
+        self.angry_timer = 0
+        self.move_speed = self.stats_angry['move_speed']
+
+    def become_normal(self):
+        self.is_angry = False
+        self.angry_timer = 0
+        self.move_speed = self.stats_normal['move_speed']
+
+    def try_teleport_to_goal(self, ball_pos, goal_x, goal_y):
+        """
+        Si el balón está muy cerca de la portería y el cooldown lo permite,
+        se teletransporta delante de la portería.
+        Devuelve True si se teletransportó.
+        """
+        if not self.body:
+            return False
+        if self.teleport_cooldown > 0:
+            return False
+
+        dist_ball_goal = abs(ball_pos.x - goal_x)
+        if dist_ball_goal < self.teleport_range:
+            # Teletransportarse justo delante de la portería
+            tp_x = goal_x + (2.0 if ball_pos.x < goal_x else -2.0)
+            self.body.position = (tp_x, goal_y)
+            self.body.linearVelocity = (0, 0)
+            self.teleport_cooldown = self.teleport_cooldown_max
+            return True
+        return False
+
+    def update_fsm(self, ball_pos, player_pos, goal_x_right):
+        """
+        Cerebro FSM de MotoMoto.
+        Similar al Bulldozer pero más agresivo y con teletransporte.
+        """
+        if not self.body:
+            return
+
+        my_pos = self.body.position
+
+        # Distancias
+        dist_to_goal = abs(ball_pos.x - goal_x_right)
+        dist_to_player = abs(player_pos.x - my_pos.x)
+
+        # ─── 1. TRANSICIONES DE ESTADO ────────────────────────
+        if dist_to_goal < 25.0:
+            self.state = "DEFENSIVO"
+        elif self.is_angry:
+            self.state = "LOCO"
+        else:
+            self.state = "OFENSIVO"
+
+        # ─── 2. CÁLCULO DEL OBJETIVO (Target X) ──────────────
+        target_x = my_pos.x
+
+        if self.state == "DEFENSIVO":
+            target_x = ball_pos.x + 1.5
+        elif self.state == "LOCO":
+            target_x = player_pos.x
+        elif self.state == "OFENSIVO":
+            if ball_pos.x < my_pos.x:
+                target_x = ball_pos.x
+            else:
+                target_x = ball_pos.x + 3.0
+
+        # ─── 3. MOTRICIDAD ────────────────────────────────────
+        current_max_speed = self.move_speed
+
+        if self.state == "DEFENSIVO" and not self.is_angry:
+            current_max_speed = self.move_speed * 2.5
+
+        diff = target_x - my_pos.x
+        vel = self.body.linearVelocity
+
+        if abs(diff) > 0.5:
+            target_vx = current_max_speed if diff > 0 else -current_max_speed
+        else:
+            target_vx = 0.0
+
+        # Blend más agresivo (menos inercia, más ágil)
+        blend_factor = 0.22
+        new_vx = vel.x + (target_vx - vel.x) * blend_factor
+        self.body.linearVelocity = (new_vx, vel.y)
+
+        # ─── 4. SALTO ────────────────────────────────────────
+        dist_x_ball = abs(ball_pos.x - my_pos.x)
+        if dist_x_ball < 3.5 and ball_pos.y < my_pos.y - 1.5 and self.on_ground:
+            self.jump()
 
 
 class LaJenny(Car):
