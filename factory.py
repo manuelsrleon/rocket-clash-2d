@@ -209,3 +209,19 @@ class RocketFactory:
             userData={'type': 'trapdoor', 'index': index}
         )
         return body
+
+    # ─── POWER-UP BOX ─────────────────────────────────────────
+
+    @staticmethod
+    def create_powerup_body(world, x_px, size_px):
+        """Crea un body cinemático sensor para la caja de power-up.
+        Devuelve el body Box2D."""
+        cx_m = px2m(x_px)
+        cy_m = px2m(-size_px)  # empieza fuera de pantalla
+        body = world.CreateKinematicBody(position=(cx_m, cy_m))
+        body.CreatePolygonFixture(
+            box=(px2m(size_px / 2), px2m(size_px / 2)),
+            isSensor=True,
+            userData={'type': 'powerup'}
+        )
+        return body

@@ -43,15 +43,8 @@ class PowerUpBox(pygame.sprite.Sprite):
         self.rect.centerx = int(x_px)
         self.rect.centery = 0  # empieza arriba
 
-        # Body Box2D — sensor cinemático que cae
-        cx_m = px2m(x_px)
-        cy_m = px2m(-size)  # empieza fuera de pantalla
-        self.body = world.CreateKinematicBody(position=(cx_m, cy_m))
-        self.body.CreatePolygonFixture(
-            box=(px2m(size / 2), px2m(size / 2)),
-            isSensor=True,
-            userData={'type': 'powerup'}
-        )
+        # Body Box2D — delegado a RocketFactory
+        self.body = RocketFactory.create_powerup_body(world, x_px, size)
         self.body.linearVelocity = (0, POWERUP_FALL_SPEED)
 
         self.collected = False
@@ -302,7 +295,7 @@ class MatchScene(PyGameScene):
         if self.active_powerup is None:
             return
         if self.active_powerup.body:
-            self.world.DestroyBody(self.active_powerup.body)
+            RocketFactory.destroy_body(self.world, self.active_powerup.body)
             self.active_powerup.body = None
         self.active_powerup.kill()
         self.active_powerup = None
