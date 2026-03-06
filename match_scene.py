@@ -126,6 +126,7 @@ class MatchScene(PyGameScene):
 
         # Hook para que subclases añadan elementos extra (boss, etc.)
         self._init_extras()
+        self._align_boss_visual_with_player()
 
         # Marcador
         self.score_left  = 0
@@ -169,10 +170,44 @@ class MatchScene(PyGameScene):
     def _body_px(self, body):
         return (m2px(body.position.x), m2px(body.position.y))
 
+    #  Calculate the bottom Y coordinate of a Box2D body in local space
+    def _get_body_bottom_local_m(self, body):
+        bottom = 0.0
+        for fixture in body.fixtures:
+            shape = fixture.shape
+            if isinstance(shape, Box2D.b2PolygonShape):
+                y = max(v[1] for v in shape.vertices)
+            elif isinstance(shape, Box2D.b2CircleShape):
+                y = shape.pos[1] + shape.radius
+            else:
+                continue
+            if y > bottom:
+                bottom = y
+        return bottom
+
+    # Calculate how many pixels of the sprite are visually below its physical "feet"
+    def _get_visual_sink_px(self, sprite):
+        if not getattr(sprite, 'body', None):
+            return 0
+        half_h_m = (sprite.rect.height / 2) / PPM
+        body_bottom_m = self._get_body_bottom_local_m(sprite.body)
+        sink_m = half_h_m - body_bottom_m
+        return int(round(sink_m * PPM))
+
+    def _align_boss_visual_with_player(self):
+        boss = getattr(self, 'boss', None)
+        if boss is None or not getattr(boss, 'body', None) or not self.jugador.body:
+            return
+
+        player_sink = self._get_visual_sink_px(self.jugador)
+        boss_sink = self._get_visual_sink_px(boss)
+        boss.render_offset_y = player_sink - boss_sink
+
     def _sync_sprite(self, sprite):
         if sprite.body:
             pos = sprite.body.position
-            sprite.establecerPosicion((m2px(pos.x), m2px(pos.y)))
+            offset_y = getattr(sprite, 'render_offset_y', 0)
+            sprite.establecerPosicion((m2px(pos.x), m2px(pos.y) + offset_y))
 
     def _check_on_ground(self):
         if not self.jugador.body:
