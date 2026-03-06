@@ -112,6 +112,9 @@ class MatchScene(PyGameScene):
         self.pelota  = RocketFactory.create_element("ball",   self.world, self.ball_start)
         self.grupo_sprites = pygame.sprite.Group(self.jugador, self.pelota)
 
+        # Sprites who cast shadows 
+        self.shadow_sprites = [self.jugador]
+
         # Flags de movimiento
         self.move_left_flag  = False
         self.move_right_flag = False
@@ -416,8 +419,35 @@ class MatchScene(PyGameScene):
     def _render_field_fg(self, screen):
         pass
 
+    def _render_shadows(self, screen):
+        SHADOW_COLOR   = (0, 0, 0, 110)
+        SHADOW_W_RATIO = 0.80   # shadow width relative to sprite width
+        SHADOW_H_BASE  = 11     # base height
+        SHADOW_Y_OFFSET = -3     # px offset from ground level
+
+        shadow_y = self.ground_y - SHADOW_Y_OFFSET
+
+        candidates = list(self.shadow_sprites)
+        boss = getattr(self, 'boss', None)
+        if boss is not None and boss not in candidates:
+            candidates.append(boss)
+
+        for sprite in candidates:
+            if not getattr(sprite, 'body', None):
+                continue
+
+            cx = sprite.rect.centerx
+
+            sw = max(2, int(sprite.rect.width * SHADOW_W_RATIO))
+            sh = max(1, SHADOW_H_BASE)
+
+            shadow_surf = pygame.Surface((sw, sh), pygame.SRCALPHA)
+            pygame.draw.ellipse(shadow_surf, SHADOW_COLOR, (0, 0, sw, sh))
+            screen.blit(shadow_surf, (cx - sw // 2, shadow_y - sh // 2))
+
     def render(self, screen):
         self._render_field(screen)
+        self._render_shadows(screen)
         self.grupo_sprites.draw(screen)
         self._render_field_fg(screen)
         self._draw_hud(screen)
