@@ -9,8 +9,8 @@ from factory import RocketFactory
 # ─── CONSTANTES DEL ESCENARIO 3 ──────────────────────────────
 
 GROUND_Y   = 570
-GOAL_W     = 100
-GOAL_H     = 160
+GOAL_W     = 150
+GOAL_H     = 320
 GOAL_POST  = 6
 GOAL_TOP_Y = GROUND_Y - GOAL_H + 30
 
@@ -267,14 +267,14 @@ class ThirdMatch(MatchScene):
         # Porterías fondo
         if not hasattr(self, '_goalpost_bg'):
             try:
-                l_yellow_container_bg    = pygame.image.load('./assets/stadiums/contenedor_left_yellow_bg.png').convert_alpha()
-                r_green_container_bg    = pygame.image.load('./assets/stadiums/contenedor_right_green_bg.png').convert_alpha()
+                l_goalpost_bg    = pygame.image.load('./assets/stadiums/stadium-3-goalpost-bg.png').convert_alpha()
+                r_goalpost_bg    = pygame.image.load('./assets/stadiums/stadium-3-goalpost-bg.png').convert_alpha()
 
-                l_yellow_container_bg_scaled = pygame.transform.scale(l_yellow_container_bg, (GOAL_W*2, GOAL_H))
-                r_green_container_bg_scaled = pygame.transform.scale(r_green_container_bg, (GOAL_W*2, GOAL_H))
+                l_goalpost_bg_scaled = pygame.transform.scale(l_goalpost_bg, (GOAL_W*2, GOAL_H))
+                r_goalpost_bg_scaled = pygame.transform.flip(l_goalpost_bg_scaled, True, False)
                 
-                self._goalpost_bg_l = l_yellow_container_bg_scaled
-                self._goalpost_bg_r = r_green_container_bg_scaled
+                self._goalpost_bg_l = l_goalpost_bg_scaled
+                self._goalpost_bg_r = r_goalpost_bg_scaled
             except Exception:
                 self._goalpost_bg_l = pygame.Surface((GOAL_W, GOAL_H), pygame.SRCALPHA)
                 pygame.draw.rect(self._goalpost_bg_l, (*GOAL_NET_COLOR,), (0, 0, GOAL_W, GOAL_H))
@@ -287,14 +287,14 @@ class ThirdMatch(MatchScene):
     def _render_field_fg(self, screen):
         if not hasattr(self, '_goalpost_fg'):
             try:
-                l_yellow_container_fg    = pygame.image.load('./assets/stadiums/contenedor_left_yellow_fg.png').convert_alpha()
-                r_green_container_fg    = pygame.image.load('./assets/stadiums/contenedor_right_green_fg.png').convert_alpha()
+                l_goalpost_fg    = pygame.image.load('./assets/stadiums/l_goalpost_fg.png').convert_alpha()
+                r_goalpost_fg    = pygame.image.load('./assets/stadiums/r_goalpost_fg.png').convert_alpha()
 
-                l_yellow_container_fg_scaled = pygame.transform.scale(l_yellow_container_fg, (GOAL_W*2, GOAL_H))
-                r_green_container_fg_scaled = pygame.transform.scale(r_green_container_fg , (GOAL_W*2, GOAL_H))
+                l_goalpost_fg_scaled = pygame.transform.scale(l_goalpost_fg, (GOAL_W*2, GOAL_H))
+                r_goalpost_fg_scaled = pygame.transform.flip(l_goalpost_fg_scaled, True, False)
 
-                self._goalpost_fg_l = l_yellow_container_fg_scaled
-                self._goalpost_fg_r = r_green_container_fg_scaled
+                self._goalpost_fg_l = l_goalpost_bg_scaled
+                self._goalpost_fg_r = r_goalpost_bg_scaled
             except Exception:
                 self._goalpost_fg_l = pygame.Surface((GOAL_W*2, GOAL_H), pygame.SRCALPHA)
                 self._goalpost_fg_r = self._goalpost_fg_l.copy()
