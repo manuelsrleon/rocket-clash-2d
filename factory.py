@@ -24,15 +24,15 @@ class RocketFactory:
             )
             objeto.body.CreatePolygonFixture(
                 box=(3.85, 0.5, (0.0, 0.5), 0),
-                density=0.09,
+                density=0.12,
                 friction=0.08,
-                restitution=0.12
+                restitution=0.55
             )
             objeto.body.CreatePolygonFixture(
                 vertices=[(-3.0, -1.0), (0.0, -1.0), (0.5, 0.0), (-3.9, 0.0)],
-                density=0.08,
-                friction=0.4,
-                restitution=0.05
+                density=0.10,
+                friction=0.3,
+                restitution=0.65
             )
             return objeto
 
@@ -61,14 +61,14 @@ class RocketFactory:
             objeto = Ball(pos)
             objeto.body = world.CreateDynamicBody(
                 position=pos_m,
-                linearDamping=0.3,
-                angularDamping=0.4
+                linearDamping=0.08,     # menos resistencia al aire → conserva velocidad
+                angularDamping=0.3
             )
             objeto.body.CreateCircleFixture(
                 radius=2.5,
-                density=0.3,
-                friction=0.5,
-                restitution=0.7
+                density=0.08,           # mucho más ligero → reacciona más al contacto
+                friction=0.4,
+                restitution=0.82        # rebota más en general
             )
             return objeto
 
