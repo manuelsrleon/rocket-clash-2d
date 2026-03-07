@@ -313,7 +313,8 @@ class SecondScene(MatchScene):
         return (self._make_goal('left'), self._make_goal('right'))
 
     def _make_goal(self, side):
-        gx = 0 if side == 'left' else SW - GOAL_W
+        back_post_offset = 00
+        gx = back_post_offset if side == 'left' else SW - back_post_offset
         cx = px2m(gx + GOAL_W / 2)
 
         # Travesaño superior
