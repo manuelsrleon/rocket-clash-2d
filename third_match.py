@@ -105,7 +105,6 @@ class ThirdMatch(MatchScene):
 
         # Fuentes para indicadores
         self.angry_font = pygame.font.SysFont('Arial', 18, bold=True)
-        self.kick_font  = pygame.font.SysFont('Arial', 22, bold=True)
 
         # ─── Teletransporte ───────────────────────────────────
         self.teleport_flash_timer = 0
@@ -123,42 +122,6 @@ class ThirdMatch(MatchScene):
 
     def _on_powerup_activate(self):
         """El jugador pulsa E para lanzar un pelotazo si está cerca del balón."""
-        if not self.player_has_powerup:
-            return
-        if not self.jugador.body or not self.pelota.body:
-            return
-
-        player_pos = self.jugador.body.position
-        ball_pos   = self.pelota.body.position
-
-        dx   = ball_pos.x - player_pos.x
-        dy   = ball_pos.y - player_pos.y
-        dist = math.sqrt(dx * dx + dy * dy)
-
-        if dist > POWERUP_KICK_RANGE:
-            return  # demasiado lejos
-
-        # Dirección del pelotazo: jugador → balón
-        if dist < 0.01:
-            dir_x, dir_y = 1.0, -0.3
-        else:
-            dir_x = dx / dist
-            dir_y = dy / dist
-
-        # Impulso masivo con Box2D
-        self.pelota.body.linearVelocity = (0, 0)
-        self.pelota.body.ApplyLinearImpulse(
-            impulse=(dir_x * POWERUP_KICK_SPEED, dir_y * POWERUP_KICK_SPEED),
-            point=self.pelota.body.worldCenter,
-            wake=True
-        )
-
-        # Consumir power-up
-        self.player_has_powerup = False
-
-        # Efecto visual
-        self.kick_flash_timer = POWERUP_FLASH_DURATION
-        self.kick_flash_pos   = (int(m2px(ball_pos.x)), int(m2px(ball_pos.y)))
 
     # ─── BOUNDARIES & GOALS (idénticas a FirstScene) ─────────
 
@@ -278,10 +241,6 @@ class ThirdMatch(MatchScene):
         self._boss_was_angry = self.boss.is_angry if hasattr(self, 'boss') else False
 
         # Limpiar efectos visuales
-        self.teleport_flash_timer = 0
-        self.teleport_flash_pos   = None
-        self.kick_flash_timer     = 0
-        self.kick_flash_pos       = None
 
     # ─── UPDATE ───────────────────────────────────────────────
 
@@ -289,16 +248,8 @@ class ThirdMatch(MatchScene):
         super().update(delta_time)
 
         # Aplicar impulsos de rebote de nubes DESPUÉS del world.Step (que ocurre en super)
-        if hasattr(self, 'contact_listener'):
-            self.contact_listener.apply_pending_bounces()
 
         self._update_boss_ai(delta_time)
-
-        if self.teleport_flash_timer > 0:
-            self.teleport_flash_timer = max(0, self.teleport_flash_timer - delta_time)
-
-        if self.kick_flash_timer > 0:
-            self.kick_flash_timer = max(0, self.kick_flash_timer - delta_time)
 
     # ─── RENDER ───────────────────────────────────────────────
 
@@ -355,9 +306,6 @@ class ThirdMatch(MatchScene):
     def render(self, screen):
         super().render(screen)
         self._draw_angry_indicator(screen)
-        self._draw_teleport_flash(screen)
-        self._draw_kick_flash(screen)
-        self._draw_kick_hud(screen)
 
     # ─── INDICADORES VISUALES ─────────────────────────────────
 
@@ -370,11 +318,11 @@ class ThirdMatch(MatchScene):
             blink = (pygame.time.get_ticks() // 400) % 2 == 0
             color = ANGRY_INDICATOR_COLOR if blink else (200, 60, 30)
             tp_tag = " [TP USADO]" if self._teleport_used_this_anger else " [TP LISTO]"
-            label  = "⚠ MOTOMOTO ENFADADO!" + tp_tag
+            label  = "⚠ LA JENNY SE HA ENFADADO!" + tp_tag
             text   = self.angry_font.render(label, True, color)
         else:
             remaining_s = max(0, (30000 - self.boss.angry_timer) / 1000)
-            label = f"MotoMoto: calmado  ({remaining_s:.0f}s)"
+            label = f"La jenny está calmada  ({remaining_s:.0f}s)"
             text  = self.angry_font.render(label, True, (150, 255, 150))
 
         rect = text.get_rect(topright=ANGRY_INDICATOR_POS)
@@ -382,84 +330,3 @@ class ThirdMatch(MatchScene):
         bg.fill((0, 0, 0, 140))
         screen.blit(bg, (rect.x - 8, rect.y - 4))
         screen.blit(text, rect)
-
-    def _draw_teleport_flash(self, screen):
-        """Destello cyan donde MotoMoto se teletransportó."""
-        if self.teleport_flash_timer <= 0 or self.teleport_flash_pos is None:
-            return
-
-        ratio  = self.teleport_flash_timer / TELEPORT_FLASH_DURATION
-        alpha  = max(0, min(255, int(255 * ratio)))
-        cx, cy = self.teleport_flash_pos
-        radius = int(40 * ratio) + 10
-
-        flash_surf = pygame.Surface((radius * 2, radius * 2), pygame.SRCALPHA)
-        pygame.draw.circle(flash_surf, (*TELEPORT_COLOR, alpha // 2), (radius, radius), radius)
-        pygame.draw.circle(flash_surf, (*TELEPORT_COLOR, alpha),      (radius, radius), max(4, radius // 2))
-        screen.blit(flash_surf, (cx - radius, cy - radius))
-
-        t = pygame.time.get_ticks() / 150.0
-        for i in range(6):
-            angle = t + i * (2 * math.pi / 6)
-            d  = radius * 0.8
-            px = cx + int(d * math.cos(angle))
-            py = cy + int(d * math.sin(angle))
-            pygame.draw.circle(screen, TELEPORT_COLOR, (px, py), 3)
-
-    def _draw_kick_flash(self, screen):
-        """Destello naranja donde se lanzó el pelotazo."""
-        if self.kick_flash_timer <= 0 or self.kick_flash_pos is None:
-            return
-
-        ratio  = self.kick_flash_timer / POWERUP_FLASH_DURATION
-        alpha  = max(0, min(255, int(255 * ratio)))
-        cx, cy = self.kick_flash_pos
-        radius = int(50 * ratio) + 8
-
-        flash_surf = pygame.Surface((radius * 2, radius * 2), pygame.SRCALPHA)
-        pygame.draw.circle(flash_surf, (*POWERUP_KICK_COLOR, alpha // 3),
-                           (radius, radius), radius)
-        pygame.draw.circle(flash_surf, (*POWERUP_KICK_COLOR, alpha),
-                           (radius, radius), max(4, radius // 3))
-        screen.blit(flash_surf, (cx - radius, cy - radius))
-
-        if ratio > 0.5:
-            kick_text = self.kick_font.render("💥 KICK!", True, POWERUP_KICK_COLOR)
-            screen.blit(kick_text, kick_text.get_rect(center=(cx, cy - 30)))
-
-        t = pygame.time.get_ticks() / 100.0
-        for i in range(8):
-            angle      = t + i * (2 * math.pi / 8)
-            inner_dist = radius * 0.4
-            outer_dist = radius * 0.9
-            x1 = cx + int(inner_dist * math.cos(angle))
-            y1 = cy + int(inner_dist * math.sin(angle))
-            x2 = cx + int(outer_dist * math.cos(angle))
-            y2 = cy + int(outer_dist * math.sin(angle))
-            pygame.draw.line(screen, (*POWERUP_KICK_COLOR, alpha), (x1, y1), (x2, y2), 2)
-
-    def _draw_kick_hud(self, screen):
-        """HUD inferior: estado del pelotazo."""
-        if not self.player_has_powerup:
-            return
-
-        if self.jugador.body and self.pelota.body:
-            player_pos = self.jugador.body.position
-            ball_pos   = self.pelota.body.position
-            dx   = ball_pos.x - player_pos.x
-            dy   = ball_pos.y - player_pos.y
-            dist = math.sqrt(dx * dx + dy * dy)
-
-            if dist <= POWERUP_KICK_RANGE:
-                color = (0, 255, 100)
-                label = "⚡ PELOTAZO LISTO [E] - ¡EN RANGO!"
-            else:
-                color = (255, 200, 0)
-                label = f"⚡ PELOTAZO [E] - Acércate ({dist:.1f}m)"
-
-            text = self.kick_font.render(label, True, color)
-            rect = text.get_rect(bottomleft=(10, SH - 40))
-            bg   = pygame.Surface((rect.width + 12, rect.height + 8), pygame.SRCALPHA)
-            bg.fill((0, 0, 0, 150))
-            screen.blit(bg, (rect.x - 6, rect.y - 4))
-            screen.blit(text, rect)
