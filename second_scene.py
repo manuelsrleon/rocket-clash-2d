@@ -324,12 +324,6 @@ class SecondScene(MatchScene):
             self.boss.body.linearVelocity  = (0, 0)
             self.boss.body.angularVelocity = 0
 
-        # Destruir todas las nubes activas
-        if hasattr(self, 'clouds'):
-            for c in self.clouds:
-                self._destroy_cloud_body(c['body'])
-            self.clouds            = []
-            self.cloud_spawn_timer = CLOUD_SPAWN_INTERVAL * 0.3
 
         if not (hasattr(self, 'boss') and self.boss.is_angry):
             self._teleport_used_this_anger = False
