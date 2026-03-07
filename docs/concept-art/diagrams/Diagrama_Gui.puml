@@ -1,0 +1,72 @@
+@startuml SistemaGUI
+skinparam shadowing false
+skinparam monochrome false
+skinparam classAttributeIconSize 0
+
+title Diagrama de Clases: Sistema de Interfaz Gráfica (GUI)
+
+class GUIScreen {
+  - image: Surface
+  - GUIElements: List<GUIElement>
+  - selected_index: int
+  + events(event_list): void
+  + render(screen: Surface): void
+  + _update_selection(): void
+}
+
+abstract class GUIElement {
+  - screen: Surface
+  - rect: Rect
+  + setPosition(position: tuple): void
+  + render(): void
+  + action(): void
+}
+
+class Button {
+  - text: String
+  - hover: boolean
+  - font_size: int
+  + render(screen: Surface): void
+  + action(): void
+}
+
+class VolumeSlider {
+  - value: float
+  - selected: boolean
+  + get_value(): float
+  + _value_to_x(value: float): int
+  + render(screen: Surface): void
+}
+
+' Botones específicos
+class PlayButton
+class SettingsButton
+class ExitButton
+class ResumeButton
+class ExitToMenuButton
+
+' Relaciones de Agregación y Herencia (Sin cardinalidad)
+GUIScreen o--> GUIElement : Contiene
+
+GUIElement <|-- Button
+Button <|-- PlayButton
+Button <|-- SettingsButton
+Button <|-- ExitButton
+Button <|-- ResumeButton
+Button <|-- ExitToMenuButton
+
+' Managers externos (Estereotipados para no romper el diagrama)
+class AssetsManager <<Manager>>
+class VolumeController <<Manager>>
+class SettingsManager <<Manager>>
+
+hide AssetsManager members
+hide VolumeController members
+hide SettingsManager members
+
+' Dependencias funcionales
+GUIScreen ..> AssetsManager : Usa (Carga de fondos)
+Button ..> AssetsManager : Usa (Fuentes y SFX de clic)
+VolumeSlider ..> VolumeController : Ajusta volumen actual
+VolumeSlider ..> SettingsManager : Guarda ajustes
+@enduml

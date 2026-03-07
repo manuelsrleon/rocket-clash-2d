@@ -1,0 +1,67 @@
+@startuml OrganizacionScenes
+skinparam shadowing false
+skinparam monochrome false
+skinparam packageStyle rectangle
+
+title Organización interna del componente Scenes
+
+package "Componente: Scenes" {
+
+    class "Scene" as SceneBase
+    class "PyGameScene" as PyGameSceneBase
+    
+    SceneBase <|-- PyGameSceneBase
+
+    package "Rama: Menu" {
+        class "Menu" as MainMenu
+        class "IngameMenu" as Ingame
+        class "SettingsScene" as Settings
+        class "EndScene" as EndScn
+        class "IntroScene" as Intro
+        class "DialogueScene" as Dialogue
+    }
+
+    package "Rama: Levels" {
+        class "MatchScene" as Match
+        class "FirstScene" as First
+        class "SecondScene" as Second
+        class "ThirdScene" as Third
+    }
+}
+
+' Relaciones de Herencia
+PyGameSceneBase <|-- MainMenu
+PyGameSceneBase <|-- Ingame
+PyGameSceneBase <|-- Settings
+PyGameSceneBase <|-- EndScn
+PyGameSceneBase <|-- Intro
+PyGameSceneBase <|-- Dialogue
+
+PyGameSceneBase <|-- Match
+Match <|-- First
+Match <|-- Second
+Match <|-- Third
+
+' Dependencias externas (declaradas como clases con estereotipo para evitar el crash)
+class "GUI" as GUIComponent <<Component>>
+class "Managers" as ManagersComponent <<Component>>
+class "Entities" as EntitiesComponent <<Component>>
+class "Utils" as UtilsComponent <<Component>>
+
+' Ocultamos los atributos de los componentes para que queden limpios
+hide GUIComponent members
+hide ManagersComponent members
+hide EntitiesComponent members
+hide UtilsComponent members
+
+' Dependencias de la rama Menu
+MainMenu ..> GUIComponent
+Ingame ..> GUIComponent
+Settings ..> ManagersComponent : (sound/settings)
+
+' Dependencias de la rama Levels
+Match ..> EntitiesComponent : controla
+Match ..> UtilsComponent : usa
+First ..> ManagersComponent : usa
+Second ..> ManagersComponent : usa
+@enduml

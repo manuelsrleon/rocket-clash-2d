@@ -1,0 +1,23 @@
+@startuml ArquitecturaAltoNivel
+skinparam componentStyle uml2
+skinparam shadowing false
+skinparam monochrome false
+
+title Diagrama de componentes UML del sistema a alto nivel
+
+component "Core" as Core
+component "Scenes" as Scenes
+component "Entities" as Entities
+component "GUI" as GUI
+component "Managers" as Managers
+component "Utils" as Utils
+
+Core ..> Scenes : Gestiona
+Core ..> Utils : Configura
+Scenes ..> Entities : Controla físicas/lógica
+Scenes ..> GUI : Renderiza
+Scenes ..> Managers : Usa (Audio/Textos)
+GUI ..> Managers : Usa (Ajustes/Sonido)
+Entities ..> Managers : Usa (Sprites/Audio)
+Managers ..> Utils : Lee/Escribe
+@enduml

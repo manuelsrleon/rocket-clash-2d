@@ -1,0 +1,61 @@
+@startuml PaqueteManagers
+skinparam shadowing false
+skinparam monochrome false
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+
+title Diagrama de Clases del paquete Managers
+
+package "Componente: Managers" {
+
+    package "Gestión de Diálogos" {
+        class DialogManager {
+            - json_path: String
+            - data: dict
+            - lines: List
+            - speed_multiplier: float
+            + load(): void
+            + update(dt: float): void
+            + get_shown_text(): String
+            + is_line_complete(): boolean
+            + advance(): String
+        }
+
+        class DialogueUI {
+            - full_text: String
+            - anim_progress: float
+            - entry_mode: String
+            + _anim_slide(rect, progress): Rect
+            + _anim_pop(rect, progress): Rect
+            + draw(screen, y, text, x): float
+        }
+    }
+
+    package "Gestión de Recursos (Assets)" {
+        class AssetsManager <<Utilidad>> {
+            + {static} load_image(name, path, scale): Surface
+            + {static} load_sound(name, path): Sound
+        }
+
+        class BallsAssets
+        class CarsAssets
+        class GUIAssets
+        class SFXAssets
+    }
+}
+
+' Relaciones internas limpias (Sin cardinalidad)
+DialogManager *--> DialogueUI : Gestiona historial y animaciones
+AssetsManager <|-- BallsAssets : Estructura
+AssetsManager <|-- CarsAssets : Estructura
+AssetsManager <|-- GUIAssets : Estructura
+AssetsManager <|-- SFXAssets : Estructura
+
+' Relaciones externas
+class "Archivos .json" as JSON <<Datos Externos>>
+class "Director / Scenes" as Core <<Core>>
+
+DialogManager ..> JSON : Lee guiones
+Core ..> DialogManager : Instancia y actualiza
+Core ..> SFXAssets : Reproduce sonidos
+@enduml

@@ -1,0 +1,73 @@
+@startuml PaqueteEntities
+skinparam shadowing false
+skinparam monochrome false
+skinparam classAttributeIconSize 0
+
+title Diagrama de Clases del paquete Entities (Físicas Box2D)
+
+' Clase externa de Pygame
+class "pygame.sprite.Sprite" as PygameSprite <<PyGame>>
+
+package "Componente: Entities" {
+
+    abstract class MySprite {
+      + image: Surface
+      + rect: Rect
+      + body: b2Body
+      + establecerPosicion(pos: tuple): void
+    }
+
+    class Car {
+      + move_speed: float
+      + jump_force: float
+      + boost_amount: float
+      + update(dt: float): void
+    }
+
+    class PlayerCar {
+      + update_movement(keys: list): void
+      + jump(): void
+    }
+
+    class Bulldozer {
+      - state: String
+      - attack_timer: float
+      + update(dt: float): void
+      - _update_ai(): void
+    }
+
+    class MotoMoto {
+      - teleport_cooldown: int
+      - is_teleporting: boolean
+      + update(dt: float): void
+      + teleport_to(target_pos): void
+    }
+
+    class Ball {
+      + body: b2Body
+      + update(dt: float): void
+    }
+
+    class RocketFactory <<Factory>> {
+      + {static} create_element(tipo, world, pos): Object
+      + {static} create_mud(world, pos, size): b2Body
+    }
+}
+
+' Herencias de la librería gráfica
+PygameSprite <|-- MySprite
+PygameSprite <|-- Ball
+
+' Jerarquía de Vehículos
+MySprite <|-- Car
+Car <|-- PlayerCar
+Car <|-- Bulldozer
+Car <|-- MotoMoto
+
+' Dependencias de Creación (Patrón Factoría, sin cardinalidades)
+RocketFactory ..> PlayerCar : Instancia
+RocketFactory ..> Bulldozer : Instancia
+RocketFactory ..> MotoMoto : Instancia
+RocketFactory ..> Ball : Instancia
+
+@enduml
