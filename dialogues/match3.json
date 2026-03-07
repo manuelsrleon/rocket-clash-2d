@@ -3,6 +3,7 @@
   "next_scene": "end_scene",
   "base_speed": 15,
   "background": "assets/backgrounds/background.png",
+  "music": "assets/sfx/match_bg_theme_3.ogg",
   "characters": {
     "left": {
       "name": "Ruedaldinho",
