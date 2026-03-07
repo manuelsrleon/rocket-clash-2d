@@ -152,6 +152,30 @@ class MatchScene(PyGameScene):
         self.font_goal  = pygame.font.SysFont(GUISettings.FONT_TEXT, 72, bold=True)
         self.font_powerup = pygame.font.SysFont(GUISettings.FONT_TEXT, 16, bold=True)
 
+        # Música de fondo
+        self._start_background_music()
+
+    def on_exit(self):
+        """Se llama cuando se sale de la escena"""
+        self._stop_background_music()
+
+    def _start_background_music(self):
+        """Inicia la música de fondo del partido"""
+        try:
+            # Cargar música usando pygame.mixer.music para música de fondo
+            pygame.mixer.music.load("assets/sfx/musica2.ogg")
+            pygame.mixer.music.set_volume(VolumeController.get_music_volume())
+            pygame.mixer.music.play(-1)  # -1 para loop infinito
+        except Exception as e:
+            print(f"Error al cargar música de fondo: {e}")
+
+    def _stop_background_music(self):
+        """Detiene la música de fondo"""
+        try:
+            pygame.mixer.music.stop()
+        except:
+            pass
+
     def _get_config(self):
         return {}
 
@@ -303,8 +327,8 @@ class MatchScene(PyGameScene):
         self.goal_scored      = True
         self.goal_pause_timer = self.goal_pause
         try:
-            sound = SFXAssets.goal1.play()
-            sound.set_volume(VolumeController.get_current_volume())
+            sound = SFXAssets.musica2.play()
+            sound.set_volume(VolumeController.get_music_volume())
         except Exception:
             pass
 
@@ -421,6 +445,9 @@ class MatchScene(PyGameScene):
         if self.match_over:
             return
 
+        # Actualizar volumen de música de fondo
+        pygame.mixer.music.set_volume(VolumeController.get_music_volume())
+
         if self.goal_scored:
             self.goal_pause_timer -= delta_time
             if self.goal_pause_timer <= 0:
@@ -446,6 +473,7 @@ class MatchScene(PyGameScene):
         if self.time_remaining_ms <= 0:
             self.time_remaining_ms = 0
             self.match_over = True
+            self._stop_background_music()  # Detener música al terminar el partido
             self.director.change_scene(EndScene(
                 self.director, self.score_left, self.score_right
             ))

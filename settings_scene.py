@@ -18,7 +18,8 @@ TITLE_FONT_SIZE = 48
 LABEL_FONT_SIZE = 24
 TEXT_COLOR = Colors.WHITE
 TITLE_Y = 50
-VOLUME_SLIDER_Y = 200
+MUSIC_SLIDER_Y = 150
+SFX_SLIDER_Y = 250
 SLIDER_LABEL_OFFSET = 40
 SAVE_BUTTON_Y = 400
 
@@ -47,11 +48,9 @@ class VolumeSlider:
     def handle_event(self, event):
         if event.type == KEYDOWN:
             if event.key == K_LEFT:
-                # Disminuir volumen
                 self.value = max(VOLUME_MIN, self.value - 0.1)
                 self.handle_x = self._value_to_x(self.value)
             elif event.key == K_RIGHT:
-                # Aumentar volumen
                 self.value = min(VOLUME_MAX, self.value + 0.1)
                 self.handle_x = self._value_to_x(self.value)
 
@@ -77,6 +76,7 @@ class VolumeSlider:
         )
         pygame.draw.circle(screen, SLIDER_FG_COLOR, handle_center, SLIDER_HANDLE_RADIUS - 3)
 
+
 class SaveButton(Button):
 
     def __init__(self, screen):
@@ -84,13 +84,13 @@ class SaveButton(Button):
             self,
             screen,
             position=(ScreenSettings.SCREEN_WIDTH // 2, SAVE_BUTTON_Y),
-            text="Save Settings",
+            text="Guardar",
         )
-        # Center the button
         self.base_rect.centerx = ScreenSettings.SCREEN_WIDTH // 2
 
     def action(self):
         self.screen.save_settings()
+
 
 class SettingsScene(PyGameScene):
 
@@ -99,31 +99,45 @@ class SettingsScene(PyGameScene):
         self.title_font = pygame.font.SysFont(GUISettings.FONT_TEXT, TITLE_FONT_SIZE, bold=True)
         self.label_font = pygame.font.SysFont(GUISettings.FONT_TEXT, LABEL_FONT_SIZE)
         slider_x = ScreenSettings.SCREEN_WIDTH // 2 - 150
-        
-        saved_volume = SettingsManager.get_volume()
-        self.volume_slider = VolumeSlider(slider_x, VOLUME_SLIDER_Y, saved_volume)
+
+        # Load saved settings
+        volumes = SettingsManager.get_volumes()
+
+        # Create music volume slider
+        self.music_slider = VolumeSlider(slider_x, MUSIC_SLIDER_Y, volumes['music'])
+
+        # Create SFX volume slider
+        self.sfx_slider = VolumeSlider(slider_x, SFX_SLIDER_Y, volumes['sfx'])
 
         self.save_button = SaveButton(self)
-        VolumeController.set_volume(self.volume_slider.get_value())
+
+        # Set initial volumes
+        VolumeController.set_music_volume(self.music_slider.get_value())
+        VolumeController.set_sfx_volume(self.sfx_slider.get_value())
 
         self.show_save_message = False
         self.save_message_timer = 0
-        
-        self.elements = [self.volume_slider, self.save_button]
+
+        self.elements = [self.music_slider, self.sfx_slider, self.save_button]
         self.selected_index = 0
         self._update_selection()
 
     def _update_selection(self):
-        self.volume_slider.selected = False
+        self.music_slider.selected = False
+        self.sfx_slider.selected = False
         self.save_button.hover = False
 
         if self.selected_index == 0:
-            self.volume_slider.selected = True
+            self.music_slider.selected = True
         elif self.selected_index == 1:
+            self.sfx_slider.selected = True
+        elif self.selected_index == 2:
             self.save_button.hover = True
 
     def update(self, delta_time):
-        VolumeController.set_volume(self.volume_slider.get_value())
+        VolumeController.set_music_volume(self.music_slider.get_value())
+        VolumeController.set_sfx_volume(self.sfx_slider.get_value())
+
         if self.show_save_message:
             self.save_message_timer += delta_time
             if self.save_message_timer >= 2000:
@@ -142,52 +156,77 @@ class SettingsScene(PyGameScene):
                     self.selected_index = (self.selected_index + 1) % len(self.elements)
                     self._update_selection()
                 elif event.key == K_RETURN or event.key == K_KP_ENTER:
-                    if self.selected_index == 1:
+                    if self.selected_index == 2:  # Save button
                         self.save_button.action()
                 elif event.key == K_LEFT or event.key == K_RIGHT:
                     if self.selected_index == 0:
-                        self.volume_slider.handle_event(event)
+                        self.music_slider.handle_event(event)
+                    elif self.selected_index == 1:
+                        self.sfx_slider.handle_event(event)
 
     def render(self, screen):
         screen.fill(BACKGROUND_COLOR)
         self._render_title(screen)
-        self._render_volume_section(screen)
+        self._render_music_section(screen)
+        self._render_sfx_section(screen)
         self.save_button.render(screen)
         if self.show_save_message:
             self._render_save_confirmation(screen)
         self._render_instructions(screen)
 
     def _render_title(self, screen):
-        title_text = self.title_font.render("Settings", True, TEXT_COLOR)
+        title_text = self.title_font.render("Configuración", True, TEXT_COLOR)
         title_rect = title_text.get_rect(
             center=(ScreenSettings.SCREEN_WIDTH // 2, TITLE_Y)
         )
         screen.blit(title_text, title_rect)
 
-    def _render_volume_section(self, screen):
-        # Volume label
-        volume_label = self.label_font.render("Volume", True, TEXT_COLOR)
-        label_rect = volume_label.get_rect(
+    def _render_music_section(self, screen):
+        # Music label
+        music_label = self.label_font.render("Música", True, TEXT_COLOR)
+        label_rect = music_label.get_rect(
             center=(
                 ScreenSettings.SCREEN_WIDTH // 2,
-                VOLUME_SLIDER_Y - SLIDER_LABEL_OFFSET,
+                MUSIC_SLIDER_Y - SLIDER_LABEL_OFFSET,
             )
         )
-        screen.blit(volume_label, label_rect)
-        self.volume_slider.render(screen)
+        screen.blit(music_label, label_rect)
+        self.music_slider.render(screen)
 
-        volume_percent = int(self.volume_slider.get_value() * 100)
-        percent_text = self.label_font.render(f"{volume_percent}%", True, TEXT_COLOR)
+        music_percent = int(self.music_slider.get_value() * 100)
+        percent_text = self.label_font.render(f"{music_percent}%", True, TEXT_COLOR)
         percent_rect = percent_text.get_rect(
             center=(
                 ScreenSettings.SCREEN_WIDTH // 2,
-                VOLUME_SLIDER_Y + SLIDER_LABEL_OFFSET,
+                MUSIC_SLIDER_Y + SLIDER_LABEL_OFFSET,
+            )
+        )
+        screen.blit(percent_text, percent_rect)
+
+    def _render_sfx_section(self, screen):
+        # SFX label
+        sfx_label = self.label_font.render("Efectos", True, TEXT_COLOR)
+        label_rect = sfx_label.get_rect(
+            center=(
+                ScreenSettings.SCREEN_WIDTH // 2,
+                SFX_SLIDER_Y - SLIDER_LABEL_OFFSET,
+            )
+        )
+        screen.blit(sfx_label, label_rect)
+        self.sfx_slider.render(screen)
+
+        sfx_percent = int(self.sfx_slider.get_value() * 100)
+        percent_text = self.label_font.render(f"{sfx_percent}%", True, TEXT_COLOR)
+        percent_rect = percent_text.get_rect(
+            center=(
+                ScreenSettings.SCREEN_WIDTH // 2,
+                SFX_SLIDER_Y + SLIDER_LABEL_OFFSET,
             )
         )
         screen.blit(percent_text, percent_rect)
 
     def _render_save_confirmation(self, screen):
-        save_msg = self.label_font.render("Settings saved!", True, (100, 255, 100))
+        save_msg = self.label_font.render("¡Configuración guardada!", True, (100, 255, 100))
         save_msg_rect = save_msg.get_rect(
             center=(ScreenSettings.SCREEN_WIDTH // 2, SAVE_BUTTON_Y + 60)
         )
@@ -195,15 +234,35 @@ class SettingsScene(PyGameScene):
 
     def _render_instructions(self, screen):
         instructions = self.label_font.render(
-            "Arrows: Navigate | Left/Right: Volume | Enter: Save | ESC: Return", True, (150, 150, 150)
+            "Flechas: Navegar | Izq/Der: Volumen | Enter: Guardar | ESC: Volver", True, (150, 150, 150)
         )
         instructions_rect = instructions.get_rect(
-            center=(ScreenSettings.SCREEN_WIDTH // 2, ScreenSettings.SCREEN_HEIGHT - 50)
+            center=(ScreenSettings.SCREEN_WIDTH // 2, ScreenSettings.SCREEN_HEIGHT - 30)
         )
         screen.blit(instructions, instructions_rect)
 
     def save_settings(self):
-        settings = {"volume": self.volume_slider.get_value()}
-        if SettingsManager.save_settings(settings):
-            self.show_save_message = True
-            self.save_message_timer = 0
+        music_vol = self.music_slider.get_value()
+        sfx_vol = self.sfx_slider.get_value()
+
+        # Save to settings
+        SettingsManager.save_volumes(music_vol, sfx_vol)
+
+        self.show_save_message = True
+        self.save_message_timer = 0
+
+    def _render_save_confirmation(self, screen):
+        save_msg = self.label_font.render("¡Configuración guardada!", True, (100, 255, 100))
+        save_msg_rect = save_msg.get_rect(
+            center=(ScreenSettings.SCREEN_WIDTH // 2, SAVE_BUTTON_Y + 60)
+        )
+        screen.blit(save_msg, save_msg_rect)
+
+    def _render_instructions(self, screen):
+        instructions = self.label_font.render(
+            "Flechas: Navegar | Izq/Der: Volumen | Enter: Guardar | ESC: Volver", True, (150, 150, 150)
+        )
+        instructions_rect = instructions.get_rect(
+            center=(ScreenSettings.SCREEN_WIDTH // 2, ScreenSettings.SCREEN_HEIGHT - 30)
+        )
+        screen.blit(instructions, instructions_rect)
