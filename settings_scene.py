@@ -182,46 +182,40 @@ class SettingsScene(PyGameScene):
         screen.blit(title_text, title_rect)
 
     def _render_music_section(self, screen):
-        # Music label
+        # Music label (left side)
         music_label = self.label_font.render("Música", True, TEXT_COLOR)
         label_rect = music_label.get_rect(
-            center=(
-                ScreenSettings.SCREEN_WIDTH // 2,
-                MUSIC_SLIDER_Y - SLIDER_LABEL_OFFSET,
-            )
+            midleft=(50, MUSIC_SLIDER_Y)
         )
         screen.blit(music_label, label_rect)
+
+        # Music slider (center)
         self.music_slider.render(screen)
 
+        # Music percentage (right side)
         music_percent = int(self.music_slider.get_value() * 100)
         percent_text = self.label_font.render(f"{music_percent}%", True, TEXT_COLOR)
         percent_rect = percent_text.get_rect(
-            center=(
-                ScreenSettings.SCREEN_WIDTH // 2,
-                MUSIC_SLIDER_Y + SLIDER_LABEL_OFFSET,
-            )
+            midright=(ScreenSettings.SCREEN_WIDTH - 50, MUSIC_SLIDER_Y)
         )
         screen.blit(percent_text, percent_rect)
 
     def _render_sfx_section(self, screen):
-        # SFX label
+        # SFX label (left side)
         sfx_label = self.label_font.render("Efectos", True, TEXT_COLOR)
         label_rect = sfx_label.get_rect(
-            center=(
-                ScreenSettings.SCREEN_WIDTH // 2,
-                SFX_SLIDER_Y - SLIDER_LABEL_OFFSET,
-            )
+            midleft=(50, SFX_SLIDER_Y)
         )
         screen.blit(sfx_label, label_rect)
+
+        # SFX slider (center)
         self.sfx_slider.render(screen)
 
+        # SFX percentage (right side)
         sfx_percent = int(self.sfx_slider.get_value() * 100)
         percent_text = self.label_font.render(f"{sfx_percent}%", True, TEXT_COLOR)
         percent_rect = percent_text.get_rect(
-            center=(
-                ScreenSettings.SCREEN_WIDTH // 2,
-                SFX_SLIDER_Y + SLIDER_LABEL_OFFSET,
-            )
+            midright=(ScreenSettings.SCREEN_WIDTH - 50, SFX_SLIDER_Y)
         )
         screen.blit(percent_text, percent_rect)
 
