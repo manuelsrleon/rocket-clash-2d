@@ -10,15 +10,15 @@ from factory import RocketFactory
 
 GROUND_Y   = 570
 GOAL_W     = 150
-GOAL_H     = 320
+GOAL_H     = 250
 GOAL_POST  = 6
 GOAL_TOP_Y = GROUND_Y - GOAL_H + 30
+L_GOAL_POS = -100
 
 BG_COLOR       = (40, 40, 80)
 GROUND_COLOR   = (30, 30, 60)
 GOAL_COLOR     = (255, 255, 255)
 GOAL_NET_COLOR = (180, 180, 180, 80)
-
 # Boss MotoMoto
 BOSS_START = (SW - 200, GROUND_Y - 40)
 
@@ -281,27 +281,26 @@ class ThirdMatch(MatchScene):
                 self._goalpost_bg_r = self._goalpost_bg_l.copy()
             self._goalpost_bg = True
 
-        screen.blit(self._goalpost_bg_l, (0, GOAL_TOP_Y))
-        screen.blit(self._goalpost_bg_r, (SW - GOAL_W*2, GOAL_TOP_Y))
+        screen.blit(self._goalpost_bg_l, (L_GOAL_POS, GOAL_TOP_Y))
+        screen.blit(self._goalpost_bg_r, (SW - GOAL_W+L_GOAL_POS+50, GOAL_TOP_Y))
 
     def _render_field_fg(self, screen):
         if not hasattr(self, '_goalpost_fg'):
             try:
-                l_goalpost_fg    = pygame.image.load('./assets/stadiums/l_goalpost_fg.png').convert_alpha()
-                r_goalpost_fg    = pygame.image.load('./assets/stadiums/r_goalpost_fg.png').convert_alpha()
+                l_goalpost_fg    = pygame.image.load('./assets/stadiums/stadium-3-goalpost-fg.png').convert_alpha()
 
                 l_goalpost_fg_scaled = pygame.transform.scale(l_goalpost_fg, (GOAL_W*2, GOAL_H))
                 r_goalpost_fg_scaled = pygame.transform.flip(l_goalpost_fg_scaled, True, False)
 
-                self._goalpost_fg_l = l_goalpost_bg_scaled
-                self._goalpost_fg_r = r_goalpost_bg_scaled
+                self._goalpost_fg_l = l_goalpost_fg_scaled
+                self._goalpost_fg_r = r_goalpost_fg_scaled
             except Exception:
-                self._goalpost_fg_l = pygame.Surface((GOAL_W*2, GOAL_H), pygame.SRCALPHA)
+                self._goalpost_fg_l = pygame.Surface((GOAL_W, GOAL_H), pygame.SRCALPHA)
                 self._goalpost_fg_r = self._goalpost_fg_l.copy()
             self._goalpost_fg = True
 
-        screen.blit(self._goalpost_fg_l, (0, GOAL_TOP_Y))
-        screen.blit(self._goalpost_fg_r, (SW - GOAL_W*2, GOAL_TOP_Y))
+        screen.blit(self._goalpost_fg_l, (L_GOAL_POS, GOAL_TOP_Y))
+        screen.blit(self._goalpost_fg_r, (SW - GOAL_W-50, GOAL_TOP_Y))
 
     def render(self, screen):
         super().render(screen)
