@@ -39,11 +39,11 @@ TRAPDOOR_ACTIVE_MS    = 400
 TRAPDOOR_VISIBLE_MS_RANGE = (2000, 5000)
 TRAPDOOR_HIDDEN_MS_RANGE  = (15000, 25000)
 
-TRAPDOOR_X_CENTERS = [
-    270,
-    SW // 2,
-    SW - 270,
-]
+TRAPDOOR_MAX_VISIBLE  = 2
+TRAPDOOR_SPAWN_INTERVAL_RANGE = (4000, 9000)  # ms entre intentos de spawn
+TRAPDOOR_X_MIN = GOAL_W + 40
+TRAPDOOR_X_MAX = SW - GOAL_W - 40
+TRAPDOOR_MIN_SEPARATION = 120  # px mínimo entre centros de trampillas
 
 
 class ThirdSceneContactListener(Box2D.b2ContactListener):
@@ -87,8 +87,10 @@ class ThirdSceneContactListener(Box2D.b2ContactListener):
         count = self._trapdoor_contact_count.get(key, 0) + 1
         self._trapdoor_contact_count[key] = count
 
-        if count == 1 and 0 <= trapdoor_idx < len(self.scene._trapdoors):
-            self.scene._trapdoors[trapdoor_idx]['player_inside'] = True
+        if count == 1:
+            td = self.scene._get_trapdoor_by_index(trapdoor_idx)
+            if td is not None:
+                td['player_inside'] = True
 
     def EndContact(self, contact):
         trapdoor_idx, player_body = self._get_trapdoor_player_pair(contact)
@@ -99,8 +101,9 @@ class ThirdSceneContactListener(Box2D.b2ContactListener):
         count = self._trapdoor_contact_count.get(key, 0) - 1
         if count <= 0:
             self._trapdoor_contact_count.pop(key, None)
-            if 0 <= trapdoor_idx < len(self.scene._trapdoors):
-                self.scene._trapdoors[trapdoor_idx]['player_inside'] = False
+            td = self.scene._get_trapdoor_by_index(trapdoor_idx)
+            if td is not None:
+                td['player_inside'] = False
         else:
             self._trapdoor_contact_count[key] = count
 
@@ -110,7 +113,7 @@ class ThirdScene(MatchScene):
     Mechanics:
         - Jenny is faster than the player.
         - Every ~20s she launches a headlight flash that blinds the player for 2s (unless wearing sunglasses).
-        - There are 3 trapdoors on the ground that launch the player upwards.
+        - There are up to 2 trapdoors at random positions on the ground that launch the player upwards.
         - Power-up: Sunglasses: protect from the flash while active.
     """
 
@@ -146,67 +149,71 @@ class ThirdScene(MatchScene):
         self._flash_hold_timer = 0
         self._flash_protected_timer = 0
         self._sunglasses_timer = 0
+
+        # Trapdoors: lista dinámica + contador de índices únicos
         self._trapdoors = []
-        self._create_trapdoors()
+        self._next_trapdoor_index = 0
+        self._spawn_timer = random.randint(*TRAPDOOR_SPAWN_INTERVAL_RANGE)
 
-    def _create_trapdoors(self):
-        """Creates 3 visual trapdoors and their Box2D sensor via RocketFactory."""
-        for idx, cx_px in enumerate(TRAPDOOR_X_CENTERS):
-            x_px = cx_px - TRAPDOOR_W // 2
-            y_px = GROUND_Y - TRAPDOOR_H
-            rect = pygame.Rect(x_px, y_px, TRAPDOOR_W, TRAPDOOR_H)
+    def _get_trapdoor_by_index(self, index):
+        """Busca una trampilla por su índice único."""
+        for td in self._trapdoors:
+            if td['index'] == index:
+                return td
+        return None
 
-            sensor_body = RocketFactory.create_trapdoor_sensor(
-                self.world, cx_px, y_px, TRAPDOOR_W, TRAPDOOR_H, idx
-            )
+    def _random_x_center(self):
+        """Genera una posición X aleatoria para una trampilla, respetando separación mínima."""
+        for _ in range(30):
+            cx = random.randint(TRAPDOOR_X_MIN, TRAPDOOR_X_MAX)
+            too_close = False
+            for td in self._trapdoors:
+                if abs(td['rect'].centerx - cx) < TRAPDOOR_MIN_SEPARATION:
+                    too_close = True
+                    break
+            if not too_close:
+                return cx
+        return None
 
-            self._trapdoors.append({
-                'rect': rect,
-                'sensor_body': sensor_body,
-                'player_inside': False,
-                'active': False,
-                'active_timer': 0,
-                'visible': True,
-                'state_timer': self._random_visible_ms(),
-            })
-
-    def _random_visible_ms(self):
-        return random.randint(*TRAPDOOR_VISIBLE_MS_RANGE)
-
-    def _random_hidden_ms(self):
-        return random.randint(*TRAPDOOR_HIDDEN_MS_RANGE)
-
-    def _set_trapdoor_visibility(self, idx, visible):
-        if not (0 <= idx < len(self._trapdoors)):
+    def _spawn_trapdoor(self):
+        """Crea una trampilla en una posición aleatoria del suelo."""
+        cx_px = self._random_x_center()
+        if cx_px is None:
             return
 
-        td = self._trapdoors[idx]
-        if td['visible'] == visible:
-            return
+        idx = self._next_trapdoor_index
+        self._next_trapdoor_index += 1
 
-        td['visible'] = visible
-        td['active'] = False
-        td['active_timer'] = 0
-        td['player_inside'] = False
+        x_px = cx_px - TRAPDOOR_W // 2
+        y_px = GROUND_Y - TRAPDOOR_H
+        rect = pygame.Rect(x_px, y_px, TRAPDOOR_W, TRAPDOOR_H)
 
+        sensor_body = RocketFactory.create_trapdoor_sensor(
+            self.world, cx_px, y_px, TRAPDOOR_W, TRAPDOOR_H, idx
+        )
+
+        self._trapdoors.append({
+            'index': idx,
+            'rect': rect,
+            'sensor_body': sensor_body,
+            'player_inside': False,
+            'active': False,
+            'active_timer': 0,
+            'lifetime': random.randint(*TRAPDOOR_VISIBLE_MS_RANGE),
+        })
+
+    def _despawn_trapdoor(self, td):
+        """Elimina una trampilla y destruye su body."""
         body = td.get('sensor_body')
         if body:
-            body.active = visible
-
-        if hasattr(self, 'contact_listener') and hasattr(self.contact_listener, 'clear_trapdoor_contacts'):
-            self.contact_listener.clear_trapdoor_contacts(idx)
-
-        td['state_timer'] = self._random_visible_ms() if visible else self._random_hidden_ms()
-
-    def _update_trapdoor_visibility(self, delta_time):
-        for idx, td in enumerate(self._trapdoors):
-            td['state_timer'] -= delta_time
-            if td['state_timer'] > 0:
-                continue
-            self._set_trapdoor_visibility(idx, not td['visible'])
+            RocketFactory.destroy_body(self.world, body)
+            td['sensor_body'] = None
+        if hasattr(self, 'contact_listener'):
+            self.contact_listener.clear_trapdoor_contacts(td['index'])
+        self._trapdoors.remove(td)
 
     def _destroy_trapdoors(self):
-        for td in self._trapdoors:
+        for td in list(self._trapdoors):
             body = td.get('sensor_body')
             if body:
                 RocketFactory.destroy_body(self.world, body)
@@ -218,23 +225,46 @@ class ThirdScene(MatchScene):
         if not player_body:
             return
 
-        self._update_trapdoor_visibility(delta_time)
-        player_cx_m = player_body.position.x
+        # Reducir lifetime de cada trampilla y eliminar las expiradas
+        for td in list(self._trapdoors):
+            td['lifetime'] -= delta_time
+            if td['lifetime'] <= 0 and not td['active']:
+                self._despawn_trapdoor(td)
+
+        # Intentar spawnear nuevas trampillas
+        self._spawn_timer -= delta_time
+        if self._spawn_timer <= 0:
+            self._spawn_timer = random.randint(*TRAPDOOR_SPAWN_INTERVAL_RANGE)
+            if len(self._trapdoors) < TRAPDOOR_MAX_VISIBLE:
+                self._spawn_trapdoor()
+
+        boss_body = self.boss.body if hasattr(self, 'boss') and self.boss.body else None
 
         for td in self._trapdoors:
             if td['active']:
                 td['active_timer'] -= delta_time
                 if td['active_timer'] <= 0:
                     td['active'] = False
-            if not td['visible'] or td['active']:
                 continue
+
             rect = td['rect']
             td_left_m  = px2m(rect.left)
             td_right_m = px2m(rect.right)
-            player_over = td_left_m <= player_cx_m <= td_right_m
 
-            if player_over and self.jugador.on_ground:
+            launched = False
+
+            player_cx_m = player_body.position.x
+            if td_left_m <= player_cx_m <= td_right_m and self.jugador.on_ground:
                 self._launch_player_up(player_body)
+                launched = True
+
+            if boss_body:
+                boss_cx_m = boss_body.position.x
+                if td_left_m <= boss_cx_m <= td_right_m and self.boss.on_ground:
+                    self._launch_player_up(boss_body)
+                    launched = True
+
+            if launched:
                 td['active'] = True
                 td['active_timer'] = TRAPDOOR_ACTIVE_MS
 
@@ -361,15 +391,10 @@ class ThirdScene(MatchScene):
         if hasattr(self, 'contact_listener') and hasattr(self.contact_listener, 'reset_flags'):
             self.contact_listener.reset_flags()
 
-        for td in self._trapdoors:
-            td['player_inside'] = False
-            td['active']        = False
-            td['active_timer']  = 0
-            td['visible'] = True
-            td['state_timer'] = self._random_visible_ms()
-            body = td.get('sensor_body')
-            if body:
-                body.active = True
+        # Destruir trampillas existentes y reiniciar
+        self._destroy_trapdoors()
+        self._next_trapdoor_index = 0
+        self._spawn_timer = random.randint(*TRAPDOOR_SPAWN_INTERVAL_RANGE)
 
     def update(self, delta_time):
         super().update(delta_time)
@@ -389,8 +414,6 @@ class ThirdScene(MatchScene):
 
         # Trapdoors
         for td in self._trapdoors:
-            if not td['visible']:
-                continue
             color = TRAPDOOR_ACTIVE_COLOR if td['active'] else TRAPDOOR_COLOR
             pygame.draw.rect(screen, color, td['rect'])
             pygame.draw.rect(screen, TRAPDOOR_BORDER_COLOR, td['rect'], 2)
