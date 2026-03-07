@@ -106,3 +106,19 @@ class SFXAssets:
 
     # Victory sound
     victory_fanfare = load_sound("victory_fanfare.ogg", SFX_PATH)
+    
+    # Dialogue sounds
+    dialog_1 = load_sound("dialog_1.ogg", SFX_PATH)
+    dialog_2 = load_sound("dialog_2.ogg", SFX_PATH)
+    dialog_text_1 = load_sound("dialog_text_1.ogg", SFX_PATH)
+    dialog_text_2 = load_sound("dialog_text_2.ogg", SFX_PATH)
+    dialog_text_3 = load_sound("dialog_text_3.ogg", SFX_PATH)
+    dialog_text_4 = load_sound("dialog_text_4.ogg", SFX_PATH)
+    
+    # Background music
+    intro_bg_theme = load_sound("intro_bg_theme.ogg", SFX_PATH)
+    match_bg_theme_1= load_sound("match_bg_theme_1.ogg", SFX_PATH)
+    match_bg_theme_2= load_sound("match_bg_theme_2.ogg", SFX_PATH)
+    match_bg_theme_3= load_sound("match_bg_theme_3.ogg", SFX_PATH)
+    victory_bg = load_sound("victory.ogg", SFX_PATH)
+    
