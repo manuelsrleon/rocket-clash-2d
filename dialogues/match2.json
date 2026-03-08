@@ -2,7 +2,7 @@
   "scene": "vertical_platforms_encounter",
   "next_scene": "stadium_final_phase",
   "base_speed": 15,
-  "background": "background",
+  "background": "stadium2_bg",
   "music": "match_bg_theme_2",
   "characters": {
     "left": {

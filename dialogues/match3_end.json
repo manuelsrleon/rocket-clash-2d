@@ -2,7 +2,7 @@
   "scene": "jenny_defeat",
   "next_scene": "end_scene",
   "base_speed": 15,
-  "background": "background",
+  "background": "stadium3_bg",
   "music": "final_victory",
   "characters": {
     "left": {

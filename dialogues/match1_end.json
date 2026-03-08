@@ -2,7 +2,7 @@
   "scene": "bulldozer_defeat",
   "next_scene": "world_map",
   "base_speed": 15,
-  "background": "background",
+  "background": "stadium1_bg",
   "music": "victory",
   "characters": {
     "left": {

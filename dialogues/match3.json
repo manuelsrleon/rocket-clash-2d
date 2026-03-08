@@ -2,7 +2,7 @@
   "scene": "match3_scene",
   "next_scene": "end_scene",
   "base_speed": 15,
-  "background": "background",
+  "background": "stadium3_bg",
   "music": "match_bg_theme_3",
   "characters": {
     "left": {
