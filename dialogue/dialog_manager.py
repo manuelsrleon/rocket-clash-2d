@@ -1,7 +1,7 @@
 import json
 import os
 
-class DialogManager:
+class DialogueManager:
     def __init__(self, json_path):
         self.json_path = json_path
         self.data = {}

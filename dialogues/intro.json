@@ -7,6 +7,7 @@
   "characters": {
     "middle": {
       "name": "Tenazas",
+      "size": [600, 325],
       "portraits": {
         "idle": "tenazas_1",
         "talk": "tenazas_2"

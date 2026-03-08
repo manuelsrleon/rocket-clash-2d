@@ -31,8 +31,8 @@ class Assets:
         # Portraits
         "Bulldozer": ("Bulldozer.png", PORTRAITS_PATH, None),
         "MotoMoto": ("MotoMoto.png", PORTRAITS_PATH, None),
-        "opponent1": ("opponent1.png", PORTRAITS_PATH, None),
-        "player": ("player.png", PORTRAITS_PATH, None),
+        "Jenny": ("Jenny.png", PORTRAITS_PATH, None),
+        "Ruedaldinho": ("Ruedaldinho.png", PORTRAITS_PATH, None),
         "tenazas_1": ("Tenazas_1.png", PORTRAITS_PATH, None),
         "tenazas_2": ("Tenazas_2.png", PORTRAITS_PATH, None),
 

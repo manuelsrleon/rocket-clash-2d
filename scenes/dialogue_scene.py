@@ -2,7 +2,7 @@ import pygame
 import random
 from scene import PyGameScene
 from assets_manager import Assets
-from dialogue.dialog_manager import DialogManager
+from dialogue.dialog_manager import DialogueManager
 from dialogue.dialog_ui import DialogueUI
 from dialogue.dialogue_sound_player import DialogueSoundPlayer
 
@@ -14,27 +14,32 @@ class DialogueScene(PyGameScene):
 
         # --- CONFIGURACIÓN VISUAL ---
         self.font = pygame.font.Font(None, 28)
-        self.base_sprite_size = (600, 325)
         self.fixed_sprite_y = 40
         self.margin_side = 10
         self.sprite_to_bubble_gap = 10
         self.bubble_gap = 8
 
         # --- GESTIÓN DE DIÁLOGOS ---
-        self.manager = DialogManager(json_path)
+        self.manager = DialogueManager(json_path)
         self.history = []
         
         num_chars = len(self.manager.data.get('characters', {}))
+        # Factor global que afecta a todos (puedes ajustarlo si quieres miniaturas)
         self.scale_factor = 0.75 if num_chars > 1 else 1.0
-        self.current_w = int(self.base_sprite_size[0] * self.scale_factor)
-        self.current_h = int(self.base_sprite_size[1] * self.scale_factor)
-        self.start_bubbles_y = self.fixed_sprite_y + self.current_h + self.sprite_to_bubble_gap
 
         # --- CARGA DINÁMICA ---
         bg_key = self.manager.data.get('background', 'background')
         self.bg = Assets.get_image(bg_key)
         self.character_sprites = self._load_characters()
         
+        # Calculamos el punto de inicio de las burbujas basado en el sprite más alto cargado
+        # para evitar que el texto pise a los personajes
+        max_h = 0
+        for char in self.character_sprites.values():
+            max_h = max(max_h, char["display_size"][1])
+        
+        self.start_bubbles_y = self.fixed_sprite_y + max_h + self.sprite_to_bubble_gap
+
         # --- SISTEMA DE SONIDO DE VOCES ---
         sound_config = {
             "Tenazas": [Assets.get_sound("dialog_1")],
@@ -80,13 +85,27 @@ class DialogueScene(PyGameScene):
             name = data.get('name')
             if not name: continue
             
-            sprites[name] = {"side": side_key}
+            # Obtenemos la imagen base para conocer su tamaño real
+            portraits = data.get('portraits', {"idle": data.get('portrait_key')})
+            base_img = Assets.get_image(portraits.get("idle"))
+            
+            # Si no hay "size" en el JSON, usamos el tamaño original del archivo
+            size_data = data.get('size', base_img.get_size())
+            
+            char_w = int(size_data[0] * self.scale_factor)
+            char_h = int(size_data[1] * self.scale_factor)
+            
+            sprites[name] = {
+                "side": side_key,
+                "display_size": (char_w, char_h)
+            }
+            
             portraits = data.get('portraits', {"idle": data.get('portrait_key')})
             
             for state, asset_key in portraits.items():
                 if asset_key:
                     img = Assets.get_image(asset_key)
-                    img = pygame.transform.smoothscale(img, (self.current_w, self.current_h))
+                    img = pygame.transform.scale(img, (char_w, char_h))
                     sprites[name][state] = img
             
             if "idle" in sprites[name] and "talk" not in sprites[name]:
@@ -183,15 +202,25 @@ class DialogueScene(PyGameScene):
         speaker_now = current_line.get('speaker') if current_line else None
         num_chars_in_scene = len(self.character_sprites)
 
-        pos_map = {
-            "left":   (self.margin_side, self.fixed_sprite_y),
-            "middle": ((sw // 2) - (self.current_w // 2), self.fixed_sprite_y),
-            "right":  (sw - self.current_w - self.margin_side, self.fixed_sprite_y)
-        }
+        # Definimos el "suelo" donde apoyan los personajes
+        suelo_y = self.start_bubbles_y - self.sprite_to_bubble_gap
 
+        # Render de personajes con posicionamiento dinámico por ancho y alineado a la base (suelo)
         for char_name, char_info in self.character_sprites.items():
             is_speaking = (char_name == speaker_now)
             side = char_info.get("side", "middle")
+            c_w, c_h = char_info["display_size"]
+            
+            # Calculamos la posición Y para que la base del sprite toque el suelo
+            dynamic_y = suelo_y - c_h
+            
+            # Mapa de posiciones recalculado con dynamic_y
+            pos_map = {
+                "left":   (self.margin_side, dynamic_y),
+                "middle": ((sw // 2) - (c_w // 2), dynamic_y),
+                "right":  (sw - c_w - self.margin_side, dynamic_y)
+            }
+            
             pos_key = "middle" if num_chars_in_scene <= 1 else side
             draw_pos = pos_map.get(pos_key, pos_map["middle"])
             
@@ -201,7 +230,7 @@ class DialogueScene(PyGameScene):
             if img:
                 if num_chars_in_scene > 1 and not is_speaking:
                     shaded = img.copy()
-                    shaded.fill((100, 100, 100, 255), special_flags=pygame.BLEND_RGBA_MULT)
+                    shaded.fill((120, 120, 120, 255), special_flags=pygame.BLEND_RGBA_MULT)
                     temp_surf.blit(shaded, draw_pos)
                 else:
                     temp_surf.blit(img, draw_pos)
@@ -209,20 +238,19 @@ class DialogueScene(PyGameScene):
         current_y = self.start_bubbles_y
         for i, bubble in enumerate(self.history):
             is_last_in_history = (i == len(self.history) - 1)
-            
-            # Determinamos el texto a mostrar
-            if self.is_exiting and is_last_in_history:
-                txt = bubble.full_text
-            elif is_last_in_history:
+            txt = bubble.full_text
+            if not self.is_exiting and is_last_in_history:
                 txt = self.manager.get_shown_text()
-            else:
-                txt = bubble.full_text
 
-            # --- CORRECCIÓN DEL INDICADOR DE ESPACIO ---
-            # Solo mostramos la flechita si es la última burbuja Y NO estamos saliendo
             show_hint = is_last_in_history and not self.is_exiting
             
-            draw_x = (sw // 2) - (self.current_w // 2) if num_chars_in_scene <= 1 else 50
+            # Si solo hay un personaje, centramos el texto, si no, a la izquierda
+            draw_x = 50
+            if num_chars_in_scene <= 1:
+                # Intentamos centrar la burbuja relativo al ancho del único personaje
+                char_name = list(self.character_sprites.keys())[0]
+                c_w = self.character_sprites[char_name]["display_size"][0]
+                draw_x = (sw // 2) - (c_w // 2)
             
             y_inc = bubble.draw(temp_surf, current_y, txt, draw_x, is_last=show_hint)
             current_y += y_inc + self.bubble_gap

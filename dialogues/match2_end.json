@@ -7,10 +7,12 @@
   "characters": {
     "left": {
       "name": "Ruedaldinho",
-      "portraits": { "idle": "player" }
+      "size": [510, 210],
+      "portraits": { "idle": "Ruedaldinho" }
     },
     "right": {
       "name": "MotoMoto",
+      "size": [500, 380],
       "portraits": { "idle": "MotoMoto" }
     }
   },

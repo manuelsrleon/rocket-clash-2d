@@ -7,11 +7,13 @@
   "characters": {
     "left": {
       "name": "Ruedaldinho",
-      "portraits": { "idle": "player" }
+      "size": [510, 210],
+      "portraits": { "idle": "Ruedaldinho" }
     },
     "right": {
       "name": "Jenny",
-      "portraits": { "idle": "opponent1" } 
+      "size": [530, 160],
+      "portraits": { "idle": "Jenny" } 
     }
   },
   "lines": [
