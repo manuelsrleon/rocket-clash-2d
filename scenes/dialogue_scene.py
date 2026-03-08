@@ -60,12 +60,17 @@ class DialogueScene(PyGameScene):
         self.shake_offset = pygame.Vector2(0, 0)
         self.shake_amount = 0
         
+        # NUEVO: Flag para controlar la pausa final
+        self.is_exiting = False
+
         self.effect_handlers = {
             "flash": self._handle_flash, 
             "shake": self._handle_shake, 
             "wait": self._handle_wait
         }
 
+        # Iniciamos la escena apareciendo desde negro
+        self.fade_from_black()
         self._spawn_current_bubble()
 
     def _load_characters(self):
@@ -89,6 +94,19 @@ class DialogueScene(PyGameScene):
         return sprites
 
     def update(self, dt):
+        # 1. Actualizar el fundido
+        self.update_fade(dt)
+        
+        # Si ya estamos en negro total y esperando a salir, procesamos solo FX
+        if self.is_exiting and self.fade_alpha >= 255:
+            self._update_fx_logic(dt / 1000.0)
+            return
+
+        # 2. Si estamos fundiendo a negro por haber terminado, permitimos que el render 
+        # siga dibujando el último estado pero detenemos la lógica de avance.
+        if self.fade_mode == "IN" and self.fade_alpha > 250:
+            return
+
         if not self.music_started:
             if self.bgm_key:
                 sound = Assets.get_sound(self.bgm_key)
@@ -133,16 +151,19 @@ class DialogueScene(PyGameScene):
             self.flash_timer -= dt_sec
             if self.flash_timer <= 0: 
                 self.flash_color = None
+                # SI ESTAMOS SALIENDO y termina el wait, cerramos la escena
+                if self.is_exiting and not self.effects_queue:
+                    self.director.exitScene()
                 
         # 3. AUTO-AVANCE: Si la cola está vacía y la línea actual no tiene texto
-        if self.flash_timer <= 0 and not self.effects_queue:
+        if not self.is_exiting and self.flash_timer <= 0 and not self.effects_queue:
             line = self.manager.current_line()
             if line and not line.get('text', '').strip():
                 result = self.manager.advance()
                 if result == 'next':
                     self._spawn_current_bubble()
                 elif result == 'finished':
-                    self.director.exitScene()
+                    self._start_exit_transition()
             
         # 4. Lógica de Shake
         if self.shake_amount > 0:
@@ -187,10 +208,23 @@ class DialogueScene(PyGameScene):
 
         current_y = self.start_bubbles_y
         for i, bubble in enumerate(self.history):
-            is_last = (i == len(self.history) - 1)
-            txt = self.manager.get_shown_text() if is_last else bubble.full_text
+            is_last_in_history = (i == len(self.history) - 1)
+            
+            # Determinamos el texto a mostrar
+            if self.is_exiting and is_last_in_history:
+                txt = bubble.full_text
+            elif is_last_in_history:
+                txt = self.manager.get_shown_text()
+            else:
+                txt = bubble.full_text
+
+            # --- CORRECCIÓN DEL INDICADOR DE ESPACIO ---
+            # Solo mostramos la flechita si es la última burbuja Y NO estamos saliendo
+            show_hint = is_last_in_history and not self.is_exiting
+            
             draw_x = (sw // 2) - (self.current_w // 2) if num_chars_in_scene <= 1 else 50
-            y_inc = bubble.draw(temp_surf, current_y, txt, draw_x, is_last=is_last)
+            
+            y_inc = bubble.draw(temp_surf, current_y, txt, draw_x, is_last=show_hint)
             current_y += y_inc + self.bubble_gap
 
         screen.blit(temp_surf, (self.shake_offset.x, self.shake_offset.y))
@@ -201,7 +235,12 @@ class DialogueScene(PyGameScene):
             f.set_alpha(150)
             screen.blit(f, (0, 0))
 
+        self.draw_fade(screen)
+
     def events(self, events):
+        if self.fade_mode == "IN" or self.is_exiting:
+            return
+
         for event in events:
             if event.type == pygame.QUIT: 
                 self.director.salirPrograma()
@@ -212,11 +251,24 @@ class DialogueScene(PyGameScene):
                     if result == 'next': 
                         self._spawn_current_bubble()
                     elif result == 'finished': 
-                        self._stop_all_audio()
-                        self.director.exitScene()
+                        self._start_exit_transition()
                 else:
                     l = self.manager.current_line()
                     if l: self.manager.char_index = len(l.get('text', ''))
+
+    def _start_exit_transition(self):
+        """Bloquea la escena y funde a negro manteniendo el último texto."""
+        if self.is_exiting: return
+        
+        self.is_exiting = True
+        self._stop_all_audio()
+        
+        self.fade_speed = 100 
+
+        def al_terminar_negro():
+            self.effects_queue.append({"type": "wait", "seconds": 2.0})
+            
+        self.fade_to_black(callback=al_terminar_negro)
 
     def _spawn_current_bubble(self):
         line = self.manager.current_line()
@@ -228,7 +280,7 @@ class DialogueScene(PyGameScene):
         
         text_content = line.get('text', '').strip()
         
-        # SI NO HAY TEXTO: Salimos sin crear UI. update() se encargará de avanzar.
+        # SI NO HAY TEXTO: Salimos sin crear UI (update() se encargará de avanzar).
         if not text_content:
             return
 
@@ -256,7 +308,7 @@ class DialogueScene(PyGameScene):
 
     def _handle_flash(self, data):
         self.flash_color = data.get('color', (255, 255, 255))
-        self.flash_timer = 0.15
+        self.flash_timer = data.get('seconds', 0.15)
 
     def _handle_shake(self, data):
         self.shake_amount = data.get('intensity', 15)
@@ -267,4 +319,4 @@ class DialogueScene(PyGameScene):
     def _stop_all_audio(self):
         if self.bgm_key:
             sound = Assets.get_sound(self.bgm_key)
-            if sound: sound.fadeout(500)
+            if sound: sound.fadeout(1000)
