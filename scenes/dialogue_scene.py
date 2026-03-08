@@ -1,6 +1,7 @@
 import pygame
 import random
 from scene import PyGameScene
+from assets_manager import Assets
 from dialogue.dialog_manager import DialogManager
 from dialogue.dialog_ui import DialogueUI
 from dialogue.dialogue_sound_player import DialogueSoundPlayer
@@ -11,14 +12,13 @@ class DialogueScene(PyGameScene):
         self.screen = getattr(director, "screen", None) or pygame.display.get_surface()
         sw, sh = self.screen.get_size()
 
-        # --- CONFIGURACIÓN DE POSICIONES FIJAS (Top-Down) ---
+        # --- CONFIGURACIÓN VISUAL ---
         self.font = pygame.font.Font(None, 28)
         self.base_sprite_size = (600, 325)
-        
-        self.fixed_sprite_y = 40        # Margen superior
-        self.margin_side = 10           # Pegados a los lados
-        self.sprite_to_bubble_gap = 10  # Espacio entre el coche y la primera caja
-        self.bubble_gap = 8             # Espacio entre cajas y margen inferior
+        self.fixed_sprite_y = 40
+        self.margin_side = 10
+        self.sprite_to_bubble_gap = 10
+        self.bubble_gap = 8
 
         # --- GESTIÓN DE DIÁLOGOS ---
         self.manager = DialogManager(json_path)
@@ -28,26 +28,30 @@ class DialogueScene(PyGameScene):
         self.scale_factor = 0.75 if num_chars > 1 else 1.0
         self.current_w = int(self.base_sprite_size[0] * self.scale_factor)
         self.current_h = int(self.base_sprite_size[1] * self.scale_factor)
-
-        # Coordenada Y donde empezará SIEMPRE la primera burbuja
         self.start_bubbles_y = self.fixed_sprite_y + self.current_h + self.sprite_to_bubble_gap
 
-        # --- CARGA DE ASSETS ---
-        self.bg = self._load_bg(self.manager.data.get('background', 'assets/backgrounds/background.png'))
+        # --- CARGA DINÁMICA ---
+        bg_key = self.manager.data.get('background', 'background')
+        self.bg = Assets.get_image(bg_key)
         self.character_sprites = self._load_characters()
         
         # --- SISTEMA DE SONIDO DE VOCES ---
         sound_config = {
-            "Tenazas": ["assets/sfx/dialog_1.ogg"],
-            "Ruedaldinho": [f"assets/sfx/dialog_text_{i}.ogg" for i in range(1, 5)],
-            "default": ["assets/sfx/dialog_2.ogg"]
+            "Tenazas": [Assets.get_sound("dialog_1")],
+            "Ruedaldinho": [
+                Assets.get_sound("dialog_text_1"), 
+                Assets.get_sound("dialog_text_2"), 
+                Assets.get_sound("dialog_text_3"), 
+                Assets.get_sound("dialog_text_4")
+            ],
+            "default": [Assets.get_sound("dialog_2")] 
         }
         self.audio_player = DialogueSoundPlayer(sound_config)
         self.audio_player.set_interval_by_speed(self.manager.base_speed)
         
-        # --- MÚSICA: CONTROL AUTÓNOMO ---
-        self.bgm_path = self.manager.data.get('music')
-        self.music_started = False  # Flag para evitar que suene antes de tiempo
+        # --- MÚSICA ---
+        self.bgm_key = self.manager.data.get('music')
+        self.music_started = False
 
         # --- ESTADO DE EFECTOS ---
         self.effects_queue = []
@@ -64,65 +68,33 @@ class DialogueScene(PyGameScene):
 
         self._spawn_current_bubble()
 
-    def _load_bg(self, path):
-        try:
-            img = pygame.image.load(path).convert()
-            return pygame.transform.scale(img, self.screen.get_size())
-        except:
-            s = pygame.Surface(self.screen.get_size()); s.fill((30, 30, 30)); return s
-
     def _load_characters(self):
         sprites = {}
         chars_data = self.manager.data.get('characters', {})
         for side_key, data in chars_data.items():
             name = data.get('name')
             if not name: continue
+            
             sprites[name] = {"side": side_key}
-            portraits = data.get('portraits', {"idle": data.get('portrait')})
-            for state, path in portraits.items():
-                if path:
-                    try:
-                        img = pygame.image.load(path).convert_alpha()
-                        img = pygame.transform.smoothscale(img, (self.current_w, self.current_h))
-                        sprites[name][state] = img
-                    except: pass
+            portraits = data.get('portraits', {"idle": data.get('portrait_key')})
+            
+            for state, asset_key in portraits.items():
+                if asset_key:
+                    img = Assets.get_image(asset_key)
+                    img = pygame.transform.smoothscale(img, (self.current_w, self.current_h))
+                    sprites[name][state] = img
+            
             if "idle" in sprites[name] and "talk" not in sprites[name]:
                 sprites[name]["talk"] = sprites[name]["idle"]
         return sprites
 
-    def _spawn_current_bubble(self):
-        line = self.manager.current_line()
-        if not line: return
-        self.effects_queue.extend(self.manager.get_current_events())
-        self.audio_player.reset()
-        
-        new_speaker = line.get('speaker')
-        new_side = line.get('side', 'left')
-        
-        if self.history:
-            last_bubble = self.history[-1]
-            last_speaker = getattr(last_bubble, 'name', None) or getattr(last_bubble, 'speaker', None)
-            if new_speaker != last_speaker:
-                self.history = []
-
-        new_bubble = DialogueUI(new_speaker, line.get('text', ''), None, new_side, self.font)
-        current_y_cursor = self.start_bubbles_y
-        for b in self.history:
-            current_y_cursor += b.get_expected_height() + self.bubble_gap
-        
-        if current_y_cursor + new_bubble.get_expected_height() > (self.screen.get_height() - self.bubble_gap):
-            self.history = []
-
-        self.history.append(new_bubble)
-
     def update(self, dt):
-        # --- DISPARO DE MÚSICA AL COMENZAR LA ESCENA ---
         if not self.music_started:
-            if self.bgm_path:
-                self._start_music(self.bgm_path)
-            else:
-                # Si entramos en una escena sin música, silenciamos la anterior
-                self._stop_music()
+            if self.bgm_key:
+                sound = Assets.get_sound(self.bgm_key)
+                if sound:
+                    sound.play(loops=-1)
+                    sound.set_volume(0.12)
             self.music_started = True
 
         dt_sec = dt / 1000.0
@@ -147,15 +119,32 @@ class DialogueScene(PyGameScene):
         for b in self.history: 
             b.update_anim(dt_sec)
         
+        self._update_fx_logic(dt_sec)
+
+    def _update_fx_logic(self, dt_sec):
+        # 1. Procesar cola de efectos si no hay un temporizador activo
         if self.flash_timer <= 0 and self.effects_queue:
             eff = self.effects_queue.pop(0)
             handler = self.effect_handlers.get(eff.get('type'))
             if handler: handler(eff)
             
+        # 2. Control del tiempo de flash o espera
         if self.flash_timer > 0:
             self.flash_timer -= dt_sec
-            if self.flash_timer <= 0: self.flash_color = None
+            if self.flash_timer <= 0: 
+                self.flash_color = None
+                
+        # 3. AUTO-AVANCE: Si la cola está vacía y la línea actual no tiene texto
+        if self.flash_timer <= 0 and not self.effects_queue:
+            line = self.manager.current_line()
+            if line and not line.get('text', '').strip():
+                result = self.manager.advance()
+                if result == 'next':
+                    self._spawn_current_bubble()
+                elif result == 'finished':
+                    self.director.exitScene()
             
+        # 4. Lógica de Shake
         if self.shake_amount > 0:
             amt = int(self.shake_amount)
             self.shake_offset.x = random.randint(-amt, amt)
@@ -205,9 +194,12 @@ class DialogueScene(PyGameScene):
             current_y += y_inc + self.bubble_gap
 
         screen.blit(temp_surf, (self.shake_offset.x, self.shake_offset.y))
+        
         if self.flash_color and self.flash_timer > 0:
-            f = pygame.Surface(screen.get_size()); f.fill(self.flash_color)
-            f.set_alpha(150); screen.blit(f, (0, 0))
+            f = pygame.Surface(screen.get_size())
+            f.fill(self.flash_color)
+            f.set_alpha(150)
+            screen.blit(f, (0, 0))
 
     def events(self, events):
         for event in events:
@@ -220,12 +212,47 @@ class DialogueScene(PyGameScene):
                     if result == 'next': 
                         self._spawn_current_bubble()
                     elif result == 'finished': 
-                        # Detenemos música justo antes de salir de la escena
-                        self._stop_music()
+                        self._stop_all_audio()
                         self.director.exitScene()
                 else:
                     l = self.manager.current_line()
                     if l: self.manager.char_index = len(l.get('text', ''))
+
+    def _spawn_current_bubble(self):
+        line = self.manager.current_line()
+        if not line: return
+        
+        # Encolar eventos
+        self.effects_queue.extend(self.manager.get_current_events())
+        self.audio_player.reset()
+        
+        text_content = line.get('text', '').strip()
+        
+        # SI NO HAY TEXTO: Salimos sin crear UI. update() se encargará de avanzar.
+        if not text_content:
+            return
+
+        # SI HAY TEXTO: Lógica normal de creación de burbuja
+        new_speaker = line.get('speaker')
+        new_side = line.get('side', 'left')
+        
+        if self.history:
+            last_bubble = self.history[-1]
+            last_speaker = getattr(last_bubble, 'name', None) or getattr(last_bubble, 'speaker', None)
+            if new_speaker != last_speaker:
+                self.history = []
+
+        new_bubble = DialogueUI(new_speaker, text_content, None, new_side, self.font)
+        
+        # Cálculo de altura
+        current_y_cursor = self.start_bubbles_y
+        for b in self.history:
+            current_y_cursor += b.get_expected_height() + self.bubble_gap
+        
+        if current_y_cursor + new_bubble.get_expected_height() > (self.screen.get_height() - self.bubble_gap):
+            self.history = []
+
+        self.history.append(new_bubble)
 
     def _handle_flash(self, data):
         self.flash_color = data.get('color', (255, 255, 255))
@@ -236,16 +263,8 @@ class DialogueScene(PyGameScene):
 
     def _handle_wait(self, data):
         self.flash_timer = data.get('seconds', 0.2)
-        
-    def _start_music(self, path):
-        """Inicia la música de fondo."""
-        try:
-            pygame.mixer.music.load(path)
-            pygame.mixer.music.play(-1)
-            pygame.mixer.music.set_volume(0.12)
-        except Exception as e:
-            print(f"No se pudo cargar la música: {e}")
 
-    def _stop_music(self):
-        """Detiene la música de fondo con un fadeout suave."""
-        pygame.mixer.music.fadeout(500)
+    def _stop_all_audio(self):
+        if self.bgm_key:
+            sound = Assets.get_sound(self.bgm_key)
+            if sound: sound.fadeout(500)

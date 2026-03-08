@@ -2,25 +2,30 @@
   "scene": "vertical_platforms_encounter",
   "next_scene": "stadium_final_phase",
   "base_speed": 15,
-  "background": "assets/backgrounds/background.png",
-  "music": "assets/sfx/match_bg_theme_2.ogg",
+  "background": "background",
+  "music": "match_bg_theme_2",
   "characters": {
     "left": {
       "name": "Ruedaldinho",
-      "portrait": "assets/portraits/player.png"
+      "portraits": { "idle": "player" }
     },
     "right": {
       "name": "MotoMoto",
-      "portrait": "assets/portraits/MotoMoto.png"
+      "portraits": { "idle": "MotoMoto" }
     }
   },
   "lines": [
-    { "speaker": "MotoMoto", "side": "right", "text": "Vaya, parece que una rueda ha logrado subir hasta aquí. Bienvenido a las plataformas, novato." },
-    { "speaker": "MotoMoto", "side": "right", "text": "En este nivel el aire es mi terreno. Vas a tener que aprender a volar... o a caerte con estilo." },
-    { "speaker": "Ruedaldinho", "side": "left", "text": "He superado desafíos peores en los suburbios de Elviña. Estoy listo para el juego vertical." },
-    { "speaker": "MotoMoto", "side": "right", "text": "Bulldozer era muy previsible. Aquí no verás ni por dónde te llega el balón." },
-    { "speaker": "MotoMoto", "side": "right", "text": "Ten cuidado con las trampas de neón, o volverás al suelo rápido." },
-    { "speaker": "Ruedaldinho", "side": "left", "text": "No necesito alas para derrotarte." },
-    { "speaker": "MotoMoto", "side": "right", "text": "¡Me gusta esa confianza! ¡Que empiece el juego!" }
+    { "speaker": "MotoMoto", "side": "right", "text": "Vaya, vaya... parece que una simple rueda ha logrado subir hasta aquí. Bienvenido a las plataformas, novato." },
+    { "speaker": "MotoMoto", "side": "right", "text": "En este nivel el aire es mi terreno. Aquí la gravedad es solo una sugerencia que yo suelo ignorar." },
+    { "speaker": "MotoMoto", "side": "right", "text": "Vas a tener que aprender a volar de verdad... o a caerte con mucho estilo mientras te adelanto." },
+    { "speaker": "Ruedaldinho", "side": "left", "text": "He superado desafíos peores en los suburbios de Elviña, esquivando tranvías y lluvia. Estoy listo para el juego vertical." },
+    { "speaker": "MotoMoto", "side": "right", "text": "¿Elviña? ¡Por favor! Allí los coches se oxidan antes de llegar a los 100 por hora. Aquí arriba el oxígeno es escaso, como tus probabilidades de victoria." },
+    { "speaker": "MotoMoto", "side": "right", "text": "Bulldozer era pura fuerza bruta y muy previsible. Un muro contra el que chocar. Pero yo soy el viento, inalcanzable." },
+    { "speaker": "Ruedaldinho", "side": "left", "text": "Incluso el viento tiene que bajar a repostar. Y cuando lo hagas, estaré allí para quitarte el balón." },
+    { "speaker": "MotoMoto", "side": "right", "text": "¡Esa es la actitud! Pero aquí arriba el balón se mueve en tres dimensiones, no verás ni por dónde te llega el golpe." },
+    { "speaker": "MotoMoto", "side": "right", "text": "Ten cuidado con las trampas de neón y las corrientes térmicas, o volverás al suelo más rápido de lo que tardas en frenar." },
+    { "speaker": "Ruedaldinho", "side": "left", "text": "No necesito alas para derrotarte, solo el ángulo correcto y un poco de presión en el turbo." },
+    { "speaker": "MotoMoto", "side": "right", "text": "¡Me gusta esa confianza! Es una pena que se vaya a estrellar contra el pavimento. ¡Prepárate para la altitud!" },
+    { "speaker": "MotoMoto", "side": "right", "text": "¡Que empiece el juego en las nubes! ¡A volar!" }
   ]
 }

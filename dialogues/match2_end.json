@@ -1,0 +1,40 @@
+{
+  "scene": "motomoto_defeat",
+  "next_scene": "world_map",
+  "base_speed": 15,
+  "background": "background",
+  "music": "victory",
+  "characters": {
+    "left": {
+      "name": "Ruedaldinho",
+      "portraits": { "idle": "player" }
+    },
+    "right": {
+      "name": "MotoMoto",
+      "portraits": { "idle": "MotoMoto" }
+    }
+  },
+  "lines": [
+    { 
+      "speaker": "MotoMoto", "side": "right", 
+      "text": "¡No puede ser! ¡Mis alerones están... doblados! He caído más rápido que un motor sin aceite.",
+      "events": [{ "type": "shake", "intensity": 20 }]
+    },
+    { 
+      "speaker": "MotoMoto", "side": "right", 
+      "text": "Me has cortado las alas en pleno vuelo, Ruedaldinho. El ángulo de tu último turbo... fue simplemente perfecto." 
+    },
+    { 
+      "speaker": "MotoMoto", "side": "right", 
+      "text": "Supongo que tendré que volver al taller a recalibrar mi sentido de la superioridad. Disfruta de la vista mientras puedas... porque Jenny no te dará margen ni como para relajarte un momento." 
+    },
+    { 
+      "speaker": "MotoMoto", "side": "right", 
+      "text": " Ella no es el viento... ella es la tormenta entera."
+    },
+    { 
+      "speaker": "MotoMoto", "side": "right", 
+      "text": "Vete ya, antes de que mis sensores de vergüenza sobrepasen el límite. ¡Suerte, bola de chatarra!" 
+    }
+  ]
+}
