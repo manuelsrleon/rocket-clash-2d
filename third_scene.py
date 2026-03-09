@@ -6,11 +6,12 @@ from match_scene import MatchScene, px2m, m2px, SW, SH, PPM
 from factory import RocketFactory
 
 # Scene constants
-GROUND_Y   = 520
-GOAL_W     = 160
-GOAL_H     = 320
+GROUND_Y   = 570
+GOAL_W     = 150
+GOAL_H     = 250
 GOAL_POST  = 6
 GOAL_TOP_Y = GROUND_Y - GOAL_H + 30
+L_GOAL_POS = -100
 JENNY_START = (SW - 200, GROUND_Y - 60)
 JENNY_INDICATOR_POS = (SW - 10, 10)
 
@@ -406,7 +407,7 @@ class ThirdScene(MatchScene):
     def _render_field(self, screen):
         try:
             if not hasattr(self, '_stadium_bg'):
-                bg = pygame.image.load('./assets/stadiums/stadium1_bg.png').convert()
+                bg = pygame.image.load('./assets/stadiums/stadium3_bg.png').convert()
                 self._stadium_bg = pygame.transform.scale(bg, (SW, SH))
             screen.blit(self._stadium_bg, (0, 0))
         except Exception:
@@ -424,18 +425,44 @@ class ThirdScene(MatchScene):
             pygame.draw.line(screen, TRAPDOOR_BORDER_COLOR, (mx + 15, y0), (mx + 15, y1), 1)
             pygame.draw.rect(screen, (120, 120, 160),
                              pygame.Rect(mx - 4, td['rect'].centery - 2, 8, 4))
+        
+        # Porterías fondo
+        if not hasattr(self, '_goalpost_bg'):
+            try:
+                l_goalpost_bg    = pygame.image.load('./assets/stadiums/stadium-3-goalpost-bg.png').convert_alpha()
+                r_goalpost_bg    = pygame.image.load('./assets/stadiums/stadium-3-goalpost-bg.png').convert_alpha()
+
+                l_goalpost_bg_scaled = pygame.transform.scale(l_goalpost_bg, (GOAL_W*2, GOAL_H))
+                r_goalpost_bg_scaled = pygame.transform.flip(l_goalpost_bg_scaled, True, False)
+                
+                self._goalpost_bg_l = l_goalpost_bg_scaled
+                self._goalpost_bg_r = r_goalpost_bg_scaled
+            except Exception:
+                self._goalpost_bg_l = pygame.Surface((GOAL_W, GOAL_H), pygame.SRCALPHA)
+                pygame.draw.rect(self._goalpost_bg_l, (*GOAL_NET_COLOR,), (0, 0, GOAL_W, GOAL_H))
+                self._goalpost_bg_r = self._goalpost_bg_l.copy()
+            self._goalpost_bg = True
+
+        screen.blit(self._goalpost_bg_l, (L_GOAL_POS, GOAL_TOP_Y))
+        screen.blit(self._goalpost_bg_r, (SW - GOAL_W+L_GOAL_POS+50, GOAL_TOP_Y))
 
     def _render_field_fg(self, screen):
-        try:
-            if not hasattr(self, '_goalpost_fg'):
-                img = pygame.image.load('./assets/stadiums/excavator_shovel_goalpost_fg.png').convert_alpha()
-                scaled = pygame.transform.scale(img, (GOAL_W, GOAL_H))
-                self._goalpost_fg_l = scaled
-                self._goalpost_fg_r = pygame.transform.flip(scaled, True, False)
-            screen.blit(self._goalpost_fg_l, (0, GOAL_TOP_Y))
-            screen.blit(self._goalpost_fg_r, (SW - GOAL_W, GOAL_TOP_Y))
-        except Exception:
-            pass
+        if not hasattr(self, '_goalpost_fg'):
+            try:
+                l_goalpost_fg    = pygame.image.load('./assets/stadiums/stadium-3-goalpost-fg.png').convert_alpha()
+
+                l_goalpost_fg_scaled = pygame.transform.scale(l_goalpost_fg, (GOAL_W*2, GOAL_H))
+                r_goalpost_fg_scaled = pygame.transform.flip(l_goalpost_fg_scaled, True, False)
+
+                self._goalpost_fg_l = l_goalpost_fg_scaled
+                self._goalpost_fg_r = r_goalpost_fg_scaled
+            except Exception:
+                self._goalpost_fg_l = pygame.Surface((GOAL_W, GOAL_H), pygame.SRCALPHA)
+                self._goalpost_fg_r = self._goalpost_fg_l.copy()
+            self._goalpost_fg = True
+
+        screen.blit(self._goalpost_fg_l, (L_GOAL_POS, GOAL_TOP_Y))
+        screen.blit(self._goalpost_fg_r, (SW - GOAL_W-50, GOAL_TOP_Y))
 
     def render(self, screen):
         super().render(screen)
