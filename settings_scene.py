@@ -161,8 +161,12 @@ class SettingsScene(PyGameScene):
                 elif event.key == K_LEFT or event.key == K_RIGHT:
                     if self.selected_index == 0:
                         self.music_slider.handle_event(event)
+                        # Aplicar cambio inmediatamente
+                        VolumeController.set_music_volume(self.music_slider.get_value())
                     elif self.selected_index == 1:
                         self.sfx_slider.handle_event(event)
+                        # Aplicar cambio inmediatamente
+                        VolumeController.set_sfx_volume(self.sfx_slider.get_value())
 
     def render(self, screen):
         screen.fill(BACKGROUND_COLOR)

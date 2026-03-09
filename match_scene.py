@@ -4,10 +4,11 @@ from scene import PyGameScene
 from factory import RocketFactory
 from ingame_menu_scene import IngameMenu
 from end_scene import EndScene
-from assets_manager import SFXAssets
+from assets_manager import SFX_PATH
 from settings import ScreenSettings, GUISettings, Colors, GameSettings, VolumeController
 from pygame.locals import *
 import random
+import os
 
 # Física Box2D
 PPM = 10.0
@@ -163,7 +164,8 @@ class MatchScene(PyGameScene):
         """Inicia la música de fondo del partido"""
         try:
             # Cargar música usando pygame.mixer.music para música de fondo
-            pygame.mixer.music.load("assets/sfx/musica2.ogg")
+            music_path = os.path.join(SFX_PATH, "musica2.ogg")
+            pygame.mixer.music.load(music_path)
             pygame.mixer.music.set_volume(VolumeController.get_music_volume())
             pygame.mixer.music.play(-1)  # -1 para loop infinito
         except Exception as e:
@@ -327,8 +329,9 @@ class MatchScene(PyGameScene):
         self.goal_scored      = True
         self.goal_pause_timer = self.goal_pause
         try:
-            sound = SFXAssets.musica2.play()
-            sound.set_volume(VolumeController.get_music_volume())
+            music_path = os.path.join(SFX_PATH, "musica2.ogg")
+            pygame.mixer.music.load(music_path)
+            pygame.mixer.music.set_volume(VolumeController.get_music_volume())
         except Exception:
             pass
 

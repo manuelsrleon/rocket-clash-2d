@@ -44,7 +44,7 @@ class Assets:
         # GUI
         "exit_button": ("exit_button.png", GUI_PATH, (160, 48)),
         "play_button": ("play_button.png", GUI_PATH, (160, 48)),
-        "main_menu_bg": ("main_menu_bg.png", GUI_PATH, (ScreenSettings.SCREEN_WIDTH, ScreenSettings.SCREEN_HEIGHT)),
+        "main_menu_bg": ("Main_Background.png", GUI_PATH, (ScreenSettings.SCREEN_WIDTH, ScreenSettings.SCREEN_HEIGHT)),
         "main_menu_svg": ("main_menu.svg", GUI_PATH, None)
     }
 
@@ -153,7 +153,8 @@ class Assets:
                     return None
             
             try:
-                sound = pygame.mixer.Sound(os.path.join(SFX_PATH, filename))
+                sound_path = os.path.join(SFX_PATH, filename)
+                sound = pygame.mixer.Sound(sound_path)
                 Assets._sounds_cache[key] = sound
                 return sound
             except Exception as e:

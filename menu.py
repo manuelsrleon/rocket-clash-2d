@@ -2,7 +2,7 @@ import pygame
 from match_scene import MatchScene
 from scene import PyGameScene
 from gui_elements import Button, GUIScreen
-from assets_manager import GUIAssets
+from assets_manager import Assets
 from settings import ScreenSettings
 from settings_scene import SettingsScene
 from firts_scene import FirstScene
@@ -64,7 +64,7 @@ class InitialGUIScreen(GUIScreen):
 
     def __init__(self, menu):
         try:
-            bg_image = GUIAssets.main_menu_bg
+            bg_image = Assets.get_image("main_menu_bg")
         except Exception:
             bg_image = None
         

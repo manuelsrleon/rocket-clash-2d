@@ -47,6 +47,14 @@ class VolumeController:
     @classmethod
     def set_sfx_volume(cls, volume):
         cls._sfx_volume = max(0.0, min(1.0, volume))
+        # Actualizar volumen de todos los canales SFX en tiempo real
+        try:
+            import pygame
+            if pygame.mixer.get_init():
+                for i in range(pygame.mixer.get_num_channels()):
+                    pygame.mixer.Channel(i).set_volume(cls._sfx_volume)
+        except:
+            pass
 
     @classmethod
     def get_music_volume(cls):
