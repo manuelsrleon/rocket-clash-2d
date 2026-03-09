@@ -326,132 +326,77 @@ class MotoMoto(Car):
 
 
 class LaJenny(Car):
+    FLASH_INTERVAL = 20000   # tiempo recarga flash (ms)
+    FLASH_DURATION = 900    # animacion de flash en ms
+    FLASH_RANGE_X = 35.0   # en metros
+
     def __init__(self, carPos=(600, 460)):
-        self.stats_normal = {'move_speed': 4.0, 'jump_force': 60.0, 'mass': 3.0, 'scale': 1.5}
-        # Bajamos la velocidad de 62.0 a 16.0. Sigue siendo más rápido que el jugador (12.0)
-        self.stats_angry = {'move_speed': 16.0, 'jump_force': 60.0, 'mass': 4.5, 'scale': 1.5}
-        
-        super().__init__(BOSS1_IMG, carPos, stats=self.stats_normal)
-        self.angry_timer = 0
-        self.is_angry = False
-        
-        # ─── Estado inicial de la FSM ───
+        self._jenny_stats = {'move_speed': 16.0, 'jump_force': 350.0, 'mass': 0.9, 'scale': 1.1}
+        # TODO: Cambiar PLAYER_CAR_IMG por una imagen específica de Jenny
+        super().__init__(PLAYER_CAR_IMG, carPos, stats=self._jenny_stats)
+
+        # Temporizador de flash
+        self._flash_timer = int(self.FLASH_INTERVAL * 0.6)
+        self.is_flashing = False 
+        self._flash_vis_timer = 0
         self.state = "OFENSIVO"
 
     def update_logic(self, dt_ms):
-        """Lógica interna: ciclos de enfado."""
-        self.angry_timer += dt_ms
-        if not self.is_angry and self.angry_timer > 5000:
-            self.become_angry()
-        elif self.is_angry and self.angry_timer > 15000:
-            self.become_normal()
+        self._flash_timer += dt_ms
 
-    def become_angry(self):
-        self.is_angry = True
-        self.angry_timer = 0
-        self.move_speed = self.stats_angry['move_speed']
+        if self.is_flashing:
+            self._flash_vis_timer -= dt_ms
+            if self._flash_vis_timer <= 0:
+                self.is_flashing = False
+                self._flash_vis_timer = 0
 
-    def become_normal(self):
-        self.is_angry = False
-        self.angry_timer = 0
-        self.move_speed = self.stats_normal['move_speed']
+    def should_flash(self):
+        return self._flash_timer >= self.FLASH_INTERVAL
 
+    def trigger_flash(self):
+        self.is_flashing = True
+        self._flash_vis_timer = self.FLASH_DURATION
+        self._flash_timer = 0
+
+    def can_reach_player(self, player_pos):
+        if not self.body:
+            return False
+        my_x = self.body.position.x
+        dist = my_x - player_pos.x
+        return 0 < dist < self.FLASH_RANGE_X
+    
+    # state machine logic
     def update_fsm(self, ball_pos, player_pos, goal_x_right):
-        """
-        Cerebro FSM del Bulldozer.
-        (Reemplaza a decide_movement y apply_movement)
-        Evalúa el entorno y decide hacia dónde aplicar fuerza física.
-        """
         if not self.body:
             return
 
         my_pos = self.body.position
-        
-        # Distancias (en metros de Box2D)
         dist_to_goal = abs(ball_pos.x - goal_x_right)
-        dist_to_player = abs(player_pos.x - my_pos.x)
 
-        # ─── 1. TRANSICIONES DE ESTADO (FSM) ──────────────────
-        if dist_to_goal < 25.0:
-            # Si el balón está muy cerca de su portería, defiende a muerte
+        if dist_to_goal < 20.0:
             self.state = "DEFENSIVO"
-        elif self.is_angry:
-            # Si se activa su Ultimate (manejado por update_logic), va a por el jugador
-            self.state = "LOCO"
         else:
-            # Por defecto, intenta atacar y marcar gol
             self.state = "OFENSIVO"
 
-        # ─── 2. CÁLCULO DEL OBJETIVO FÍSICO (Target X) ──────────
-        target_x = my_pos.x # Por defecto, frenar
-
         if self.state == "DEFENSIVO":
-            # Va a posicionarse justo delante del balón para actuar de muro
-            target_x = ball_pos.x + 2.0 
-            
-        elif self.state == "LOCO":
-            # Va directo a las coordenadas del jugador para embestirlo
-            target_x = player_pos.x
-            
-        elif self.state == "OFENSIVO":
-            # Intenta empujar el balón hacia la izquierda
+            target_x = ball_pos.x + 2.0
+        else:
             if ball_pos.x < my_pos.x:
-                target_x = ball_pos.x  # Acelera hacia el balón
+                target_x = ball_pos.x
             else:
-                # Si el balón se queda atrás, retrocede un poco para rodearlo
-                target_x = ball_pos.x + 4.0
+                target_x = ball_pos.x + 3.0
 
-       # ─── 3. MOTRICIDAD (Física Aplicada) ───────────────────
-        current_max_speed = self.move_speed 
-        
-        # ¡NUEVO!: Boost de velocidad al defender (solo si no está ya en modo LOCO/Enfadado)
-        if self.state == "DEFENSIVO" and not self.is_angry:
-            current_max_speed = self.move_speed * 2.0  # El doble de rápido para llegar a salvar el gol
-        
-        # Diferencia entre dónde está y a dónde quiere ir
         diff = target_x - my_pos.x
-        vel = self.body.linearVelocity
+        vel  = self.body.linearVelocity
 
-        # Margen muerto de 0.8 metros para que no vibre
         if abs(diff) > 0.8:
-            target_vx = current_max_speed if diff > 0 else -current_max_speed
+            target_vx = self.move_speed if diff > 0 else -self.move_speed
         else:
             target_vx = 0.0
 
-        # BLEND FÍSICO (Inercia): Simula el peso del Bulldozer
-        blend_factor = 0.15 
-        new_vx = vel.x + (target_vx - vel.x) * blend_factor
-        
-        # Aplicamos la velocidad resultante al chasis de Box2D
+        new_vx = vel.x + (target_vx - vel.x) * 0.18
         self.body.linearVelocity = (new_vx, vel.y)
 
-        # ─── 4. ESTADO SALTO (Reflejo Concurrente) ────────────
-        dist_x_ball = abs(ball_pos.x - my_pos.x)
-        if dist_x_ball < 4.0 and ball_pos.y < my_pos.y - 2.0 and self.on_ground:
+        # jump if ball is above and close
+        if abs(ball_pos.x - my_pos.x) < 4.0 and ball_pos.y < my_pos.y - 2.0 and self.on_ground:
             self.jump()
-
-    def apply_movement(self, target_x, ball_pos, player_pos,
-                       boss_speed=6.0, boss_speed_angry=9.0, boss_blend=0.18,
-                       boss_chase_margin=0.3):
-        """Aplica el movimiento hacia el objetivo."""
-        if not self.body:
-            return
-
-        speed = boss_speed_angry if self.is_angry else boss_speed
-        diff = target_x - self.body.position.x
-        vel = self.body.linearVelocity
-
-        if abs(diff) > boss_chase_margin:
-            target_vx = speed if diff > 0 else -speed
-        else:
-            target_vx = 0.0
-
-        new_vx = vel.x + (target_vx - vel.x) * boss_blend
-        self.body.linearVelocity = (new_vx, vel.y)
-
-        # Saltar si el objetivo está por encima
-        target_y = ball_pos.y
-        if target_y < self.body.position.y - 3.0 and abs(diff) < 8.0:
-            if self.on_ground:
-                self.jump()
-    pass
