@@ -5,6 +5,7 @@ from assets_manager import Assets
 from dialogue.dialog_manager import DialogueManager
 from dialogue.dialog_ui import DialogueUI
 from dialogue.dialogue_sound_player import DialogueSoundPlayer
+from settings import DialogueSpeedController
 
 class DialogueScene(PyGameScene):
     def __init__(self, director, json_path):
@@ -53,6 +54,9 @@ class DialogueScene(PyGameScene):
         }
         self.audio_player = DialogueSoundPlayer(sound_config)
         self.audio_player.set_interval_by_speed(self.manager.base_speed)
+
+        # Aplicar velocidad de diálogo según la configuración guardada
+        self.manager.set_speed_multiplier(DialogueSpeedController.get_speed())
         
         # --- MÚSICA ---
         self.bgm_key = self.manager.data.get('music')

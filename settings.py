@@ -26,6 +26,29 @@ class GameSettings:
     
     MATCH_DURATION = 180 # in seconds
 
+class DialogueSpeedController:
+    NORMAL = 1.0
+    FAST   = 3.0
+
+    _speed = NORMAL  # default
+
+    @classmethod
+    def set_fast(cls):
+        cls._speed = cls.FAST
+
+    @classmethod
+    def set_normal(cls):
+        cls._speed = cls.NORMAL
+
+    @classmethod
+    def get_speed(cls):
+        return cls._speed
+
+    @classmethod
+    def is_fast(cls):
+        return cls._speed == cls.FAST
+
+
 class VolumeController:
     # Control de volumen separado para Música y SFX
     _music_volume = 0.7  # Default music volume (70%)
@@ -120,6 +143,12 @@ class SettingsManager:
         """Get music and SFX volumes"""
         settings = cls.get_settings()
         volumes = settings.get('volumes', {})
+        # Also restore dialogue speed
+        dialogue_fast = settings.get('dialogue_fast', False)
+        if dialogue_fast:
+            DialogueSpeedController.set_fast()
+        else:
+            DialogueSpeedController.set_normal()
         return {
             'music': volumes.get('music', 0.7),
             'sfx': volumes.get('sfx', 0.8),
@@ -133,4 +162,5 @@ class SettingsManager:
             'music': music_vol,
             'sfx': sfx_vol,
         }
+        settings['dialogue_fast'] = DialogueSpeedController.is_fast()
         return cls.save_settings(settings)
