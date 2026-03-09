@@ -1,0 +1,62 @@
+@startuml PaqueteEnvironment
+skinparam shadowing false
+skinparam monochrome false
+skinparam classAttributeIconSize 0
+
+title Diagrama de Clases del paquete Environment (Entorno)
+
+class "pygame.sprite.Sprite" as PygameSprite <<PyGame>>
+
+package "Componente: Environment" {
+
+    class FieldBoundaries {
+        + ground_y: int
+        + walls: list
+        + create_boundaries(world: b2World): void
+    }
+
+    class Goal {
+        + width: int
+        + height: int
+        + body: b2Body
+        + check_goal(ball_pos: tuple): boolean
+    }
+
+    class PowerUpBox {
+        + size: int
+        + ground_y_px: float
+        + body: b2Body
+        + update(dt: float): void
+    }
+
+    class CloudObstacle {
+        + lifetime: int
+        + bounce_force: float
+        + body: b2Body
+        + update(dt: float): void
+    }
+
+    class MudArea {
+        + drag_friction: float
+        + body: b2Body
+    }
+}
+
+' Herencias de Pygame
+PygameSprite <|-- PowerUpBox
+PygameSprite <|-- CloudObstacle
+
+' Escenas que componen el entorno (Sin cardinalidad)
+class "MatchScene" as Match <<Scene>>
+class "FirstScene" as First <<Scene>>
+class "SecondScene" as Second <<Scene>>
+
+' Relaciones de Agregación limpias
+Match o--> FieldBoundaries : Construye
+Match o--> Goal : Contiene
+Match o--> PowerUpBox : Spawnea intermitentemente
+
+First o--> MudArea : Genera en el suelo
+Second o--> CloudObstacle : Spawnea en el aire
+
+@enduml

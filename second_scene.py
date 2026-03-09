@@ -8,9 +8,9 @@ from factory import RocketFactory
 
 # ─── CONSTANTES DEL ESCENARIO 2 ──────────────────────────────
 
-GROUND_Y   = 520
-GOAL_W     = 160
-GOAL_H     = 320
+GROUND_Y   = 570
+GOAL_W     = 100
+GOAL_H     = 160
 GOAL_POST  = 6
 GOAL_TOP_Y = GROUND_Y - GOAL_H + 30
 
@@ -366,10 +366,14 @@ class SecondScene(MatchScene):
 
         if not hasattr(self, '_goalpost_bg'):
             try:
-                img    = pygame.image.load('./assets/stadiums/excavator_shovel_goalpost_bg.png').convert_alpha()
-                scaled = pygame.transform.scale(img, (GOAL_W, GOAL_H))
-                self._goalpost_bg_l = scaled
-                self._goalpost_bg_r = pygame.transform.flip(scaled, True, False)
+                l_yellow_container_bg    = pygame.image.load('./assets/stadiums/contenedor_left_yellow_bg.png').convert_alpha()
+                r_green_container_bg    = pygame.image.load('./assets/stadiums/contenedor_right_green_bg.png').convert_alpha()
+
+                l_yellow_container_bg_scaled = pygame.transform.scale(l_yellow_container_bg, (GOAL_W*2, GOAL_H))
+                r_green_container_bg_scaled = pygame.transform.scale(r_green_container_bg, (GOAL_W*2, GOAL_H))
+                
+                self._goalpost_bg_l = l_yellow_container_bg_scaled
+                self._goalpost_bg_r = r_green_container_bg_scaled
             except Exception:
                 self._goalpost_bg_l = pygame.Surface((GOAL_W, GOAL_H), pygame.SRCALPHA)
                 pygame.draw.rect(self._goalpost_bg_l, (*GOAL_NET_COLOR,), (0, 0, GOAL_W, GOAL_H))
@@ -377,24 +381,28 @@ class SecondScene(MatchScene):
             self._goalpost_bg = True
 
         screen.blit(self._goalpost_bg_l, (0, GOAL_TOP_Y))
-        screen.blit(self._goalpost_bg_r, (SW - GOAL_W, GOAL_TOP_Y))
+        screen.blit(self._goalpost_bg_r, (SW - GOAL_W*2, GOAL_TOP_Y))
 
         self._draw_clouds(screen)
 
     def _render_field_fg(self, screen):
         if not hasattr(self, '_goalpost_fg'):
             try:
-                img    = pygame.image.load('./assets/stadiums/excavator_shovel_goalpost_fg.png').convert_alpha()
-                scaled = pygame.transform.scale(img, (GOAL_W, GOAL_H))
-                self._goalpost_fg_l = scaled
-                self._goalpost_fg_r = pygame.transform.flip(scaled, True, False)
+                l_yellow_container_fg    = pygame.image.load('./assets/stadiums/contenedor_left_yellow_fg.png').convert_alpha()
+                r_green_container_fg    = pygame.image.load('./assets/stadiums/contenedor_right_green_fg.png').convert_alpha()
+
+                l_yellow_container_fg_scaled = pygame.transform.scale(l_yellow_container_fg, (GOAL_W*2, GOAL_H))
+                r_green_container_fg_scaled = pygame.transform.scale(r_green_container_fg , (GOAL_W*2, GOAL_H))
+
+                self._goalpost_fg_l = l_yellow_container_fg_scaled
+                self._goalpost_fg_r = r_green_container_fg_scaled
             except Exception:
-                self._goalpost_fg_l = pygame.Surface((GOAL_W, GOAL_H), pygame.SRCALPHA)
+                self._goalpost_fg_l = pygame.Surface((GOAL_W*2, GOAL_H), pygame.SRCALPHA)
                 self._goalpost_fg_r = self._goalpost_fg_l.copy()
             self._goalpost_fg = True
 
         screen.blit(self._goalpost_fg_l, (0, GOAL_TOP_Y))
-        screen.blit(self._goalpost_fg_r, (SW - GOAL_W, GOAL_TOP_Y))
+        screen.blit(self._goalpost_fg_r, (SW - GOAL_W*2, GOAL_TOP_Y))
 
     def render(self, screen):
         super().render(screen)
