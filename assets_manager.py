@@ -95,17 +95,6 @@ class Assets:
         "klaxon4": "klaxon4.ogg",
         "klaxon5": "klaxon5.ogg",
 
-        # Music & Fanfares
-        "musica2": "musica2.ogg",
-        "musica4": "musica4.ogg",
-        "victory_fanfare": "victory_fanfare.ogg",
-        "intro_bg_theme": "intro_bg_theme.ogg",
-        "match_bg_theme_1": "match_bg_theme_1.ogg",
-        "match_bg_theme_2": "match_bg_theme_2.ogg",
-        "match_bg_theme_3": "match_bg_theme_3.ogg",
-        "victory": "victory.ogg",
-        "final_victory": "final_victory_theme.ogg",
-
         # Dialogue specific
         "dialog_1": "dialog_1.ogg",
         "dialog_2": "dialog_2.ogg",
@@ -113,6 +102,17 @@ class Assets:
         "dialog_text_2": "dialog_text_2.ogg",
         "dialog_text_3": "dialog_text_3.ogg",
         "dialog_text_4": "dialog_text_4.ogg"
+    }
+    
+    _MUSIC_DATA = {
+        "musica2": "musica2.ogg",
+        "musica4": "musica4.ogg",
+        "intro_bg_theme": "intro_bg_theme.ogg",
+        "match_bg_theme_1": "match_bg_theme_1.ogg",
+        "match_bg_theme_2": "match_bg_theme_2.ogg",
+        "match_bg_theme_3": "match_bg_theme_3.ogg",
+        "victory": "victory.ogg",
+        "final_victory": "final_victory_theme.ogg"
     }
 
     @staticmethod
@@ -160,12 +160,11 @@ class Assets:
             except Exception as e:
                 print(f"Error cargando sonido {key}: {e}")
         return None
+    
 
-
-#class BackgroundAssets: pass
-#class PortraitAssets: pass
-#class StadiumAssets: pass
-#class BallsAssets: pass
-#class CarsAssets: pass
-#class GUIAssets: pass
-#class SFXAssets: pass
+    @staticmethod
+    def get_music_path(key):
+        filename = Assets._MUSIC_DATA.get(key)
+        if filename:
+            return os.path.join(SFX_PATH, filename)
+        return None

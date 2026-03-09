@@ -4,7 +4,7 @@ from scene import PyGameScene
 from factory import RocketFactory
 from ingame_menu_scene import IngameMenu
 from end_scene import EndScene
-from assets_manager import SFX_PATH
+from assets_manager import Assets
 from settings import ScreenSettings, GUISettings, Colors, GameSettings, VolumeController
 from pygame.locals import *
 import random
@@ -164,7 +164,7 @@ class MatchScene(PyGameScene):
         """Inicia la música de fondo del partido"""
         try:
             # Cargar música usando pygame.mixer.music para música de fondo
-            music_path = os.path.join(SFX_PATH, "musica2.ogg")
+            music_path = Assets.get_music_path("musica2")
             pygame.mixer.music.load(music_path)
             pygame.mixer.music.set_volume(VolumeController.get_music_volume())
             pygame.mixer.music.play(-1)  # -1 para loop infinito
