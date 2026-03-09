@@ -95,8 +95,8 @@ class GUIScreen:
                 elif event.key == K_RETURN or event.key == K_KP_ENTER:
                     if self.GUIElements and self.selected_index < len(self.GUIElements):
                         try:
-                            sound = pygame.mixer.Sound.play(SFXAssets.silbato_corto)
-                            sound.set_volume(VolumeController.get_current_volume())
+                            sound = SFXAssets.silbato_corto.play()
+                            sound.set_volume(VolumeController.get_sfx_volume())
                         except Exception:
                             pass
                         self.GUIElements[self.selected_index].action()

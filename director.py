@@ -20,7 +20,7 @@ class Director:
         
         # Initialize volume from saved settings
         VolumeController.initialize_from_settings()
-
+        
     def buclePygame(self, scene):
         clock = pygame.time.Clock()
         self.exit_scene = False
@@ -76,6 +76,11 @@ class Director:
 
     def cambiarEscena(self, scene):
         self.pararEscena()
+        # Llamar on_exit en la escena anterior si existe
+        if len(self.scene_stack) > 0:
+            previous_scene = self.scene_stack[-1]
+            if hasattr(previous_scene, 'on_exit'):
+                previous_scene.on_exit()
         self.scene_stack.append(scene)
 
     def apilarEscena(self, scene):

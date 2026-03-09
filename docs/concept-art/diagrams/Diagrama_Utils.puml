@@ -1,0 +1,39 @@
+@startuml PaqueteUtils
+skinparam shadowing false
+skinparam monochrome false
+skinparam packageStyle rectangle
+
+title Estructura interna del paquete Utils y Configuración
+
+package "Componente: Utils / Config" {
+
+    package "Archivo: settings.py" {
+        component "ScreenSettings\n(Resolución, FPS)" as Screen
+        component "Colors\n(Paleta RGB)" as Colors
+        component "GUISettings\n(Fuentes, Botones)" as GUIConf
+        component "GameSettings\n(Duración de partido)" as GameConf
+        
+        component "VolumeController\n(Gestión en RAM)" as VolCtrl
+        component "SettingsManager\n(Lectura/Escritura)" as SetMgr
+    }
+
+    package "Archivo: assets_manager.py" {
+        component "BallsAssets" as BallAst
+        component "CarsAssets" as CarAst
+        component "GUIAssets" as GUIAst
+        component "SFXAssets" as SFXAst
+    }
+}
+
+' Archivos externos
+component "game_settings.json" as JSONFile <<Archivo>>
+component "Carpeta /assets" as AssetsFolder <<Directorio>>
+
+' Relaciones de funcionamiento
+VolCtrl <..> SetMgr : Sincroniza estado
+SetMgr ..> JSONFile : Guarda/Carga
+BallAst ..> AssetsFolder : Carga PNGs
+CarAst ..> AssetsFolder : Carga PNGs
+GUIAst ..> AssetsFolder : Carga PNGs
+SFXAst ..> AssetsFolder : Carga OGGs
+@enduml

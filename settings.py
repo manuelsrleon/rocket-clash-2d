@@ -27,29 +27,57 @@ class GameSettings:
     MATCH_DURATION = 180 # in seconds
 
 class VolumeController:
-    # Implementado como classmethod para mantener el estado del volumen a nivel global
-    # Se podría usar un singleton.
-    _current_volume = 0.5  # Default volume (50%)
+    # Control de volumen separado para Música y SFX
+    _music_volume = 0.7  # Default music volume (70%)
+    _sfx_volume = 0.8    # Default SFX volume (80%)
 
     @classmethod
     def initialize_from_settings(cls):
-        saved_volume = SettingsManager.get_volume()
-        if saved_volume is not None:
-            cls.set_volume(saved_volume)
+        saved_volumes = SettingsManager.get_volumes()
+        if saved_volumes:
+            cls._music_volume = saved_volumes.get('music', 0.7)
+            cls._sfx_volume = saved_volumes.get('sfx', 0.8)
+        cls._update_mixer()
 
     @classmethod
-    def set_volume(cls, volume):
-        cls._current_volume = max(0.0, min(1.0, volume))
-        try:
-            import pygame
-            if pygame.mixer.get_init():
-                pygame.mixer.music.set_volume(cls._current_volume)
-        except:
-            pass
+    def set_music_volume(cls, volume):
+        cls._music_volume = max(0.0, min(1.0, volume))
+        cls._update_mixer()
+
+    @classmethod
+    def set_sfx_volume(cls, volume):
+        cls._sfx_volume = max(0.0, min(1.0, volume))
+
+    @classmethod
+    def get_music_volume(cls):
+        return cls._music_volume
+
+    @classmethod
+    def get_sfx_volume(cls):
+        return cls._sfx_volume
 
     @classmethod
     def get_current_volume(cls):
-        return cls._current_volume
+        """Para compatibilidad con código existente"""
+        return cls._music_volume
+    
+    @classmethod
+    def _update_mixer(cls):
+        try:
+            import pygame
+            if pygame.mixer.get_init():
+                pygame.mixer.music.set_volume(cls._music_volume)
+        except:
+            pass
+    
+    @classmethod
+    def apply_sfx_volume(cls, sound):
+        if sound:
+            try:
+                sound.set_volume(cls._sfx_volume)
+            except:
+                pass
+        return sound
 
 
 class SettingsManager:
@@ -78,3 +106,23 @@ class SettingsManager:
     def get_volume(cls):
         settings = cls.get_settings()
         return settings.get('volume', 0.5)
+    
+    @classmethod
+    def get_volumes(cls):
+        """Get music and SFX volumes"""
+        settings = cls.get_settings()
+        volumes = settings.get('volumes', {})
+        return {
+            'music': volumes.get('music', 0.7),
+            'sfx': volumes.get('sfx', 0.8),
+        }
+    
+    @classmethod
+    def save_volumes(cls, music_vol, sfx_vol):
+        """Save music and SFX volumes"""
+        settings = cls.get_settings()
+        settings['volumes'] = {
+            'music': music_vol,
+            'sfx': sfx_vol,
+        }
+        return cls.save_settings(settings)

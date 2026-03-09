@@ -1,0 +1,27 @@
+@startuml MaquinaEstadosBulldozer
+skinparam shadowing false
+skinparam monochrome false
+
+title Figura 17: Máquina de Estados (FSM) - IA del Jefe Bulldozer
+
+[*] --> DEFENSIVO : Inicio del partido
+
+DEFENSIVO --> OFENSIVO : Pelota cruza al medio campo \n[distancia a pelota < umbral]
+OFENSIVO --> DEFENSIVO : Pelota entra en área rival \n[distancia a pelota > umbral]
+
+DEFENSIVO --> LOCO : Temporizador de furia alcanzado \n/ Recibe un gol en contra
+OFENSIVO --> LOCO : Temporizador de furia alcanzado \n/ Recibe un gol en contra
+
+LOCO --> DEFENSIVO : Temporizador de furia agotado \n/ Saque de centro
+
+' Descripciones internas de cada estado
+DEFENSIVO : **Posición**: Cerca de su portería
+DEFENSIVO : **Acción**: Interceptar trayectoria de la pelota
+
+OFENSIVO : **Posición**: Persiguiendo la pelota
+OFENSIVO : **Acción**: Aplicar fuerza (boost) hacia portería rival
+
+LOCO : **Posición**: Persiguiendo al PlayerCar
+LOCO : **Acción**: Embestir a máxima velocidad (Ignora pelota)
+
+@enduml
