@@ -328,12 +328,6 @@ class MatchScene(PyGameScene):
     def _on_goal(self):
         self.goal_scored      = True
         self.goal_pause_timer = self.goal_pause
-        try:
-            music_path = os.path.join(SFX_PATH, "musica2.ogg")
-            pygame.mixer.music.load(music_path)
-            pygame.mixer.music.set_volume(VolumeController.get_music_volume())
-        except Exception:
-            pass
 
     def _reset_positions(self):
         self.jugador.body.position        = (px2m(self.player_start[0]), px2m(self.player_start[1]))
