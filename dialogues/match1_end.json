@@ -1,0 +1,29 @@
+{
+  "scene": "bulldozer_defeat",
+  "next_scene": "world_map",
+  "base_speed": 15,
+  "background": "stadium1_bg",
+  "music": "victory",
+  "characters": {
+    "left": {
+      "name": "Ruedaldinho",
+      "size": [510, 210], 
+      "portraits": { "idle": "Ruedaldinho" }
+    },
+    "right": { 
+      "name": "Bulldozer",
+      "size": [500, 330],
+      "portraits": { "idle": "Bulldozer" } 
+    }
+  },
+  "lines": [
+    { 
+      "speaker": "Bulldozer", "side": "right", 
+      "text": "Increíble... Mis pistones están echando humo. Nadie me había movido del sitio en años.", 
+      "events": [{ "type": "shake", "intensity": 15 }] 
+    },
+    { "speaker": "Bulldozer", "side": "right", "text": "Parece que no se trata de cuánto pesas, sino de cómo te mueves . Tienes agallas, novato." },
+    { "speaker": "Bulldozer", "side": "right", "text": "Eres escurridizo, como una mancha de aceite. Pasa... Te has ganado el derecho a seguir por este foso." },
+    { "speaker": "Bulldozer", "side": "right", "text": "Pero ten cuidado en las alturas. Tu rival no chocará contra ti... simplemente volará por encima de tu chasis." }
+  ]
+}

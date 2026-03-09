@@ -1,52 +1,55 @@
 {
   "scene": "match3_scene",
   "next_scene": "end_scene",
-  "base_speed": 25,
-  "background": "assets/backgrounds/background.png",
+  "base_speed": 15,
+  "background": "stadium3_bg",
+  "music": "match_bg_theme_3",
   "characters": {
     "left": {
       "name": "Ruedaldinho",
-      "portrait": "assets/portraits/player.png"
+      "size": [510, 210],
+      "portraits": { "idle": "Ruedaldinho" }
     },
     "right": {
       "name": "Jenny",
-      "portrait": "assets/portraits/Bulldozer.png"
+      "size": [530, 160],
+      "portraits": { "idle": "Jenny" } 
     }
   },
   "lines": [
-    {
-      "speaker": "Jenny",
-      "side": "left",
-      "text": "Hola cariño. Te acuerdas de mi, verdad? Soy Jenny, la mejor jugadora de Rocket Clash. "
-    },
-    {
-      "speaker": "Jenny",
-      "side": "left",
-      "text": "Me llegaron rumores de que me andabas buscando... y yo que pensaba que ya te habías dado cuenta de que no puedes vivir sin mí."
-    },
-    {
-      "speaker": "Ruedaldinho",
-      "side": "right",
-      "text": "No vengo aquí por ti, Jenny. Lo sabes perfectamente. Vengo por lo que me pertenece."
-    },
-    {
-      "speaker": "Jenny",
-      "side": "left",
-      "text": "¿Ah sí? ¿Y qué es lo que te robé, Ruedaldinho? ¿Tu orgullo? ¿Tu dignidad? JA JA JA!",
+    { 
       "events": [
-        { "type": "shake", "intensity": 15 }]
+        { "type": "flash", "color": [255, 255, 0] },
+        { "type": "flash", "color": [255, 0, 0] },
+        { "type": "flash", "color": [100, 200, 0] },
+        { "type": "flash", "color": [230, 150, 0] },
+        { "type": "flash", "color": [0, 255, 0] },
+        { "type": "flash", "color": [255, 0, 255] },
+        { "type": "flash", "color": [0, 0, 255] },
+        { "type": "flash", "color": [50, 50, 50] },
+        { "type": "flash", "color": [40, 200, 150] },
+        { "type": "flash", "color": [25, 150, 100] },
+        { "type": "wait", "seconds": 0.5 }
+      ]
     },
+    { "speaker": "Jenny", "side": "right", "text": " Uy! Perdona por la ceguera, cariño... Estaba limpiando mis faros de xenón y me he pasado de potencia." },
+    { "speaker": "Jenny", "side": "right", "text": "¿Te acuerdas de mí? Soy Jenny, la que te dejó tirado en la cuneta y ahora es la reina del Rocket Clash." },
+    { "speaker": "Jenny", "side": "right", "text": "Mirándote bien... pensaba que ya te habías dado cuenta de que ese motor tuyo no puede vivir sin mi chispa." },
+    { "speaker": "Ruedaldinho", "side": "left", "text": "No vengo aquí por tus chistes, Jenny. Vengo por lo que me pertenece por derecho." },
     {
-      "speaker": "Ruedaldinho",
-      "side": "right",
-      "text": "Ya veo que tu ego y tu arrogancia siguen intactos. Pero no te preocupes, estoy aquí para recuperar lo que es mío por derecho. Y si eso significa derrotarte en el proceso, entonces así será."
+      "speaker": "Jenny", "side": "right",
+      "text": "¡JA JA JA! ¿Ah sí? ¿Y qué es lo que te robé exactamente? ¿Tu orgullo? ¿Tu dignidad? ¡O quizá esta carrocería de platino que brilla tanto!",
+      "events": [{ "type": "shake", "intensity": 20 }]
     },
+    { "speaker": "Ruedaldinho", "side": "left", "text": "Ese chasis era de mi abuelo. Lo usaste para escalar posiciones y luego me vendiste al mejor postor." },
+    { "speaker": "Jenny", "side": "right", "text": "Cariño, en las carreras no hay sentimientos, solo hay caballos de potencia. Y tú ahora mismo vas en bicicleta." },
+    { "speaker": "Ruedaldinho", "side": "left", "text": "Tenazas me ha enseñado que el corazón del piloto importa más que el cromo. ¡Prepárate, porque voy a recuperarlo todo!" },
     {
-      "speaker": "Jenny",
-      "side": "left",
-      "text": "JA JA JA! Vamos a ver si puedes cumplir con tus palabras, aunque la respuesta es bastante obvia. !Preparate para perder!",
+      "speaker": "Jenny", "side": "right",
+      "text": "¡JA JA JA! ¿Ese gato pulgoso te ha lavado el cerebro? ¡Vamos a ver si tus bujías aguantan mi presión! ¡A morder el polvo!",
       "events": [
-        { "type": "shake", "intensity": 15 }]
+        { "type": "shake", "intensity": 25 }
+      ]
     }
   ]
 }

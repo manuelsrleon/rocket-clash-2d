@@ -1,0 +1,67 @@
+{
+  "scene": "jenny_defeat",
+  "next_scene": "end_scene",
+  "base_speed": 15,
+  "background": "stadium3_bg",
+  "music": "final_victory",
+  "characters": {
+    "left": {
+      "name": "Ruedaldinho",
+      "size": [510, 210],
+      "portraits": { "idle": "Ruedaldinho" }
+    },
+    "right": {
+      "name": "Jenny",
+      "size": [530, 160],
+      "portraits": { "idle": "Jenny" }
+    }
+  },
+  "lines": [
+    { 
+      "events": [
+        { "type": "flash", "color": [255, 255, 255] },
+        { "type": "flash", "color": [0, 0, 0] },
+        { "type": "flash", "color": [255, 255, 255] },
+        { "type": "flash", "color": [0, 0, 0] },
+        { "type": "flash", "color": [255, 255, 255] },
+        { "type": "flash", "color": [0, 0, 0] },
+        { "type": "flash", "color": [255, 255, 255] },
+        { "type": "flash", "color": [0, 0, 0] }
+      ]
+    },
+    { 
+      "speaker": "Jenny", "side": "right", 
+      "text": "¡Imposible! Mi chasis de platino... rayado. Mi motor de última generación... vencido por un trozo de hierro de Elviña.",
+      "events": [{ "type": "shake", "intensity": 15 }]
+    },
+    { 
+      "speaker": "Jenny", "side": "right", 
+      "text": "Has corrido como si no tuvieras nada que perder. O como si tuvieras demasiado que recuperar." 
+    },
+    { 
+      "speaker": "Ruedaldinho", "side": "left", 
+      "text": "Te lo dije, Jenny. El brillo del platino no sirve de nada si el piloto no tiene alma. El legado de mi abuelo vuelve a casa." 
+    },
+    { 
+      "speaker": "Jenny", "side": "right", 
+      "text": "Quédate con tu chatarra sentimental. Al final, has demostrado ser el verdadero rey del Rocket Clash... por ahora.",
+      "events": [{ "type": "wait", "seconds": 0.8 }]
+    },
+    { 
+      "speaker": "Ruedaldinho", "side": "left", 
+      "text": "No es solo el trofeo. Es saber que ya no necesito tu chispa para encender mi motor. ¡Se acabó el juego, Jenny!" 
+    },
+    { 
+      "speaker": "Jenny", "side": "right", 
+      "text": "Grrr... ¡No me mires así! ¡Llevaos este coche al desguace antes de que me arrepienta!",
+      "events": [
+        { "type": "shake", "intensity": 30 },
+        { "type": "flash", "color": [255, 255, 255] }
+      ]
+    },
+    { 
+      "speaker": "Jenny", "side": "right", 
+      "text": "Nos volveremos a ver. Y la próxima vez, no habrá segundas oportunidades. ¡Esto no ha terminado!" 
+    }
+  ]
+}

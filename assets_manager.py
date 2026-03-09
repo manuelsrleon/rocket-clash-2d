@@ -2,107 +2,169 @@ import pygame
 from settings import ScreenSettings
 import os
 
-# Asset directory paths
+# --- RUTAS DE DIRECTORIOS ---
 BASE_PATH = os.path.dirname(__file__)
 BALLS_PATH = os.path.join(BASE_PATH, "assets", "balls")
 CARS_PATH = os.path.join(BASE_PATH, "assets", "cars")
 GUI_PATH = os.path.join(BASE_PATH, "assets", "gui")
 SFX_PATH = os.path.join(BASE_PATH, "assets", "sfx")
+BACKGROUNDS_PATH = os.path.join(BASE_PATH, "assets", "backgrounds")
+PORTRAITS_PATH = os.path.join(BASE_PATH, "assets", "portraits")
+STADIUMS_PATH = os.path.join(BASE_PATH, "assets", "stadiums")
+
+class Assets:
+    """
+    Gestor centralizado. Carga assets solo cuando se piden (Lazy Loading).
+    Permite importar escenas antes de inicializar Pygame.
+    """
+    _images_cache = {}
+    _sounds_cache = {}
+
+    # --- DICCIONARIO DE IMÁGENES  ---
+    _IMAGE_DATA = {
+        # Fondos
+        "background": ("background.png", BACKGROUNDS_PATH, (ScreenSettings.SCREEN_WIDTH, ScreenSettings.SCREEN_HEIGHT)),
+        "stadium1_bg": ("stadium1_bg.png", STADIUMS_PATH, (ScreenSettings.SCREEN_WIDTH, ScreenSettings.SCREEN_HEIGHT)),
+        "stadium2_bg": ("stadium2_bg.png", STADIUMS_PATH, (ScreenSettings.SCREEN_WIDTH, ScreenSettings.SCREEN_HEIGHT)),
+        "stadium3_bg": ("stadium3_bg.png", STADIUMS_PATH, (ScreenSettings.SCREEN_WIDTH, ScreenSettings.SCREEN_HEIGHT)),
+        
+        # Portraits
+        "Bulldozer": ("Bulldozer.png", PORTRAITS_PATH, None),
+        "MotoMoto": ("MotoMoto.png", PORTRAITS_PATH, None),
+        "Jenny": ("Jenny.png", PORTRAITS_PATH, None),
+        "Ruedaldinho": ("Ruedaldinho.png", PORTRAITS_PATH, None),
+        "tenazas_1": ("Tenazas_1.png", PORTRAITS_PATH, None),
+        "tenazas_2": ("Tenazas_2.png", PORTRAITS_PATH, None),
+
+        # Balls & Cars
+        "ball": ("ball.png", BALLS_PATH, (50, 50)),
+        "car_wheel": ("car_wheel.png", CARS_PATH, (100, 50)),
+        "player_car": ("player_car.png", CARS_PATH, (140, 70)),
+
+        # GUI
+        "exit_button": ("exit_button.png", GUI_PATH, (160, 48)),
+        "play_button": ("play_button.png", GUI_PATH, (160, 48)),
+        "main_menu_bg": ("main_menu_bg.png", GUI_PATH, (ScreenSettings.SCREEN_WIDTH, ScreenSettings.SCREEN_HEIGHT)),
+        "main_menu_svg": ("main_menu.svg", GUI_PATH, None)
+    }
+
+    # --- DICCIONARIO DE SONIDOS ---
+    _SOUND_DATA = {
+        # Ball sounds
+        "ball_against_goalpost": "ball_against_goalpost.ogg",
+        "toque_balon": "toque balon.ogg",
+        
+        # Car & Engine
+        "car_lowrevs": "car_lowrevs.ogg",
+        "car_motor_interior": "car_motor_interior.ogg",
+        "car_touching_ball1": "car_touching_ball1.ogg",
+        "car_touching_ball2": "car_touching_ball2.ogg",
+        "car_touching_ball3": "car_touching_ball3.ogg",
+        "car_touching_ball4": "car_touching_ball4.ogg",
+        "ferrari": "ferrari.ogg",
+        "motor1": "motor1.ogg",
+        "motor2": "motor2.ogg",
+        "turbo1": "turbo1.ogg",
+        "turbo2": "turbo2.ogg",
+
+        # Collisions & Explosions
+        "crash1": "crash1.ogg",
+        "crash2": "crash2.ogg",
+        "crash3": "crash3.ogg",
+        "explosion1": "explosion1.ogg",
+        "explosion2": "explosion2.ogg",
+        "explosion3": "explosion3.ogg",
+        "explosion4": "explosion4.ogg",
+        "explosion5": "explosion5.ogg",
+
+        # Crowd & Ambience
+        "crowd_hits_besta": "crowd_hits_besta.ogg",
+        "publico1": "publico1.ogg",
+        "publico_estadio_cantando": "publico_estadio cantando.ogg",
+
+        # Goals & Whistles
+        "goal1": "goal1.ogg",
+        "goal2": "goal2.ogg",
+        "silbato_corto": "silbato_corto.ogg",
+        "silbato_largo": "silbato_largo.ogg",
+
+        # Horns
+        "klaxon1": "klaxon1.ogg",
+        "klaxon2": "klaxon2.ogg",
+        "klaxon3": "klaxon3.ogg",
+        "klaxon4": "klaxon4.ogg",
+        "klaxon5": "klaxon5.ogg",
+
+        # Music & Fanfares
+        "musica2": "musica2.ogg",
+        "musica4": "musica4.ogg",
+        "victory_fanfare": "victory_fanfare.ogg",
+        "intro_bg_theme": "intro_bg_theme.ogg",
+        "match_bg_theme_1": "match_bg_theme_1.ogg",
+        "match_bg_theme_2": "match_bg_theme_2.ogg",
+        "match_bg_theme_3": "match_bg_theme_3.ogg",
+        "victory": "victory.ogg",
+        "final_victory": "final_victory_theme.ogg",
+
+        # Dialogue specific
+        "dialog_1": "dialog_1.ogg",
+        "dialog_2": "dialog_2.ogg",
+        "dialog_text_1": "dialog_text_1.ogg",
+        "dialog_text_2": "dialog_text_2.ogg",
+        "dialog_text_3": "dialog_text_3.ogg",
+        "dialog_text_4": "dialog_text_4.ogg"
+    }
+
+    @staticmethod
+    def get_image(key):
+        if key in Assets._images_cache:
+            return Assets._images_cache[key]
+
+        if key in Assets._IMAGE_DATA:
+            name, path, scale = Assets._IMAGE_DATA[key]
+            try:
+                img = pygame.image.load(os.path.join(path, name))
+                if pygame.display.get_surface():
+                    img = img.convert_alpha()
+                if scale:
+                    img = pygame.transform.scale(img, scale)
+                Assets._images_cache[key] = img
+                return img
+            except Exception as e:
+                print(f"Error cargando imagen {key}: {e}")
+
+        # Fallback Magenta
+        surf = pygame.Surface((50, 50))
+        surf.fill((255, 0, 255))
+        return surf
+
+    @staticmethod
+    def get_sound(key):
+        if key in Assets._sounds_cache:
+            return Assets._sounds_cache[key]
+
+        if key in Assets._SOUND_DATA:
+            filename = Assets._SOUND_DATA[key]
+            # Si el mixer no está listo, lo intentamos inicializar
+            if not pygame.mixer.get_init():
+                try:
+                    pygame.mixer.init()
+                except:
+                    return None
+            
+            try:
+                sound = pygame.mixer.Sound(os.path.join(SFX_PATH, filename))
+                Assets._sounds_cache[key] = sound
+                return sound
+            except Exception as e:
+                print(f"Error cargando sonido {key}: {e}")
+        return None
 
 
-def load_image(name, path, scale=None):
-    image = pygame.image.load(os.path.join(path, name))
-    if scale is not None:
-        image = pygame.transform.scale(image, scale)
-    return image
-
-
-def load_sound(name, path):
-    if not pygame.mixer.get_init():
-        pygame.mixer.init()
-    return pygame.mixer.Sound(os.path.join(path, name))
-
-
-class BallsAssets:
-
-    ball = load_image("ball.png", BALLS_PATH, (50, 50))
-
-
-class CarsAssets:
-
-    car_wheel = load_image("car_wheel.png", CARS_PATH, (100, 50))
-    player_car = load_image("player_car.png", CARS_PATH, (140, 70))
-
-
-class GUIAssets:
-
-    exit_button = load_image("exit_button.png", GUI_PATH, (160, 48))
-    play_button = load_image("play_button.png", GUI_PATH, (160, 48))
-    main_menu_bg = load_image(
-        "main_menu_bg.png",
-        GUI_PATH,
-        (ScreenSettings.SCREEN_WIDTH, ScreenSettings.SCREEN_HEIGHT),
-    )
-    main_menu_svg = load_image("main_menu.svg", GUI_PATH)
-
-
-class SFXAssets:
-
-    # Ball sounds
-    ball_against_goalpost = load_sound("ball_against_goalpost.ogg", SFX_PATH)
-    # Car sounds
-    car_lowrevs = load_sound("car_lowrevs.ogg", SFX_PATH)
-    car_motor_interior = load_sound("car_motor_interior.ogg", SFX_PATH)
-    car_touching_ball1 = load_sound("car_touching_ball1.ogg", SFX_PATH)
-    car_touching_ball2 = load_sound("car_touching_ball2.ogg", SFX_PATH)
-    car_touching_ball3 = load_sound("car_touching_ball3.ogg", SFX_PATH)
-    car_touching_ball4 = load_sound("car_touching_ball4.ogg", SFX_PATH)
-
-    # Collision sounds
-    crash1 = load_sound("crash1.ogg", SFX_PATH)
-    crash2 = load_sound("crash2.ogg", SFX_PATH)
-    crash3 = load_sound("crash3.ogg", SFX_PATH)
-
-    # Crowd reactions
-    crowd_hits_besta = load_sound("crowd_hits_besta.ogg", SFX_PATH)
-    publico1 = load_sound("publico1.ogg", SFX_PATH)
-    publico_estadio_cantando = load_sound("publico_estadio cantando.ogg", SFX_PATH)
-
-    # Explosion sounds
-    explosion1 = load_sound("explosion1.ogg", SFX_PATH)
-    explosion2 = load_sound("explosion2.ogg", SFX_PATH)
-    explosion3 = load_sound("explosion3.ogg", SFX_PATH)
-    explosion4 = load_sound("explosion4.ogg", SFX_PATH)
-    explosion5 = load_sound("explosion5.ogg", SFX_PATH)
-
-    # Engine sounds
-    ferrari = load_sound("ferrari.ogg", SFX_PATH)
-    motor1 = load_sound("motor1.ogg", SFX_PATH)
-    motor2 = load_sound("motor2.ogg", SFX_PATH)
-    turbo1 = load_sound("turbo1.ogg", SFX_PATH)
-    turbo2 = load_sound("turbo2.ogg", SFX_PATH)
-
-    # Goal sounds
-    goal1 = load_sound("goal1.ogg", SFX_PATH)
-    goal2 = load_sound("goal2.ogg", SFX_PATH)
-
-    # Horn/klaxon sounds
-    klaxon1 = load_sound("klaxon1.ogg", SFX_PATH)
-    klaxon2 = load_sound("klaxon2.ogg", SFX_PATH)
-    klaxon3 = load_sound("klaxon3.ogg", SFX_PATH)
-    klaxon4 = load_sound("klaxon4.ogg", SFX_PATH)
-    klaxon5 = load_sound("klaxon5.ogg", SFX_PATH)
-
-    # Music tracks
-    musica2 = load_sound("musica2.ogg", SFX_PATH)
-    musica4 = load_sound("musica4.ogg", SFX_PATH)
-
-    # Whistle sounds
-    silbato_corto = load_sound("silbato_corto.ogg", SFX_PATH)
-    silbato_largo = load_sound("silbato_largo.ogg", SFX_PATH)
-
-    # Ball touch sound
-    toque_balon = load_sound("toque balon.ogg", SFX_PATH)
-
-    # Victory sound
-    victory_fanfare = load_sound("victory_fanfare.ogg", SFX_PATH)
+#class BackgroundAssets: pass
+#class PortraitAssets: pass
+#class StadiumAssets: pass
+#class BallsAssets: pass
+#class CarsAssets: pass
+#class GUIAssets: pass
+#class SFXAssets: pass

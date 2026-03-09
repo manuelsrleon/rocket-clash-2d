@@ -1,25 +1,29 @@
 import pygame
 from director import Director
 from scenes.dialogue_scene import DialogueScene
-from scenes.intro_scene import IntroScene
 
 def main():
     pygame.init()
-    screen = pygame.display.set_mode((800, 600))
+    pygame.display.set_mode((800, 600))
     pygame.display.set_caption("Rocket Clash 2D - Dialog Test")
 
     dir = Director()
-    dir.screen = screen
 
     # 2. Crear las escenas en orden: primero intro, luego dialog
-    escena_intro = IntroScene(dir)
+    escena_intro = DialogueScene(dir, "dialogues/intro.json")
     escena_dialog_1 = DialogueScene(dir, "dialogues/match1.json")
+    escena_dialog_1_end = DialogueScene(dir, "dialogues/match1_end.json")
     escena_dialog_2 = DialogueScene(dir, "dialogues/match2.json")
-    escena_dialog_3 = DialogueScene(dir, "dialogues/match3.json")  
+    escena_dialog_2_end = DialogueScene(dir, "dialogues/match2_end.json")
+    escena_dialog_3 = DialogueScene(dir, "dialogues/match3.json") 
+    escena_dialog_3_end = DialogueScene(dir, "dialogues/match3_end.json")
 
     # 3. Apilar las escenas para que el director las gestione
+    dir.apilarEscena(escena_dialog_3_end)
     dir.apilarEscena(escena_dialog_3)
+    dir.apilarEscena(escena_dialog_2_end)
     dir.apilarEscena(escena_dialog_2)
+    dir.apilarEscena(escena_dialog_1_end)
     dir.apilarEscena(escena_dialog_1)
     dir.apilarEscena(escena_intro)
     
