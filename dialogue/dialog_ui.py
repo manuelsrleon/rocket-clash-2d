@@ -1,4 +1,5 @@
 import pygame
+from settings import DialogueAnimationController
 
 class DialogueUI:
     def __init__(self, name, full_text, portrait, side, font):
@@ -10,7 +11,7 @@ class DialogueUI:
         
         self.anim_progress = 0.0 
         self.anim_speed = 7.0
-        self.entry_mode = "pop" 
+        self.entry_mode = DialogueAnimationController.get_mode()
         self.animations = {"slide": self._anim_slide, "pop": self._anim_pop}
         
         self.box_width = 620 
