@@ -39,13 +39,13 @@ CLOUD_MIN_W           = 70
 CLOUD_MAX_W           = 140
 CLOUD_H               = 30
 CLOUD_MARGIN_X        = 100
-CLOUD_MIN_Y           = GOAL_TOP_Y
-CLOUD_MAX_Y           = GROUND_Y - CLOUD_H
+CLOUD_MIN_Y           = GOAL_TOP_Y-100
+CLOUD_MAX_Y           = GROUND_Y - CLOUD_H-100
 CLOUD_RESTITUTION     = 3.0
 CLOUD_FRICTION        = 0.0
 CLOUD_COLOR           = (0, 0, 0)
 CLOUD_BORDER_COLOR    = (40, 40, 40)
-CLOUD_FADE_TIME       = 1500
+CLOUD_FADE_TIME       = 500
 CLOUD_BOUNCE_IMPULSE  = 25.0
 
 # ─── POWER-UP: PELOTAZO ──────────────────────────────────────
