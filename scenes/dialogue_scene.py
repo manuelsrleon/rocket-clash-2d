@@ -1,3 +1,4 @@
+import os
 import pygame
 import random
 from scene import PyGameScene
@@ -132,10 +133,11 @@ class DialogueScene(PyGameScene):
 
         if not self.music_started:
             if self.bgm_key:
-                sound = Assets.get_sound(self.bgm_key)
-                if sound:
-                    sound.play(loops=-1)
-                    sound.set_volume(0.12)
+                path = Assets.get_music_path(self.bgm_key)
+                if path and os.path.exists(path):
+                    pygame.mixer.music.load(path)
+                    pygame.mixer.music.set_volume(0.12)
+                    pygame.mixer.music.play(loops=-1)
             self.music_started = True
 
         dt_sec = dt / 1000.0
@@ -349,6 +351,4 @@ class DialogueScene(PyGameScene):
         self.flash_timer = data.get('seconds', 0.2)
 
     def _stop_all_audio(self):
-        if self.bgm_key:
-            sound = Assets.get_sound(self.bgm_key)
-            if sound: sound.fadeout(1000)
+        pygame.mixer.music.fadeout(1000)
