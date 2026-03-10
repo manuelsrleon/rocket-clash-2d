@@ -2,7 +2,7 @@
   "scene": "opponent1_intro",
   "next_scene": "match_scene",
   "base_speed": 15,
-  "background": "stadium1_bg",
+  "background": "bulldozer_background",
   "music": "match_bg_theme_1",
   "characters": {
     "left": {

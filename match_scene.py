@@ -4,10 +4,11 @@ from scene import PyGameScene
 from factory import RocketFactory
 from ingame_menu_scene import IngameMenu
 from end_scene import EndScene
-from assets_manager import SFXAssets
+from assets_manager import Assets
 from settings import ScreenSettings, GUISettings, Colors, GameSettings, VolumeController
 from pygame.locals import *
 import random
+import os
 
 # Física Box2D
 PPM = 10.0
@@ -163,7 +164,8 @@ class MatchScene(PyGameScene):
         """Inicia la música de fondo del partido"""
         try:
             # Cargar música usando pygame.mixer.music para música de fondo
-            pygame.mixer.music.load("assets/sfx/musica2.ogg")
+            music_path = Assets.get_music_path("musica2")
+            pygame.mixer.music.load(music_path)
             pygame.mixer.music.set_volume(VolumeController.get_music_volume())
             pygame.mixer.music.play(-1)  # -1 para loop infinito
         except Exception as e:
@@ -326,11 +328,6 @@ class MatchScene(PyGameScene):
     def _on_goal(self):
         self.goal_scored      = True
         self.goal_pause_timer = self.goal_pause
-        try:
-            sound = SFXAssets.musica2.play()
-            sound.set_volume(VolumeController.get_music_volume())
-        except Exception:
-            pass
 
     def _reset_positions(self):
         self.jugador.body.position        = (px2m(self.player_start[0]), px2m(self.player_start[1]))

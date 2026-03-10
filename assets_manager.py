@@ -24,6 +24,7 @@ class Assets:
     _IMAGE_DATA = {
         # Fondos
         "background": ("background.png", BACKGROUNDS_PATH, (ScreenSettings.SCREEN_WIDTH, ScreenSettings.SCREEN_HEIGHT)),
+        "bulldozer_background": ("bulldozer_background.png", BACKGROUNDS_PATH, (ScreenSettings.SCREEN_WIDTH, ScreenSettings.SCREEN_HEIGHT)),
         "stadium1_bg": ("stadium1_bg.png", STADIUMS_PATH, (ScreenSettings.SCREEN_WIDTH, ScreenSettings.SCREEN_HEIGHT)),
         "stadium2_bg": ("stadium2_bg.png", STADIUMS_PATH, (ScreenSettings.SCREEN_WIDTH, ScreenSettings.SCREEN_HEIGHT)),
         "stadium3_bg": ("stadium3_bg.png", STADIUMS_PATH, (ScreenSettings.SCREEN_WIDTH, ScreenSettings.SCREEN_HEIGHT)),
@@ -44,7 +45,7 @@ class Assets:
         # GUI
         "exit_button": ("exit_button.png", GUI_PATH, (160, 48)),
         "play_button": ("play_button.png", GUI_PATH, (160, 48)),
-        "main_menu_bg": ("main_menu_bg.png", GUI_PATH, (ScreenSettings.SCREEN_WIDTH, ScreenSettings.SCREEN_HEIGHT)),
+        "main_menu_bg": ("Main_Background.png", GUI_PATH, (ScreenSettings.SCREEN_WIDTH, ScreenSettings.SCREEN_HEIGHT)),
         "main_menu_svg": ("main_menu.svg", GUI_PATH, None)
     }
 
@@ -95,17 +96,6 @@ class Assets:
         "klaxon4": "klaxon4.ogg",
         "klaxon5": "klaxon5.ogg",
 
-        # Music & Fanfares
-        "musica2": "musica2.ogg",
-        "musica4": "musica4.ogg",
-        "victory_fanfare": "victory_fanfare.ogg",
-        "intro_bg_theme": "intro_bg_theme.ogg",
-        "match_bg_theme_1": "match_bg_theme_1.ogg",
-        "match_bg_theme_2": "match_bg_theme_2.ogg",
-        "match_bg_theme_3": "match_bg_theme_3.ogg",
-        "victory": "victory.ogg",
-        "final_victory": "final_victory_theme.ogg",
-
         # Dialogue specific
         "dialog_1": "dialog_1.ogg",
         "dialog_2": "dialog_2.ogg",
@@ -113,6 +103,17 @@ class Assets:
         "dialog_text_2": "dialog_text_2.ogg",
         "dialog_text_3": "dialog_text_3.ogg",
         "dialog_text_4": "dialog_text_4.ogg"
+    }
+    
+    _MUSIC_DATA = {
+        "musica2": "musica2.ogg",
+        "musica4": "musica4.ogg",
+        "intro_bg_theme": "intro_bg_theme.ogg",
+        "match_bg_theme_1": "match_bg_theme_1.ogg",
+        "match_bg_theme_2": "match_bg_theme_2.ogg",
+        "match_bg_theme_3": "match_bg_theme_3.ogg",
+        "victory": "victory.ogg",
+        "final_victory": "final_victory_theme.ogg"
     }
 
     @staticmethod
@@ -153,18 +154,18 @@ class Assets:
                     return None
             
             try:
-                sound = pygame.mixer.Sound(os.path.join(SFX_PATH, filename))
+                sound_path = os.path.join(SFX_PATH, filename)
+                sound = pygame.mixer.Sound(sound_path)
                 Assets._sounds_cache[key] = sound
                 return sound
             except Exception as e:
                 print(f"Error cargando sonido {key}: {e}")
         return None
+    
 
-
-#class BackgroundAssets: pass
-#class PortraitAssets: pass
-#class StadiumAssets: pass
-#class BallsAssets: pass
-#class CarsAssets: pass
-#class GUIAssets: pass
-#class SFXAssets: pass
+    @staticmethod
+    def get_music_path(key):
+        filename = Assets._MUSIC_DATA.get(key)
+        if filename:
+            return os.path.join(SFX_PATH, filename)
+        return None
