@@ -9,12 +9,15 @@ BOSS1_STATS = {'move_speed': 10.0, 'jump_force': 70.0, 'mass': 0.8, 'scale': 0.9
 PLAYER_CAR_IMG = './assets/cars/player_car.png'
 WHEEL_IMG      = './assets/cars/car_wheel.png'
 BOSS1_IMG      = './assets/cars/bulldozer.png'
+BOSS2_IMG      = './assets/cars/moto-moto.png'
+BOSS3_IMG      = './assets/cars/jenny.png'
 
 class MySprite(pygame.sprite.Sprite):
-    def __init__(self, body_path, carPos=(0, 0), scale=1.0):
+    def __init__(self, body_path, carPos=(0, 0), scale=1.0, flip=False):
         super().__init__()
         try:
-            body = pygame.image.load(body_path).convert_alpha()
+            body = pygame.transform.flip(pygame.image.load(body_path).convert_alpha(), flip, False)
+            
         except:
             body = pygame.Surface((80, 50), pygame.SRCALPHA)
             body.fill((200, 50, 50))
@@ -29,9 +32,9 @@ class MySprite(pygame.sprite.Sprite):
         self.rect.centerx, self.rect.centery = int(pos[0]), int(pos[1])
 
 class Car(MySprite):
-    def __init__(self, body_path, carPos=(0, 0), stats=None):
+    def __init__(self, body_path, carPos=(0, 0), stats=None, flip=False):
         stats = stats or DEFAULT_STATS
-        super().__init__(body_path, carPos, scale=stats.get('scale', 1.0))
+        super().__init__(body_path, carPos, scale=stats.get('scale', 1.0),flip=flip)
         self.move_speed = stats.get('move_speed', DEFAULT_STATS['move_speed'])
         self.jump_force = stats.get('jump_force', DEFAULT_STATS['jump_force'])
         self.mass = stats.get('mass', DEFAULT_STATS['mass'])
@@ -71,7 +74,7 @@ class PlayerCar(Car):
         else: self.stop_horizontal()
 
 class Bulldozer(Car):
-    def __init__(self, carPos=(600, 460)):
+    def __init__(self, carPos=(600, 460),flip=True):
         self.stats_normal = {'move_speed': 4.0, 'jump_force': 60.0, 'mass': 3.0, 'scale': 1.5}
         # Bajamos la velocidad de 62.0 a 16.0. Sigue siendo más rápido que el jugador (12.0)
         self.stats_angry = {'move_speed': 16.0, 'jump_force': 60.0, 'mass': 4.5, 'scale': 1.5}
@@ -205,10 +208,10 @@ class MotoMoto(Car):
     """Boss del escenario 2: pequeño y rápido. Se teletransporta a la portería si el balón está cerca."""
 
     def __init__(self, carPos=(600, 460)):
-        self.stats_normal = {'move_speed': 7.0, 'jump_force': 55.0, 'mass': 1.5, 'scale': 0.8}
-        self.stats_angry = {'move_speed': 22.0, 'jump_force': 55.0, 'mass': 2.0, 'scale': 0.8}
+        self.stats_normal = {'move_speed': 7.0, 'jump_force': 55.0, 'mass': 1.5, 'scale': 0.12}
+        self.stats_angry = {'move_speed': 22.0, 'jump_force': 55.0, 'mass': 2.0, 'scale': 0.13}
 
-        super().__init__(BOSS1_IMG, carPos, stats=self.stats_normal)
+        super().__init__(BOSS2_IMG, carPos, stats=self.stats_normal, flip=True)
         self.angry_timer = 0
         self.is_angry = False
 
@@ -331,9 +334,9 @@ class LaJenny(Car):
     FLASH_RANGE_X = 35.0   # en metros
 
     def __init__(self, carPos=(600, 460)):
-        self._jenny_stats = {'move_speed': 16.0, 'jump_force': 350.0, 'mass': 0.9, 'scale': 1.1}
+        self._jenny_stats = {'move_speed': 16.0, 'jump_force': 350.0, 'mass': 0.9, 'scale': 0.12}
         # TODO: Cambiar PLAYER_CAR_IMG por una imagen específica de Jenny
-        super().__init__(PLAYER_CAR_IMG, carPos, stats=self._jenny_stats)
+        super().__init__(BOSS3_IMG, carPos, stats=self._jenny_stats,flip=True)
 
         # Temporizador de flash
         self._flash_timer = int(self.FLASH_INTERVAL * 0.6)
