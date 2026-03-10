@@ -440,6 +440,9 @@ class MatchScene(PyGameScene):
 
     def update(self, delta_time):
         if self.match_over:
+            #add a black overlay and game over text
+            screen.fill(Colors.BLACK)
+            self.font_goal.render("GAME OVER", True, Colors.WHITE)
             return
 
         # Actualizar volumen de música de fondo
