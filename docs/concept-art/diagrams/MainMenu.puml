@@ -1,0 +1,76 @@
+@startuml MainMenu
+title Main Menu — Estructura y Flujo
+
+' CLASSES
+class Menu <<PyGameScene>> {
+    - screenList : list
+    - currentScreen : int
+    + __init__(director)
+    + update()
+    + events(event_list)
+    + render(screen)
+    + playCampaign()
+    + showSettingsScreen()
+    + showInitialScreen()
+    + exit()
+}
+
+class InitialGUIScreen <<GUIScreen>> {
+    - GUIElements : list
+    + __init__(menu)
+    + render(screen)
+    + events(event_list)
+}
+
+class PlayButton <<Button>> {
+    + text = "Campaign Mode"
+    + action()
+}
+
+class SettingsButton <<Button>> {
+    + text = "Settings"
+    + action()
+}
+
+class ExitButton <<Button>> {
+    + text = "Exit"
+    + action()
+}
+
+class SecondScene <<PyGameScene>> {
+}
+
+class SettingsScene <<PyGameScene>> {
+}
+
+' RELATIONSHIPS
+Menu "1" *-- "1" InitialGUIScreen : contiene
+InitialGUIScreen "1" *-- "1" PlayButton
+InitialGUIScreen "1" *-- "1" SettingsButton
+InitialGUIScreen "1" *-- "1" ExitButton
+
+' ACTIONS / NAVIGATION
+PlayButton    --> Menu         : action()\nplayCampaign()
+SettingsButton --> Menu        : action()\nshowSettingsScreen()
+ExitButton    --> Menu         : action()\nexit()
+
+Menu --> SecondScene    : apilarEscena()\n[Campaign Mode]
+Menu --> SettingsScene  : apilarEscena()\n[Settings]
+
+note top of Menu
+  ESC → exit()
+  QUIT → director.exitScene()
+end note
+
+note right of PlayButton
+  Navega a la campaña
+  empujando SecondScene
+  en el director
+end note
+
+note right of SettingsButton
+  Abre SettingsScene
+  sobre el menú (overlay)
+end note
+
+@enduml

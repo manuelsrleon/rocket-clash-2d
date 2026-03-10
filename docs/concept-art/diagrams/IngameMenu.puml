@@ -1,0 +1,83 @@
+@startuml IngameMenu
+title Ingame Menu (Pausa) — Estructura y Flujo
+
+' CLASSES
+class IngameMenu <<PyGameScene>> {
+    + is_overlay : bool = True
+    - overlay : Surface
+    - menu_panel : Surface
+    - title_font : Font
+    + __init__(director)
+    + update(delta_time)
+    + events(event_list)
+    + render(screen)
+    + resumeGame()
+    + showSettings()
+    + exitToMainMenu()
+}
+
+class IngameMenuGUIScreen <<GUIScreen>> {
+    - GUIElements : list
+    + __init__(menu)
+    + render(screen)
+    + events(event_list)
+}
+
+class ResumeButton <<Button>> {
+    + text = "Resume Game"
+    + action()
+}
+
+class SettingsButton <<Button>> {
+    + text = "Settings"
+    + action()
+}
+
+class ExitToMenuButton <<Button>> {
+    + text = "Exit to Main Menu"
+    + action()
+}
+
+class SettingsScene <<PyGameScene>> {
+}
+
+class CountdownScene <<PyGameScene>> {
+}
+
+class MatchScene <<PyGameScene>> {
+    note "Escena subyacente\n(sigue en el stack)" as N1
+}
+
+' RELATIONSHIPS
+IngameMenu "1" *-- "1" IngameMenuGUIScreen : contiene
+IngameMenuGUIScreen "1" *-- "1" ResumeButton
+IngameMenuGUIScreen "1" *-- "1" SettingsButton
+IngameMenuGUIScreen "1" *-- "1" ExitToMenuButton
+
+' ACTIONS / NAVIGATION
+ResumeButton     --> IngameMenu : action()\nresumeGame()
+SettingsButton   --> IngameMenu : action()\nshowSettings()
+ExitToMenuButton --> IngameMenu : action()\nexitToMainMenu()
+
+IngameMenu --> CountdownScene : apilarEscena()\n[Resume → Countdown]
+IngameMenu --> SettingsScene  : apilarEscena()\n[Settings]
+IngameMenu --> MatchScene     : exitScene()\n[vuelve al juego]
+
+note top of IngameMenu
+  ESC → resumeGame()
+  is_overlay = True
+  (se renderiza sobre MatchScene)
+end note
+
+note right of ResumeButton
+  1. director.exitScene()  — cierra el menú
+  2. apilarEscena(CountdownScene)
+end note
+
+note right of ExitToMenuButton
+  Hace pop de todas las escenas
+  del stack hasta que queda
+  solo el Menu principal
+end note
+
+@enduml
