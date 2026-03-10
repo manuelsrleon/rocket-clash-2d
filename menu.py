@@ -2,9 +2,9 @@ import pygame
 from match_scene import MatchScene
 from scene import PyGameScene
 from gui_elements import Button, GUIScreen
-from assets_manager import GUIAssets
+from assets_manager import Assets
 from settings import ScreenSettings
-from settings_scene import SettingsScene
+from settings_scene import SettingsScene, GUISettings
 from firts_scene import FirstScene
 from third_scene import ThirdScene
 from second_scene import SecondScene
@@ -17,7 +17,7 @@ class PlayButton(Button):
             self,
             screen,
             position=(
-                ScreenSettings.SCREEN_WIDTH - 200,
+                ScreenSettings.SCREEN_WIDTH // 2 - GUISettings.BUTTON_SIZE[0] // 2,
                 ScreenSettings.SCREEN_HEIGHT - 222,
             ),
             text="Campaign Mode",
@@ -34,7 +34,7 @@ class SettingsButton(Button):
             self,
             screen,
             position=(
-                ScreenSettings.SCREEN_WIDTH - 200,
+                ScreenSettings.SCREEN_WIDTH // 2 - GUISettings.BUTTON_SIZE[0] // 2,
                 ScreenSettings.SCREEN_HEIGHT - 150,
             ),
             text="Settings",
@@ -51,7 +51,7 @@ class ExitButton(Button):
             self,
             screen,
             position=(
-                ScreenSettings.SCREEN_WIDTH - 200,
+                ScreenSettings.SCREEN_WIDTH // 2 - GUISettings.BUTTON_SIZE[0] // 2,
                 ScreenSettings.SCREEN_HEIGHT - 78,
             ),
             text="Exit",
@@ -64,7 +64,7 @@ class InitialGUIScreen(GUIScreen):
 
     def __init__(self, menu):
         try:
-            bg_image = GUIAssets.main_menu_bg
+            bg_image = Assets.get_image("main_menu_bg")
         except Exception:
             bg_image = None
         

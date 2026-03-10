@@ -1,6 +1,6 @@
 import pygame
 from settings import Colors, GUISettings, VolumeController
-from assets_manager import SFXAssets
+from assets_manager import Assets
 from pygame.locals import *
 
 
@@ -95,8 +95,10 @@ class GUIScreen:
                 elif event.key == K_RETURN or event.key == K_KP_ENTER:
                     if self.GUIElements and self.selected_index < len(self.GUIElements):
                         try:
-                            sound = SFXAssets.silbato_corto.play()
-                            sound.set_volume(VolumeController.get_sfx_volume())
+                            sound = Assets.get_sound("silbato_corto")
+                            if sound:
+                                sound.set_volume(VolumeController.get_sfx_volume())
+                                sound.play()
                         except Exception:
                             pass
                         self.GUIElements[self.selected_index].action()
