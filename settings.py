@@ -26,6 +26,26 @@ class GameSettings:
     
     MATCH_DURATION = 180 # in seconds
 
+class DialogueAnimationController:
+    POP   = "pop"
+    SLIDE = "slide"
+
+    _mode = POP  # default
+
+    @classmethod
+    def set_mode(cls, mode):
+        if mode in (cls.POP, cls.SLIDE):
+            cls._mode = mode
+
+    @classmethod
+    def get_mode(cls):
+        return cls._mode
+
+    @classmethod
+    def is_pop(cls):
+        return cls._mode == cls.POP
+
+
 class DialogueSpeedController:
     NORMAL = 1.0
     FAST   = 3.0
@@ -149,6 +169,8 @@ class SettingsManager:
             DialogueSpeedController.set_fast()
         else:
             DialogueSpeedController.set_normal()
+        dialogue_anim = settings.get('dialogue_anim', DialogueAnimationController.POP)
+        DialogueAnimationController.set_mode(dialogue_anim)
         return {
             'music': volumes.get('music', 0.7),
             'sfx': volumes.get('sfx', 0.8),
@@ -163,4 +185,5 @@ class SettingsManager:
             'sfx': sfx_vol,
         }
         settings['dialogue_fast'] = DialogueSpeedController.is_fast()
+        settings['dialogue_anim'] = DialogueAnimationController.get_mode()
         return cls.save_settings(settings)

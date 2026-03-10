@@ -1,7 +1,7 @@
 import pygame
 from scene import PyGameScene
 from gui_elements import Button
-from settings import ScreenSettings, GUISettings, Colors, VolumeController, SettingsManager, DialogueSpeedController
+from settings import ScreenSettings, GUISettings, Colors, VolumeController, SettingsManager, DialogueSpeedController, DialogueAnimationController
 from assets_manager import Assets 
 from pygame.locals import *
 
@@ -22,8 +22,9 @@ TITLE_Y = 50
 MUSIC_SLIDER_Y = 150
 SFX_SLIDER_Y = 250
 DIALOGUE_SPEED_Y = 340
+DIALOGUE_ANIM_Y = 400
 SLIDER_LABEL_OFFSET = 40
-SAVE_BUTTON_Y = 430
+SAVE_BUTTON_Y = 490
 
 class VolumeSlider:
 
@@ -77,6 +78,38 @@ class VolumeSlider:
             screen, SLIDER_HANDLE_COLOR, handle_center, SLIDER_HANDLE_RADIUS
         )
         pygame.draw.circle(screen, SLIDER_FG_COLOR, handle_center, SLIDER_HANDLE_RADIUS - 3)
+
+
+class DialogueAnimToggle:
+    """Toggle POP / SLIDE for dialogue box entry animation."""
+
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+        self.selected = False
+
+    def handle_event(self, event):
+        if event.type == KEYDOWN and event.key in (K_LEFT, K_RIGHT):
+            if DialogueAnimationController.is_pop():
+                DialogueAnimationController.set_mode(DialogueAnimationController.SLIDE)
+            else:
+                DialogueAnimationController.set_mode(DialogueAnimationController.POP)
+
+    def render(self, screen, label_font):
+        is_pop = DialogueAnimationController.is_pop()
+
+        label = label_font.render("Dialog Animation", True, TEXT_COLOR)
+        screen.blit(label, label.get_rect(midleft=(50, self.y)))
+
+        cx = self.x
+        for i, (text, active) in enumerate([("POP", is_pop), ("SLIDE", not is_pop)]):
+            color = SLIDER_FG_COLOR if active else SLIDER_BG_COLOR
+            border = (255, 255, 255) if (self.selected and active) else color
+            rect = pygame.Rect(cx + i * 160, self.y - 14, 140, 28)
+            pygame.draw.rect(screen, color, rect, border_radius=6)
+            pygame.draw.rect(screen, border, rect, 2, border_radius=6)
+            txt = label_font.render(text, True, Colors.WHITE if active else (160, 160, 160))
+            screen.blit(txt, txt.get_rect(center=rect.center))
 
 
 class SaveButton(Button):
@@ -161,6 +194,9 @@ class SettingsScene(PyGameScene):
         # Dialogue speed toggle
         self.dialogue_speed_toggle = DialogueSpeedToggle(slider_x, DIALOGUE_SPEED_Y)
 
+        # Dialogue animation toggle
+        self.dialogue_anim_toggle = DialogueAnimToggle(slider_x, DIALOGUE_ANIM_Y)
+
         self.save_button = SaveButton(self)
 
         # Set initial volumes
@@ -170,7 +206,7 @@ class SettingsScene(PyGameScene):
         self.show_save_message = False
         self.save_message_timer = 0
 
-        self.elements = [self.music_slider, self.sfx_slider, self.dialogue_speed_toggle, self.save_button]
+        self.elements = [self.music_slider, self.sfx_slider, self.dialogue_speed_toggle, self.dialogue_anim_toggle, self.save_button]
         self.selected_index = 0
         self._update_selection()
 
@@ -178,6 +214,7 @@ class SettingsScene(PyGameScene):
         self.music_slider.selected = False
         self.sfx_slider.selected = False
         self.dialogue_speed_toggle.selected = False
+        self.dialogue_anim_toggle.selected = False
         self.save_button.hover = False
 
         if self.selected_index == 0:
@@ -187,6 +224,8 @@ class SettingsScene(PyGameScene):
         elif self.selected_index == 2:
             self.dialogue_speed_toggle.selected = True
         elif self.selected_index == 3:
+            self.dialogue_anim_toggle.selected = True
+        elif self.selected_index == 4:
             self.save_button.hover = True
 
     def update(self, delta_time):
@@ -211,7 +250,7 @@ class SettingsScene(PyGameScene):
                     self.selected_index = (self.selected_index + 1) % len(self.elements)
                     self._update_selection()
                 elif event.key == K_RETURN or event.key == K_KP_ENTER:
-                    if self.selected_index == 3:  # Save button
+                    if self.selected_index == 4:  # Save button
                         self.save_button.action()
                 elif event.key == K_LEFT or event.key == K_RIGHT:
                     if self.selected_index == 0:
@@ -224,6 +263,8 @@ class SettingsScene(PyGameScene):
                         VolumeController.set_sfx_volume(self.sfx_slider.get_value())
                     elif self.selected_index == 2:
                         self.dialogue_speed_toggle.handle_event(event)
+                    elif self.selected_index == 3:
+                        self.dialogue_anim_toggle.handle_event(event)
 
     def render(self, screen):
         # 1. Dibujar el fondo primero
@@ -237,6 +278,7 @@ class SettingsScene(PyGameScene):
         self._render_music_section(screen)
         self._render_sfx_section(screen)
         self.dialogue_speed_toggle.render(screen, self.label_font)
+        self.dialogue_anim_toggle.render(screen, self.label_font)
         self.save_button.render(screen)
         if self.show_save_message:
             self._render_save_confirmation(screen)
