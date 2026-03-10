@@ -46,7 +46,8 @@ class Assets:
         "exit_button": ("exit_button.png", GUI_PATH, (160, 48)),
         "play_button": ("play_button.png", GUI_PATH, (160, 48)),
         "main_menu_bg": ("Main_Background.png", GUI_PATH, (ScreenSettings.SCREEN_WIDTH, ScreenSettings.SCREEN_HEIGHT)),
-        "main_menu_svg": ("main_menu.svg", GUI_PATH, None)
+        "main_menu_svg": ("main_menu.svg", GUI_PATH, None),
+        "settings_bg": ("settings_background.png", GUI_PATH, (ScreenSettings.SCREEN_WIDTH, ScreenSettings.SCREEN_HEIGHT))
     }
 
     # --- DICCIONARIO DE SONIDOS ---

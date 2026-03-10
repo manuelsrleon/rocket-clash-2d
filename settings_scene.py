@@ -2,6 +2,7 @@ import pygame
 from scene import PyGameScene
 from gui_elements import Button
 from settings import ScreenSettings, GUISettings, Colors, VolumeController, SettingsManager, DialogueSpeedController
+from assets_manager import Assets 
 from pygame.locals import *
 
 # Settings constants
@@ -131,6 +132,19 @@ class SettingsScene(PyGameScene):
 
     def __init__(self, director):
         super().__init__(director)
+        
+        # --- Background Image ---
+        try:
+            self.background_image = Assets.get_image("settings_bg") # Cambia el nombre si es necesario
+            # Ajustar al tamaño de pantalla si fuera necesario
+            self.background_image = pygame.transform.scale(
+                self.background_image, 
+                (ScreenSettings.SCREEN_WIDTH, ScreenSettings.SCREEN_HEIGHT)
+            )
+        except Exception:
+            self.background_image = None
+        # ---------------------------------------------
+
         self.title_font = pygame.font.SysFont(GUISettings.FONT_TEXT, TITLE_FONT_SIZE, bold=True)
         self.label_font = pygame.font.SysFont(GUISettings.FONT_TEXT, LABEL_FONT_SIZE)
         slider_x = ScreenSettings.SCREEN_WIDTH // 2 - 150
@@ -212,7 +226,13 @@ class SettingsScene(PyGameScene):
                         self.dialogue_speed_toggle.handle_event(event)
 
     def render(self, screen):
-        screen.fill(BACKGROUND_COLOR)
+        # 1. Dibujar el fondo primero
+        if self.background_image:
+            screen.blit(self.background_image, (0, 0))
+        else:
+            screen.fill(BACKGROUND_COLOR)
+
+        # 2. Dibujar el resto de elementos encima
         self._render_title(screen)
         self._render_music_section(screen)
         self._render_sfx_section(screen)
