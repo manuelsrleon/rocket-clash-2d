@@ -1,4 +1,13 @@
 ## Requisitos
-- Crear entorno virtual: `python3 -m venv venv`
+## Dependencias del sistema (Ubuntu/Debian)
+
+Necesarias para compilar Box2D con SWIG:
+
+sudo apt update && sudo apt install -y \
+  swig3.0 build-essential python3-dev \
+  libgl1-mesa-dev libglew-dev freeglut3-dev \
+  libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev libsdl2-ttf-dev
+
+- Crear entorno virtual en la raiz del proyecto: `python3 -m venv venv`
 - Activar: `source venv/bin/activate`
 - Instalar: `pip install -r configs/requirements.txt`
