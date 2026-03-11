@@ -25,6 +25,7 @@ class Assets:
         # Fondos
         "background": ("background.png", BACKGROUNDS_PATH, (ScreenSettings.SCREEN_WIDTH, ScreenSettings.SCREEN_HEIGHT)),
         "bulldozer_background": ("bulldozer_background.png", BACKGROUNDS_PATH, (ScreenSettings.SCREEN_WIDTH, ScreenSettings.SCREEN_HEIGHT)),
+        "credits_background": ("credits_background.png", BACKGROUNDS_PATH, (ScreenSettings.SCREEN_WIDTH, ScreenSettings.SCREEN_HEIGHT)),
         "stadium1_bg": ("stadium1_bg.png", STADIUMS_PATH, (ScreenSettings.SCREEN_WIDTH, ScreenSettings.SCREEN_HEIGHT)),
         "stadium2_bg": ("stadium2_bg.png", STADIUMS_PATH, (ScreenSettings.SCREEN_WIDTH, ScreenSettings.SCREEN_HEIGHT)),
         "stadium3_bg": ("stadium3_bg.png", STADIUMS_PATH, (ScreenSettings.SCREEN_WIDTH, ScreenSettings.SCREEN_HEIGHT)),

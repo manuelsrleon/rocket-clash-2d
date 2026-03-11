@@ -1,6 +1,7 @@
 import pygame
 from director import Director
 from scenes.dialogue_scene import DialogueScene
+from scenes.credits_scene import CreditsScene
 
 def main():
     pygame.init()
@@ -17,8 +18,10 @@ def main():
     escena_dialog_2_end = DialogueScene(dir, "dialogues/match2_end.json")
     escena_dialog_3 = DialogueScene(dir, "dialogues/match3.json") 
     escena_dialog_3_end = DialogueScene(dir, "dialogues/match3_end.json")
+    credits_scene = CreditsScene(dir)
 
     # 3. Apilar las escenas para que el director las gestione
+    dir.apilarEscena(credits_scene)
     dir.apilarEscena(escena_dialog_3_end)
     dir.apilarEscena(escena_dialog_3)
     dir.apilarEscena(escena_dialog_2_end)
