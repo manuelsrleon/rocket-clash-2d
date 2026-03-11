@@ -1,67 +1,84 @@
-@startuml OrganizacionScenes
+@startuml ArquitecturaScenes
+' Forzamos modo diagrama de clases
 skinparam shadowing false
 skinparam monochrome false
-skinparam packageStyle rectangle
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+skinparam nodesep 50
+skinparam ranksep 40
 
-title Organización interna del componente Scenes
+title UML de la Jerarquía de Escenas 
 
-package "Componente: Scenes" {
-
-    class "Scene" as SceneBase
-    class "PyGameScene" as PyGameSceneBase
-    
-    SceneBase <|-- PyGameSceneBase
-
-    package "Rama: Menu" {
-        class "Menu" as MainMenu
-        class "IngameMenu" as Ingame
-        class "SettingsScene" as Settings
-        class "EndScene" as EndScn
-        class "IntroScene" as Intro
-        class "DialogueScene" as Dialogue
+package "Core (Motor)" {
+    class Director {
+        - scene_stack: list
+        + apilarEscena(scene: Scene): void
+        + cambiarEscena(scene: Scene): void
+        + exitScene(): void
     }
 
-    package "Rama: Levels" {
-        class "MatchScene" as Match
-        class "FirstScene" as First
-        class "SecondScene" as Second
-        class "ThirdScene" as Third
+    abstract class Scene {
+        # director: Director
+        + update(dt: float): void
+        + events(ev: list): void
+        + render(screen: Surface): void
+    }
+
+    class PyGameScene {
+        - is_overlay: boolean
+        - fade_alpha: float
+        + fade_to_black(): void
+        + fade_from_black(): void
     }
 }
 
-' Relaciones de Herencia
-PyGameSceneBase <|-- MainMenu
-PyGameSceneBase <|-- Ingame
-PyGameSceneBase <|-- Settings
-PyGameSceneBase <|-- EndScn
-PyGameSceneBase <|-- Intro
-PyGameSceneBase <|-- Dialogue
+' --- RELACIONES DE PROPIEDAD Y USO ---
+Director "1" *-- "0..*" Scene : Gestiona
+Scene "0..*" o-- "1" Director : Referencia
+Scene <|-- PyGameScene
 
-PyGameSceneBase <|-- Match
-Match <|-- First
-Match <|-- Second
-Match <|-- Third
+package "Interfaces" {
+    class Menu {
+        - screenList: list
+    }
+    class SettingsScene
+    class IngameMenu
+}
 
-' Dependencias externas (declaradas como clases con estereotipo para evitar el crash)
-class "GUI" as GUIComponent <<Component>>
-class "Managers" as ManagersComponent <<Component>>
-class "Entities" as EntitiesComponent <<Component>>
-class "Utils" as UtilsComponent <<Component>>
+' Herencias simples
+PyGameScene <|-- Menu
+PyGameScene <|-- SettingsScene
+PyGameScene <|-- IngameMenu
 
-' Ocultamos los atributos de los componentes para que queden limpios
-hide GUIComponent members
-hide ManagersComponent members
-hide EntitiesComponent members
-hide UtilsComponent members
+package "Narrativa" {
+    class DialogueScene {
+        - manager: DialogueManager
+    }
+    class CreditsScene
+}
 
-' Dependencias de la rama Menu
-MainMenu ..> GUIComponent
-Ingame ..> GUIComponent
-Settings ..> ManagersComponent : (sound/settings)
+' Separación vertical para que no se amontone
+Interfaces -[hidden]down- Narrativa
+PyGameScene <|-- DialogueScene
+PyGameScene <|-- CreditsScene
 
-' Dependencias de la rama Levels
-Match ..> EntitiesComponent : controla
-Match ..> UtilsComponent : usa
-First ..> ManagersComponent : usa
-Second ..> ManagersComponent : usa
+package "Jugabilidad (Match)" {
+    class MatchScene {
+        # score_left: int
+        # score_right: int
+        + _draw_hud(screen: Surface): void
+    }
+
+    class FirstScene
+    class SecondScene
+    class ThirdScene
+}
+
+' Herencia de segundo nivel
+Narrativa -[hidden]down- "Jugabilidad (Match)"
+PyGameScene <|-- MatchScene
+MatchScene <|-- FirstScene
+MatchScene <|-- SecondScene
+MatchScene <|-- ThirdScene
+
 @enduml

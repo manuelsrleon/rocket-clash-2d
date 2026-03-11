@@ -2,22 +2,30 @@
 skinparam componentStyle uml2
 skinparam shadowing false
 skinparam monochrome false
+skinparam linetype ortho
+skinparam nodesep 80
+skinparam ranksep 90
 
-title Diagrama de componentes UML del sistema a alto nivel
+title Figura 10: Diagrama de Componentes UML a Alto Nivel
 
-component "Core" as Core
-component "Scenes" as Scenes
-component "Entities" as Entities
-component "GUI" as GUI
-component "Managers" as Managers
-component "Utils" as Utils
+component "Core" as Core <<Motor Principal>>
+component "Scenes" as Scenes <<Gestor de Estados>>
+component "Entities" as Entities <<Físicas Box2D>>
+component "GUI" as GUI <<Interfaz de Usuario>>
+component "Managers" as Managers <<Servicios Globales>>
+component "Utils" as Utils <<Configuraciones>>
 
-Core ..> Scenes : Gestiona
-Core ..> Utils : Configura
-Scenes ..> Entities : Controla físicas/lógica
-Scenes ..> GUI : Renderiza
-Scenes ..> Managers : Usa (Audio/Textos)
-GUI ..> Managers : Usa (Ajustes/Sonido)
-Entities ..> Managers : Usa (Sprites/Audio)
-Managers ..> Utils : Lee/Escribe
+' Distancia intermedia para que el texto encaje perfectamente
+Core ..down..> Scenes : <<use>>\n[Gestiona el flujo]
+Core ..right..> Utils : <<use>>\n[Inicia config]
+
+Scenes ..down..> Entities : <<use>>\n[Físicas y lógica]
+Scenes ..right..> GUI : <<use>>\n[Muestra menús]
+Scenes ..down..> Managers : <<use>>\n[Pide Audio/Textos]
+
+GUI ..down..> Managers : <<use>>\n[Ajusta volumen]
+Entities ..right..> Managers : <<use>>\n[Carga Sprites]
+
+Managers ..right..> Utils : <<use>>\n[Lee/Escribe I/O]
+
 @enduml
