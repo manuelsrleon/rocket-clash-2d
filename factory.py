@@ -24,15 +24,15 @@ class RocketFactory:
             )
             objeto.body.CreatePolygonFixture(
                 box=(3.85, 0.5, (0.0, 0.5), 0),
-                density=0.12,
+                density=10.0,
                 friction=0.08,
-                restitution=0.55
+                restitution=0.1
             )
             objeto.body.CreatePolygonFixture(
                 vertices=[(-3.0, -1.0), (0.0, -1.0), (0.5, 0.0), (-3.9, 0.0)],
-                density=0.10,
-                friction=0.3,
-                restitution=0.65
+                density=10.0,
+                friction=0.0,
+                restitution=0.1
             )
             return objeto
 
@@ -66,9 +66,9 @@ class RocketFactory:
             )
             objeto.body.CreateCircleFixture(
                 radius=2.5,
-                density=0.08,           # mucho más ligero → reacciona más al contacto
-                friction=0.4,
-                restitution=0.82        # rebota más en general
+                density=0.00,           # mucho más ligero → reacciona más al contacto
+                friction=0.5,
+                restitution=1.1       # rebota más en general
             )
             return objeto
 
