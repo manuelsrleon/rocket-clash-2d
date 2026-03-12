@@ -85,9 +85,12 @@ class CreditsScene(PyGameScene):
         self.wait_timer = 2.0 
 
     def _exit_game_completely(self):
-        """Cierre definitivo del programa."""
-        pygame.quit()
-        sys.exit()
+        """Vuelve al menú principal en vez de cerrar el juego."""
+        if hasattr(self.director, 'in_campaign') and self.director.in_campaign:
+            self.director.advance_campaign()
+        else:
+            # Pop back to main menu
+            self.director.exitScene()
 
     def update(self, dt):
         dt_sec = dt / 1000.0

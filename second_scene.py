@@ -50,7 +50,7 @@ CLOUD_BOUNCE_IMPULSE  = 25.0
 
 # ─── POWER-UP: PELOTAZO ──────────────────────────────────────
 
-POWERUP_KICK_RANGE     = 5.0
+POWERUP_KICK_RANGE     = 10.0
 POWERUP_KICK_SPEED     = 1000.0
 POWERUP_KICK_COLOR     = (255, 100, 0)
 POWERUP_FLASH_DURATION = 400
@@ -83,6 +83,7 @@ class Scene2ContactListener(Box2D.b2ContactListener):
         if not (cloud_is_A or cloud_is_B):
             return None
 
+        cloud_body   = fA.body if cloud_is_A else fB.body
         dynamic_body = fB.body if cloud_is_A else fA.body
         if dynamic_body.type != Box2D.b2_dynamicBody:
             return None
@@ -95,19 +96,20 @@ class Scene2ContactListener(Box2D.b2ContactListener):
         if cloud_is_B:
             nx, ny = -nx, -ny
 
-        return (dynamic_body, nx, ny)
+        return (dynamic_body, nx, ny, cloud_body)
 
     def BeginContact(self, contact):
         result = self._get_cloud_contact(contact)
         if result:
-            body, nx, ny = result
-            self._pending_bounces.append((body, nx, ny))
+            body, nx, ny, cloud_body = result
+            self._pending_bounces.append((body, nx, ny, cloud_body))
 
     def EndContact(self, contact):
         pass
 
     def apply_pending_bounces(self):
-        for body, nx, ny in self._pending_bounces:
+        hit_cloud_bodies = set()
+        for body, nx, ny, cloud_body in self._pending_bounces:
             try:
                 ix = nx * CLOUD_BOUNCE_IMPULSE
                 iy = ny * CLOUD_BOUNCE_IMPULSE
@@ -120,9 +122,11 @@ class Scene2ContactListener(Box2D.b2ContactListener):
                     point=body.worldCenter,
                     wake=True
                 )
+                hit_cloud_bodies.add(cloud_body)
             except Exception:
                 pass
         self._pending_bounces.clear()
+        return hit_cloud_bodies
 
 
 # ─── SECOND SCENE ────────────────────────────────────────────
@@ -340,8 +344,19 @@ class SecondScene(MatchScene):
     def update(self, delta_time):
         super().update(delta_time)
 
+        hit_cloud_bodies = set()
         if hasattr(self, 'contact_listener'):
-            self.contact_listener.apply_pending_bounces()
+            hit_cloud_bodies = self.contact_listener.apply_pending_bounces()
+
+        # Remove clouds that were hit
+        if hit_cloud_bodies:
+            alive = []
+            for c in self.clouds:
+                if c['body'] in hit_cloud_bodies:
+                    self._destroy_cloud_body(c['body'])
+                else:
+                    alive.append(c)
+            self.clouds = alive
 
         self._update_boss_ai(delta_time)
         self._update_clouds(delta_time)

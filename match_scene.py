@@ -144,7 +144,7 @@ class MatchScene(PyGameScene):
         # --- Ball stuck detection
         self._ball_stuck_timer_ms = 0
         self._ball_stuck_threshold_ms = 3000
-        self._ball_stuck_speed_threshold = 1.0
+        self._ball_stuck_speed_threshold = 0.65
         self._kickoff_speed = 6.0
 
         # Fuentes
@@ -320,8 +320,7 @@ class MatchScene(PyGameScene):
                 if self._ball_stuck_timer_ms >= self._ball_stuck_threshold_ms:
                     self._ball_stuck_timer_ms = 0
                     self._do_kickoff()
-            else:
-                self._ball_stuck_timer_ms = 0
+            # No reset on speed spikes — timer just pauses until ball leaves the zone
         else:
             self._ball_stuck_timer_ms = 0
 
