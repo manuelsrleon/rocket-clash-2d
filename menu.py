@@ -5,7 +5,7 @@ from gui_elements import Button, GUIScreen
 from assets_manager import Assets
 from settings import ScreenSettings
 from settings_scene import SettingsScene, GUISettings
-from firts_scene import FirstScene
+from first_scene import FirstScene
 from third_scene import ThirdScene
 from second_scene import SecondScene
 from pygame.locals import KEYDOWN, K_ESCAPE, QUIT
@@ -115,8 +115,8 @@ class Menu(PyGameScene):
 
         d = self.director
         sequence = [
-            lambda: DialogueScene(d, "dialogues/intro.json"),
-            lambda: DialogueScene(d, "dialogues/match1.json"),
+            # lambda: DialogueScene(d, "dialogues/intro.json"),
+            # lambda: DialogueScene(d, "dialogues/match1.json"),
             lambda: FirstScene(d),
             lambda: DialogueScene(d, "dialogues/match1_end.json"),
             lambda: DialogueScene(d, "dialogues/match2.json"),
