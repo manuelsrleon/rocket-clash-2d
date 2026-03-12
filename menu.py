@@ -109,14 +109,11 @@ class Menu(PyGameScene):
     def playCampaign(self):
         from scenes.dialogue_scene import DialogueScene
         from scenes.credits_scene import CreditsScene
-        from firts_scene import FirstScene
-        from second_scene import SecondScene
-        from third_scene import ThirdScene
 
         d = self.director
         sequence = [
-            # lambda: DialogueScene(d, "dialogues/intro.json"),
-            # lambda: DialogueScene(d, "dialogues/match1.json"),
+            lambda: DialogueScene(d, "dialogues/intro.json"),
+            lambda: DialogueScene(d, "dialogues/match1.json"),
             lambda: FirstScene(d),
             lambda: DialogueScene(d, "dialogues/match1_end.json"),
             lambda: DialogueScene(d, "dialogues/match2.json"),
