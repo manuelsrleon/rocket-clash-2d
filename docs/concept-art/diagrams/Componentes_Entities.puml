@@ -1,73 +1,30 @@
-@startuml PaqueteEntities
+@startuml ComponentesEntities
+skinparam componentStyle uml2
 skinparam shadowing false
 skinparam monochrome false
-skinparam classAttributeIconSize 0
+skinparam linetype ortho
+skinparam nodesep 70
+skinparam ranksep 80
 
-title Diagrama de Clases del paquete Entities (Físicas Box2D)
+title Diagrama de Componentes de Entidades
 
-' Clase externa de Pygame
-class "pygame.sprite.Sprite" as PygameSprite <<PyGame>>
+component "RocketFactory" as Factory <<Patrón Creacional>>
+component "Motor Box2D" as Box2D <<Físicas Externas>>
 
-package "Componente: Entities" {
-
-    abstract class MySprite {
-      + image: Surface
-      + rect: Rect
-      + body: b2Body
-      + establecerPosicion(pos: tuple): void
-    }
-
-    class Car {
-      + move_speed: float
-      + jump_force: float
-      + boost_amount: float
-      + update(dt: float): void
-    }
-
-    class PlayerCar {
-      + update_movement(keys: list): void
-      + jump(): void
-    }
-
-    class Bulldozer {
-      - state: String
-      - attack_timer: float
-      + update(dt: float): void
-      - _update_ai(): void
-    }
-
-    class MotoMoto {
-      - teleport_cooldown: int
-      - is_teleporting: boolean
-      + update(dt: float): void
-      + teleport_to(target_pos): void
-    }
-
-    class Ball {
-      + body: b2Body
-      + update(dt: float): void
-    }
-
-    class RocketFactory <<Factory>> {
-      + {static} create_element(tipo, world, pos): Object
-      + {static} create_mud(world, pos, size): b2Body
-    }
+package "Entidades Dinámicas" {
+    component "PlayerCar" as Player <<Vehículo>>
+    component "Bosses IA" as Bosses <<Antagonistas>>
+    component "Ball" as Ball <<Elemento Reactivo>>
 }
 
-' Herencias de la librería gráfica
-PygameSprite <|-- MySprite
-PygameSprite <|-- Ball
+' Dependencias de creación
+Factory ..> Player : <<instantiate>>
+Factory ..> Bosses : <<instantiate>>
+Factory ..> Ball : <<instantiate>>
 
-' Jerarquía de Vehículos
-MySprite <|-- Car
-Car <|-- PlayerCar
-Car <|-- Bulldozer
-Car <|-- MotoMoto
-
-' Dependencias de Creación (Patrón Factoría, sin cardinalidades)
-RocketFactory ..> PlayerCar : Instancia
-RocketFactory ..> Bulldozer : Instancia
-RocketFactory ..> MotoMoto : Instancia
-RocketFactory ..> Ball : Instancia
+' Dependencias físicas (Sincronización)
+Player ..down..> Box2D : <<update physics>>\n[b2Body / Fuerzas]
+Bosses ..down..> Box2D : <<update physics>>\n[b2Body / Fuerzas]
+Ball ..down..> Box2D : <<update physics>>\n[b2Body / Rebotes]
 
 @enduml

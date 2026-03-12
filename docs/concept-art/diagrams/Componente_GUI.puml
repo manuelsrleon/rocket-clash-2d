@@ -1,0 +1,34 @@
+@startuml ComponentesGUI
+skinparam componentStyle uml2
+skinparam shadowing false
+skinparam monochrome false
+skinparam linetype ortho
+
+' Aumentamos la separación entre cajas y flechas para que el texto respire mejor
+skinparam nodesep 100
+skinparam ranksep 100
+skinparam padding 8
+
+title Diagrama de Componentes del Subsistema GUI
+
+component "Escena (Menús)" as Scene <<Client>>
+
+package "Subsistema GUI" {
+    component "GUIScreen" as GUIScreen <<Contenedor>>
+    component "GUIElement" as GUIElement <<Abstracto>>
+    component "Button" as Button <<Interactivo>>
+}
+
+component "AssetsManager" as Assets <<Efectos de Sonido>>
+
+' Relaciones de contención y uso
+Scene ..> GUIScreen : <<instancia y delega eventos>>
+GUIScreen *-- "0..*" GUIElement : <<gestiona focus>>
+
+' Herencia de elementos
+GUIElement <|-- Button
+
+' Feedback sonoro
+GUIScreen ..> Assets : <<play('silbato_corto')>>
+
+@enduml

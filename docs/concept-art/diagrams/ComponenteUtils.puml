@@ -1,0 +1,38 @@
+@startuml ComponentesUtils
+skinparam componentStyle uml2
+skinparam shadowing false
+skinparam monochrome false
+skinparam linetype ortho
+
+' Espaciado ajustado para que respire pero mantenga la estructura de columna
+skinparam nodesep 50
+skinparam ranksep 60
+skinparam padding 8
+
+title Diagrama de Componentes del Subsistema Utils
+
+' Nivel Superior: Los módulos que consumen las utilidades
+component "Scenes (Juego)" as Scenes
+component "Subsistema GUI" as GUI
+component "Subsistema Diálogos" as Dialogues
+
+' Nivel Inferior: El paquete de Utilidades
+package "Subsistema Utils & Config" {
+    component "Constantes Globales" as Constants <<Settings>>
+    component "Controladores de Estado" as State <<State>>
+    component "Jerarquía Espacial" as Hierarchy <<Math>>
+    
+    ' Forzamos la verticalidad estricta dentro del paquete
+    Constants -[hidden]down- State
+    State -[hidden]down- Hierarchy
+}
+
+' Relaciones de dependencia apuntando hacia abajo
+Scenes ..down.> Constants : <<import>>
+Scenes ..down.> Hierarchy : <<transform>>
+
+GUI ..down.> Constants : <<import>>
+
+Dialogues ..down.> State : <<read/write>>
+
+@enduml
