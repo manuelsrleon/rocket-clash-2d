@@ -156,8 +156,16 @@ class MatchScene(PyGameScene):
         # Música de fondo
         self._start_background_music()
         
+        # Countdown Inicial
+        self.intro_countdown_timer = 3500  # 3.5 segundos (3, 2, 1, ¡YA!)
+        self.waiting_for_intro = True   
+        
         # Transición 
         self.fade_from_black()
+        
+        # Estado de salida
+        self.is_exiting = False
+        self.wait_timer = 0
 
     def on_exit(self):
         """Se llama cuando se sale de la escena"""
@@ -441,24 +449,26 @@ class MatchScene(PyGameScene):
     # ─── UPDATE ───────────────────────────────────────────────
 
     def update(self, delta_time):
-        # 1. Actualizar el estado de la transición (fade)
+        dt_sec = delta_time / 1000.0
         self.update_fade(delta_time)
 
-        if self.match_over:
-            if self.fade_mode == "IN" and self.fade_alpha >= 255:
-                if self.director.in_campaign:
-                    if self.score_left > self.score_right:
-                        self.director.advance_campaign()    # Win → next scene
-                    else:
-                        self.director.fail_campaign()       # Lose/tie → back to menu
-                else:
-                    player_won = self.score_left > self.score_right
-                    result = "winner_1" if player_won else ("tie" if self.score_left == self.score_right else "winner_2")
-                    self.director.cambiarEscena(EndScene(self.director, result))
+        if self.is_exiting and self.wait_timer > 0:
+            self.wait_timer -= dt_sec
+            if self.wait_timer <= 0:
+                self._execute_scene_jump()
             return
 
-        # Actualizar volumen de música de fondo
-        pygame.mixer.music.set_volume(VolumeController.get_music_volume())
+        if self.is_exiting:
+            return
+
+        if self.waiting_for_intro:
+            if self.fade_alpha <= 0:
+                self.intro_countdown_timer -= delta_time
+                if self.intro_countdown_timer <= 0:
+                    self.waiting_for_intro = False  
+            for sprite in self.grupo_sprites:
+                self._sync_sprite(sprite)
+            return 
 
         if self.goal_scored:
             self.goal_pause_timer -= delta_time
@@ -472,7 +482,6 @@ class MatchScene(PyGameScene):
         self.world.Step(1.0 / 60.0, 8, 3)
         self.world.ClearForces()
 
-        dt = delta_time / 1000.0
         for sprite in self.grupo_sprites:
             self._sync_sprite(sprite)
 
@@ -484,9 +493,7 @@ class MatchScene(PyGameScene):
         self.time_remaining_ms -= delta_time
         if self.time_remaining_ms <= 0:
             self.time_remaining_ms = 0
-            self.match_over = True
-            self._stop_background_music()
-            self.fade_to_black()
+            self._start_exit_transition()
 
     # ─── RENDER ───────────────────────────────────────────────
     def _render_field_fg(self, screen):
@@ -523,13 +530,40 @@ class MatchScene(PyGameScene):
         self._render_shadows(screen)
         self.grupo_sprites.draw(screen)
         self._render_field_fg(screen)
-        self._draw_hud(screen)
-        self._render_powerup_hud(screen)
 
-        if self.goal_scored:
-            self._draw_goal_text(screen)
+        if not self.is_exiting:
+            self._draw_hud(screen)
+            self._render_powerup_hud(screen)
+            if self.goal_scored:
+                self._draw_goal_text(screen)
+
+            if self.waiting_for_intro and self.fade_alpha <= 0:
+                self._draw_intro_countdown(screen)
+        
+        if self.match_over and not (self.is_exiting and self.fade_alpha >= 255):
+            text_surf = self.font_goal.render("FIN DEL PARTIDO", True, Colors.WHITE)
+            text_rect = text_surf.get_rect(center=(SW // 2, SH // 2))
+            screen.blit(text_surf, text_rect)
 
         self.draw_fade(screen)
+
+    def _draw_intro_countdown(self, screen):
+        seconds = self.intro_countdown_timer / 1000.0
+        if seconds > 2:
+            txt = "3"
+        elif seconds > 1:
+            txt = "2"
+        elif seconds > 0:
+            txt = "1"
+        else:
+            txt = "¡YA!"
+
+        surf_shadow = self.font_goal.render(txt, True, Colors.BLACK)
+        surf_text = self.font_goal.render(txt, True, Colors.YELLOW)
+        
+        rect = surf_text.get_rect(center=(SW // 2, SH // 2))
+        screen.blit(surf_shadow, (rect.x + 4, rect.y + 4))
+        screen.blit(surf_text, rect)
 
     def _draw_hud(self, screen):
         surf = self.font_score.render(
@@ -549,3 +583,29 @@ class MatchScene(PyGameScene):
         cx, cy = SW // 2, SH // 2
         screen.blit(shadow, shadow.get_rect(center=(cx + 3, cy + 3)))
         screen.blit(text,   text.get_rect(center=(cx, cy)))
+
+    def _start_exit_transition(self):
+        """Inicia la salida automática al finalizar el partido."""
+        if self.is_exiting: return
+        self.is_exiting = True
+        self.match_over = True 
+        
+        pygame.mixer.music.fadeout(2000)
+        
+        self.fade_to_black(callback=self._set_wait_timer)
+
+    def _set_wait_timer(self):
+        """Activa el tiempo de espera en negro antes de cambiar de escena."""
+        self.wait_timer = 2.0 
+
+    def _execute_scene_jump(self):
+        """Lógica final de salto de escena (Campaña o Arcade)."""
+        if self.director.in_campaign:
+            if self.score_left > self.score_right:
+                self.director.advance_campaign()    # Victoria -> Siguiente
+            else:
+                self.director.fail_campaign()       # Derrota/Empate -> Menú
+        else:
+            player_won = self.score_left > self.score_right
+            result = "winner_1" if player_won else ("tie" if self.score_left == self.score_right else "winner_2")
+            self.director.cambiarEscena(EndScene(self.director, result))
