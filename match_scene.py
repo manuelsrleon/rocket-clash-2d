@@ -473,10 +473,16 @@ class MatchScene(PyGameScene):
         if self.time_remaining_ms <= 0:
             self.time_remaining_ms = 0
             self.match_over = True
-            self._stop_background_music()  # Detener música al terminar el partido
-            self.director.change_scene(EndScene(
-                self.director, self.score_left, self.score_right
-            ))
+            self._stop_background_music()
+            if self.director.in_campaign:
+                if self.score_left > self.score_right:
+                    self.director.advance_campaign()    # Win → next scene
+                else:
+                    self.director.fail_campaign()       # Lose/tie → back to menu
+            else:
+                player_won = self.score_left > self.score_right
+                result = "winner_1" if player_won else ("tie" if self.score_left == self.score_right else "winner_2")
+                self.director.cambiarEscena(EndScene(self.director, result))
 
     # ─── RENDER ───────────────────────────────────────────────
     def _render_field_fg(self, screen):

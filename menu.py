@@ -107,9 +107,27 @@ class Menu(PyGameScene):
         self.director.exitScene()
 
     def playCampaign(self):
-        campaignScene = SecondScene(self.director)
-        self.director.apilarEscena(campaignScene)
-        self.currentScreen = len(self.screenList) - 1
+        from scenes.dialogue_scene import DialogueScene
+        from scenes.credits_scene import CreditsScene
+        from firts_scene import FirstScene
+        from second_scene import SecondScene
+        from third_scene import ThirdScene
+
+        d = self.director
+        sequence = [
+            lambda: DialogueScene(d, "dialogues/intro.json"),
+            lambda: DialogueScene(d, "dialogues/match1.json"),
+            lambda: FirstScene(d),
+            lambda: DialogueScene(d, "dialogues/match1_end.json"),
+            lambda: DialogueScene(d, "dialogues/match2.json"),
+            lambda: SecondScene(d),
+            lambda: DialogueScene(d, "dialogues/match2_end.json"),
+            lambda: DialogueScene(d, "dialogues/match3.json"),
+            lambda: ThirdScene(d),
+            lambda: DialogueScene(d, "dialogues/match3_end.json"),
+            lambda: CreditsScene(d),
+        ]
+        d.start_campaign(sequence)
 
     def showInitialScreen(self):
         self.currentScreen = 0

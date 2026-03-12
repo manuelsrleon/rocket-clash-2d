@@ -9,6 +9,9 @@ class Director:
         self.screen = None
         self.scene_stack = []
         self.exit_scene = False
+        # Campaign
+        self._campaign_scenes = []
+        self._campaign_index = 0
 
     def init_pygame(self):
         pygame.init()
@@ -87,3 +90,40 @@ class Director:
         self.pararEscena()
         self.scene_stack.append(scene)
         
+    @property
+    def in_campaign(self):
+        return self._campaign_index < len(self._campaign_scenes)
+
+    def start_campaign(self, scene_factories):
+        """Begin a campaign with a list of scene factory callables."""
+        self._campaign_scenes = scene_factories
+        self._campaign_index = 0
+        if self._campaign_scenes:
+            scene = self._campaign_scenes[0]()
+            self._campaign_index = 1
+            self.apilarEscena(scene)
+
+    def advance_campaign(self):
+        """Current campaign scene finished successfully. Pop it and push the next one."""
+        if self._campaign_index < len(self._campaign_scenes):
+            next_scene = self._campaign_scenes[self._campaign_index]()
+            self._campaign_index += 1
+            # Pop current, push next
+            self.pararEscena()
+            if self.scene_stack:
+                self.scene_stack.pop()
+            self.scene_stack.append(next_scene)
+        else:
+            # Campaign complete
+            self._campaign_scenes = []
+            self._campaign_index = 0
+            self.exitScene()  # Pop last campaign scene, back to menu
+
+    def fail_campaign(self):
+        """Player lost. Abandon campaign and return to main menu."""
+        self._campaign_scenes = []
+        self._campaign_index = 0
+        self.pararEscena()
+        # Pop everything except the menu (first scene)
+        while len(self.scene_stack) > 1:
+            self.scene_stack.pop()

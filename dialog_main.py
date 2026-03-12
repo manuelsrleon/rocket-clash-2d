@@ -13,10 +13,13 @@ def main():
     # 2. Crear las escenas en orden: primero intro, luego dialog
     escena_intro = DialogueScene(dir, "dialogues/intro.json")
     escena_dialog_1 = DialogueScene(dir, "dialogues/match1.json")
+    #first_scene.py
     escena_dialog_1_end = DialogueScene(dir, "dialogues/match1_end.json")
     escena_dialog_2 = DialogueScene(dir, "dialogues/match2.json")
+    #second_scene.py
     escena_dialog_2_end = DialogueScene(dir, "dialogues/match2_end.json")
     escena_dialog_3 = DialogueScene(dir, "dialogues/match3.json") 
+    #third_scene.py
     escena_dialog_3_end = DialogueScene(dir, "dialogues/match3_end.json")
     credits_scene = CreditsScene(dir)
 

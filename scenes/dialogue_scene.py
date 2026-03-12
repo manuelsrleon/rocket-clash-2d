@@ -168,7 +168,12 @@ class DialogueScene(PyGameScene):
             self.flash_timer -= dt_sec
             if self.flash_timer <= 0: 
                 self.flash_color = None
-                if self.is_exiting and not self.effects_queue: self.director.exitScene()
+                if self.is_exiting and not self.effects_queue:
+                    if self.director.in_campaign:
+                        self.director.advance_campaign()
+                    else:
+                        self.director.exitScene()
+                
         if not self.is_exiting and self.flash_timer <= 0 and not self.effects_queue:
             line = self.manager.current_line()
             if line and not line.get('text', '').strip():

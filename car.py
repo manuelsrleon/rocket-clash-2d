@@ -75,9 +75,9 @@ class PlayerCar(Car):
 
 class Bulldozer(Car):
     def __init__(self, carPos=(600, 460),flip=True):
-        self.stats_normal = {'move_speed': 4.0, 'jump_force': 60.0, 'mass': 3.0, 'scale': 1.5}
+        self.stats_normal = {'move_speed': 4.0, 'jump_force': 60.0, 'mass': 3.0, 'scale': 0.2}
         # Bajamos la velocidad de 62.0 a 16.0. Sigue siendo más rápido que el jugador (12.0)
-        self.stats_angry = {'move_speed': 16.0, 'jump_force': 60.0, 'mass': 4.5, 'scale': 1.5}
+        self.stats_angry = {'move_speed': 16.0, 'jump_force': 60.0, 'mass': 4.5, 'scale': 0.2}
         
         super().__init__(BOSS1_IMG, carPos, stats=self.stats_normal)
         self.angry_timer = 0
