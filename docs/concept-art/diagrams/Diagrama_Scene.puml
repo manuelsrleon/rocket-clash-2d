@@ -1,26 +1,23 @@
 @startuml ArquitecturaScenes
-' Forzamos modo diagrama de clases
 skinparam shadowing false
 skinparam monochrome false
 skinparam classAttributeIconSize 0
 skinparam linetype ortho
-skinparam nodesep 50
-skinparam ranksep 40
+' Forzamos distancias cortas para que el diagrama sea compacto
+skinparam nodesep 30
+skinparam ranksep 30
 
-title UML de la Jerarquía de Escenas 
+title Jerarquía de Escenas
 
 package "Core (Motor)" {
     class Director {
         - scene_stack: list
         + apilarEscena(scene: Scene): void
-        + cambiarEscena(scene: Scene): void
-        + exitScene(): void
     }
 
     abstract class Scene {
         # director: Director
         + update(dt: float): void
-        + events(ev: list): void
         + render(screen: Surface): void
     }
 
@@ -28,24 +25,20 @@ package "Core (Motor)" {
         - is_overlay: boolean
         - fade_alpha: float
         + fade_to_black(): void
-        + fade_from_black(): void
     }
 }
 
-' --- RELACIONES DE PROPIEDAD Y USO ---
-Director "1" *-- "0..*" Scene : Gestiona
-Scene "0..*" o-- "1" Director : Referencia
+' Relaciones principales
+Director "1" *-- "0..*" Scene
+Scene "0..*" o-- "1" Director
 Scene <|-- PyGameScene
 
 package "Interfaces" {
-    class Menu {
-        - screenList: list
-    }
+    class Menu
     class SettingsScene
     class IngameMenu
 }
 
-' Herencias simples
 PyGameScene <|-- Menu
 PyGameScene <|-- SettingsScene
 PyGameScene <|-- IngameMenu
@@ -57,7 +50,7 @@ package "Narrativa" {
     class CreditsScene
 }
 
-' Separación vertical para que no se amontone
+' Forzado de columna: Narrativa debajo de Interfaces
 Interfaces -[hidden]down- Narrativa
 PyGameScene <|-- DialogueScene
 PyGameScene <|-- CreditsScene
@@ -65,7 +58,6 @@ PyGameScene <|-- CreditsScene
 package "Jugabilidad (Match)" {
     class MatchScene {
         # score_left: int
-        # score_right: int
         + _draw_hud(screen: Surface): void
     }
 
@@ -74,9 +66,11 @@ package "Jugabilidad (Match)" {
     class ThirdScene
 }
 
-' Herencia de segundo nivel
+' Forzado de columna: Jugabilidad debajo de Narrativa
 Narrativa -[hidden]down- "Jugabilidad (Match)"
 PyGameScene <|-- MatchScene
+
+' Herencia de niveles
 MatchScene <|-- FirstScene
 MatchScene <|-- SecondScene
 MatchScene <|-- ThirdScene
