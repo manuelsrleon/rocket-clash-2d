@@ -155,6 +155,9 @@ class MatchScene(PyGameScene):
 
         # Música de fondo
         self._start_background_music()
+        
+        # Transición 
+        self.fade_from_black()
 
     def on_exit(self):
         """Se llama cuando se sale de la escena"""
@@ -438,10 +441,20 @@ class MatchScene(PyGameScene):
     # ─── UPDATE ───────────────────────────────────────────────
 
     def update(self, delta_time):
+        # 1. Actualizar el estado de la transición (fade)
+        self.update_fade(delta_time)
+
         if self.match_over:
-            #add a black overlay and game over text
-            screen.fill(Colors.BLACK)
-            self.font_goal.render("GAME OVER", True, Colors.WHITE)
+            if self.fade_mode == "IN" and self.fade_alpha >= 255:
+                if self.director.in_campaign:
+                    if self.score_left > self.score_right:
+                        self.director.advance_campaign()    # Win → next scene
+                    else:
+                        self.director.fail_campaign()       # Lose/tie → back to menu
+                else:
+                    player_won = self.score_left > self.score_right
+                    result = "winner_1" if player_won else ("tie" if self.score_left == self.score_right else "winner_2")
+                    self.director.cambiarEscena(EndScene(self.director, result))
             return
 
         # Actualizar volumen de música de fondo
@@ -473,15 +486,7 @@ class MatchScene(PyGameScene):
             self.time_remaining_ms = 0
             self.match_over = True
             self._stop_background_music()
-            if self.director.in_campaign:
-                if self.score_left > self.score_right:
-                    self.director.advance_campaign()    # Win → next scene
-                else:
-                    self.director.fail_campaign()       # Lose/tie → back to menu
-            else:
-                player_won = self.score_left > self.score_right
-                result = "winner_1" if player_won else ("tie" if self.score_left == self.score_right else "winner_2")
-                self.director.cambiarEscena(EndScene(self.director, result))
+            self.fade_to_black()
 
     # ─── RENDER ───────────────────────────────────────────────
     def _render_field_fg(self, screen):
@@ -523,6 +528,8 @@ class MatchScene(PyGameScene):
 
         if self.goal_scored:
             self._draw_goal_text(screen)
+
+        self.draw_fade(screen)
 
     def _draw_hud(self, screen):
         surf = self.font_score.render(
