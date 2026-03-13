@@ -146,6 +146,7 @@ class SecondScene(MatchScene):
             'air_blend':     0.12,
             'player_hh':     3.5,
             'goal_pause_ms': 2000,
+            'music_name': "match2_bg_playing_theme"
         }
 
     # ─── INIT EXTRAS ─────────────────────────────────────────

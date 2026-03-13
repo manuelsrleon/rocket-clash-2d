@@ -113,6 +113,7 @@ class Assets:
         "intro_bg_theme": "intro_bg_theme.ogg",
         "match_bg_theme_1": "match_bg_theme_1.ogg",
         "match1_bg_playing_theme": "match_1_bg_music_hydeouts_points.ogg",
+        "match2_bg_playing_theme": "match_2_bg_music.ogg",
         "match3_bg_playing_theme": "match_3_bg_music.ogg",
         "match_bg_theme_2": "match_bg_theme_2.ogg",
         "match_bg_theme_3": "match_bg_theme_3.ogg",
