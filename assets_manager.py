@@ -112,10 +112,13 @@ class Assets:
         "musica4": "musica4.ogg",
         "intro_bg_theme": "intro_bg_theme.ogg",
         "match_bg_theme_1": "match_bg_theme_1.ogg",
+        "match1_bg_playing_theme": "match_1_bg_music_hydeouts_points.ogg",
         "match_bg_theme_2": "match_bg_theme_2.ogg",
         "match_bg_theme_3": "match_bg_theme_3.ogg",
         "victory": "victory.ogg",
-        "final_victory": "final_victory_theme.ogg"
+        "final_victory": "final_victory_theme.ogg",
+        "main_menu": "main_menu_bg_theme.ogg"
+        
     }
 
     @staticmethod

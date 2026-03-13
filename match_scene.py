@@ -172,10 +172,10 @@ class MatchScene(PyGameScene):
         self._stop_background_music()
 
     def _start_background_music(self):
-        """Inicia la música de fondo del partido"""
         try:
-            # Cargar música usando pygame.mixer.music para música de fondo
-            music_path = Assets.get_music_path("musica2")
+            cfg = self._get_config()
+            music_key = cfg.get('music_name', "musica2")
+            music_path = Assets.get_music_path(music_key)
             pygame.mixer.music.load(music_path)
             pygame.mixer.music.set_volume(VolumeController.get_music_volume())
             pygame.mixer.music.play(-1)  # -1 para loop infinito
