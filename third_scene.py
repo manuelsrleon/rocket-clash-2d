@@ -130,6 +130,7 @@ class ThirdScene(MatchScene):
             'air_blend':     0.12,
             'player_hh':     3.5,
             'goal_pause_ms': 2000,
+            'music_name': "match3_bg_playing_theme"
         }
 
     def _init_extras(self):
