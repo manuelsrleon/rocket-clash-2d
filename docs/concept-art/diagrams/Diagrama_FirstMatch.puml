@@ -1,50 +1,82 @@
-@startuml Diagrama_FirstMatch
-skinparam shadowing false
-skinparam monochrome false
-skinparam classAttributeIconSize 0
-skinparam linetype ortho
+@startuml Diagrama_FirstMatch_Completo
+title Diagrama de Clases - Escena FirstMatch
 
-' Separación ajustada para el formato vertical
-skinparam nodesep 60
-skinparam ranksep 80
-skinparam padding 8
+abstract class MatchScene <<PyGameScene>> {
+  + __init__(director)
+  + on_exit()
+  + events(event_list)
+  + update(delta_time)
+  + render(screen)
 
-title Diagrama de Clases - Escena FirstMatch 
-
-class MatchScene <<Base Física>> {
-    # world: b2World
-    # contact_listener: b2ContactListener
-    + update(dt: float): void
-    + render(screen: Surface): void
+  # _get_config()
+  # _create_boundaries()
+  # _create_goals()
+  # _render_field(screen)
+  # _init_extras()
+  # _on_powerup_collected()
+  # _on_powerup_activate()
+  # _render_field_fg(screen)
+  # _render_powerup_hud(screen)
+  # _on_goal()
+  # _reset_positions()
 }
 
-class FirstScene <<Nivel>> {
-    - mud_zones: list
-    - boss_stunned: bool
-    + _spawn_mud(): void
-    + _draw_angry_indicator(): void
+class FirstScene {
+  - boss : Bulldozer
+  - contact_listener : SceneContactListener
+  - mud_patches : List
+  - player_stunned : bool
+  - boss_stunned : bool
+
+  # _get_config()
+  # _init_extras()
+  # _create_boundaries()
+  # _create_goals()
+  # _on_powerup_collected()
+  # _on_powerup_activate()
+  # _reset_positions()
+  + events(event_list)
+  + update(delta_time)
+  + render(screen)
+
+  - _on_boss_hit_player()
+  - _update_boss_ai(delta_time)
+  - _update_mud(delta_time)
+  - _spawn_mud_patch()
+  - _render_field(screen)
+  - _render_field_fg(screen)
 }
 
-class RocketFactory <<Factory>> {
-    + create_element(tipo, world, pos)
+class SceneContactListener <<Box2D.b2ContactListener>> {
+  - scene : FirstScene
+  - bodies_in_mud : Set
+  - _contact_count : Dict
+  + boss_hit_player : bool
+  + BeginContact(contact)
+  + EndContact(contact)
+  + is_in_mud(body) : bool
+  - _get_mud_and_other(contact)
+  - _is_boss_player_collision(contact)
 }
 
-package "Entidades Box2D" {
-    class Bulldozer <<IA>>
-    class PlayerCar <<Control>>
-    class Ball <<Física>>
-    
-    Bulldozer -[hidden]down- PlayerCar
-    PlayerCar -[hidden]down- Ball
+class RocketFactory <<Static>> {
+  + create_element(tipo, world, pos, subtipo)
+  + create_mud(world, x_px, w_px, ground_y, mud_height)
+  + create_goals(world, screen_width, ground_y, goal_w, goal_h, goal_post, goal_top_y)
+  + create_boundaries(world, screen_width, ground_y, goal_top_y)
+  + destroy_body(world, body)
 }
 
-' Herencia
-MatchScene <|--down- FirstScene
+class Bulldozer {
+  + body : b2Body
+  + is_angry : bool
+  + update_logic(dt_ms)
+  + update_fsm(ball_pos, player_pos, goal_x_right)
+}
 
-' Relaciones de dependencia verticales
-FirstScene .down.> RocketFactory : > delega instanciación
-RocketFactory ..down.> Bulldozer : > crea
-RocketFactory ..down.> PlayerCar : > crea
-RocketFactory ..down.> Ball : > crea
-
+MatchScene <|-- FirstScene
+FirstScene *-- SceneContactListener
+SceneContactListener --> FirstScene : scene
+FirstScene ..> RocketFactory : usa
+FirstScene --> Bulldozer : boss
 @enduml
