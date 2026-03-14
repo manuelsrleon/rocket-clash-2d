@@ -338,7 +338,7 @@ class SettingsScene(PyGameScene):
 
     def _render_instructions(self, screen):
         instructions = self.label_font.render(
-            "Arrows: Navigate | Left/Right: Volume | Enter: Save | ESC: Back", True, (150, 150, 150)
+            "Arrows: Navigate | Left/Right: Volume | Enter: Save | ESC: Back", True, (255, 255, 255)
         )
         instructions_rect = instructions.get_rect(
             center=(ScreenSettings.SCREEN_WIDTH // 2, ScreenSettings.SCREEN_HEIGHT - 30)
@@ -354,19 +354,3 @@ class SettingsScene(PyGameScene):
 
         self.show_save_message = True
         self.save_message_timer = 0
-
-    def _render_save_confirmation(self, screen):
-        save_msg = self.label_font.render("Settings Saved!", True, (100, 255, 100))
-        save_msg_rect = save_msg.get_rect(
-            center=(ScreenSettings.SCREEN_WIDTH // 2, SAVE_BUTTON_Y + 60)
-        )
-        screen.blit(save_msg, save_msg_rect)
-
-    def _render_instructions(self, screen):
-        instructions = self.label_font.render(
-            "Arrows: Navigate | Left/Right: Volume | Enter: Save | ESC: Back", True, (150, 150, 150)
-        )
-        instructions_rect = instructions.get_rect(
-            center=(ScreenSettings.SCREEN_WIDTH // 2, ScreenSettings.SCREEN_HEIGHT - 30)
-        )
-        screen.blit(instructions, instructions_rect)

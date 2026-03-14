@@ -3,9 +3,9 @@ from match_scene import MatchScene
 from scene import PyGameScene
 from gui_elements import Button, GUIScreen
 from assets_manager import Assets
-from settings import ScreenSettings
+from settings import ScreenSettings, VolumeController
 from settings_scene import SettingsScene, GUISettings
-from firts_scene import FirstScene
+from first_scene import FirstScene
 from third_scene import ThirdScene
 from second_scene import SecondScene
 from pygame.locals import KEYDOWN, K_ESCAPE, QUIT
@@ -83,6 +83,16 @@ class Menu(PyGameScene):
     def __init__(self, director):
         PyGameScene.__init__(self, director)
         self.screenList = []
+        
+        music_path = Assets.get_music_path("main_menu")
+        
+        if music_path:
+            if not pygame.mixer.get_init():
+                pygame.mixer.init(44100, -16, 2, 512)
+
+        pygame.mixer.music.load(music_path)
+        pygame.mixer.music.set_volume(VolumeController.get_music_volume())
+        pygame.mixer.music.play(-1)
 
         self.screenList.append(InitialGUIScreen(self))
         self.showInitialScreen()
@@ -107,11 +117,11 @@ class Menu(PyGameScene):
         self.director.exitScene()
 
     def playCampaign(self):
+        
+        pygame.mixer.music.fadeout(500)
+        
         from scenes.dialogue_scene import DialogueScene
         from scenes.credits_scene import CreditsScene
-        from firts_scene import FirstScene
-        from second_scene import SecondScene
-        from third_scene import ThirdScene
 
         d = self.director
         sequence = [

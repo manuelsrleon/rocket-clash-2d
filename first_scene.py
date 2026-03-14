@@ -146,6 +146,7 @@ class FirstScene(MatchScene):
             'air_blend':    0.12,
             'player_hh':    3.5,
             'goal_pause_ms': 2000,
+            'music_name': "match1_bg_playing_theme",
         }
 
     def _init_extras(self):
@@ -484,11 +485,14 @@ class FirstScene(MatchScene):
     def render(self, screen):
         """Override para añadir indicadores de stun y enfado del boss."""
         super().render(screen)
-        if self.player_stunned:
-            self._draw_stun_indicator(screen)
-        if self.boss_stunned:
-            self._draw_boss_stun_indicator(screen)
-        self._draw_angry_indicator(screen)
+        
+        #super().render(screen)
+        #if not self.is_exiting:
+        #    if self.player_stunned:
+        #        self._draw_stun_indicator(screen)
+        #    if self.boss_stunned:
+        #        self._draw_boss_stun_indicator(screen)
+        #    self._draw_angry_indicator(screen)
 
     def _draw_stun_indicator(self, screen):
         """Dibuja un indicador visual de aturdimiento sobre el jugador."""

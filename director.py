@@ -90,9 +90,25 @@ class Director:
         self.pararEscena()
         self.scene_stack.append(scene)
         
+    def _play_main_menu_music(self):
+        """Relanza la musica del menu principal si existe en el stack."""
+        try:
+            from menu import Menu
+            from assets_manager import Assets
+
+            remaining = self.scene_stack
+            if remaining and isinstance(remaining[0], Menu):
+                music_path = Assets.get_music_path("main_menu")
+                if music_path:
+                    pygame.mixer.music.load(music_path)
+                    pygame.mixer.music.set_volume(VolumeController.get_music_volume())
+                    pygame.mixer.music.play(-1)
+        except Exception as e:
+            print(f"Error relanzando musica del menu: {e}")
+
     @property
     def in_campaign(self):
-        return self._campaign_index < len(self._campaign_scenes)
+        return bool(self._campaign_scenes)
 
     def start_campaign(self, scene_factories):
         """Begin a campaign with a list of scene factory callables."""
@@ -118,7 +134,8 @@ class Director:
             self._campaign_scenes = []
             self._campaign_index = 0
             self.exitScene()  # Pop last campaign scene, back to menu
-
+            self._play_main_menu_music()
+ 
     def fail_campaign(self):
         """Player lost. Abandon campaign and return to main menu."""
         self._campaign_scenes = []
@@ -127,3 +144,4 @@ class Director:
         # Pop everything except the menu (first scene)
         while len(self.scene_stack) > 1:
             self.scene_stack.pop()
+        self._play_main_menu_music()

@@ -145,7 +145,22 @@ class IngameMenu(PyGameScene):
         self.director.apilarEscena(settings_scene)
 
     def exitToMainMenu(self):
+        # Detener la música del partido antes de volver al menú
+        pygame.mixer.music.stop()
+        
         for scene in self.director.scene_stack:
             if len(self.director.scene_stack) == 1:
                 break
             self.director.exitScene()
+        
+        # Relanzar la música del menú
+        from menu import Menu
+        remaining = self.director.scene_stack
+        if remaining and isinstance(remaining[0], Menu):
+            from assets_manager import Assets
+            from settings import VolumeController
+            music_path = Assets.get_music_path("main_menu")
+            if music_path:
+                pygame.mixer.music.load(music_path)
+                pygame.mixer.music.set_volume(VolumeController.get_music_volume())
+                pygame.mixer.music.play(-1)

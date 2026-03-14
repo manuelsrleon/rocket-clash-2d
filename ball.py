@@ -1,23 +1,20 @@
 import pygame
+from assets_manager import Assets
 
-# Asset path
-BALL_IMG = './assets/balls/ball.png'
 
 class Ball(pygame.sprite.Sprite):
     def __init__(self, ballPos=(400, 300), scale=0.8): # Escala reducida para que no sea gigante
         super().__init__()
 
-        # Cargar imagen
         try:
-            img = pygame.image.load(BALL_IMG).convert_alpha()
+            img = Assets.get_image("ball").copy()
             w = int(img.get_width() * scale)
             h = int(img.get_height() * scale)
             self.image = pygame.transform.scale(img, (w, h))
-        except:
-            # Placeholder circular si falla la carga
+        except Exception:
             size = int(40 * scale)
             self.image = pygame.Surface((size, size), pygame.SRCALPHA)
-            pygame.draw.circle(self.image, (255, 255, 255), (size // 8, size // 8), size // 8)
+            pygame.draw.circle(self.image, (255, 255, 255), (size // 2, size // 2), size // 2)
 
         self.rect = self.image.get_rect()
         self.establecerPosicion(ballPos)
