@@ -38,10 +38,13 @@ class Assets:
         "tenazas_1": ("Tenazas_1.png", PORTRAITS_PATH, None),
         "tenazas_2": ("Tenazas_2.png", PORTRAITS_PATH, None),
 
-        # Balls & Cars
-        "ball": ("ball.png", BALLS_PATH, (50, 50)),
-        "car_wheel": ("car_wheel.png", CARS_PATH, (100, 50)),
-        "player_car": ("player_car.png", CARS_PATH, (140, 70)),
+        # Balls & Cars (gameplay sprites: sin escala fija)
+        "ball": ("ball.png", BALLS_PATH, None),
+        "car_wheel": ("car_wheel.png", CARS_PATH, None),
+        "player_car": ("player_car.png", CARS_PATH, None),
+        "bulldozer_car": ("bulldozer.png", CARS_PATH, None),
+        "moto_moto_car": ("moto-moto.png", CARS_PATH, None),
+        "jenny_car": ("jenny.png", CARS_PATH, None),
 
         # GUI
         "exit_button": ("exit_button.png", GUI_PATH, (160, 48)),
