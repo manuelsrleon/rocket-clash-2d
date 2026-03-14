@@ -18,8 +18,6 @@ class Menu <<PyGameScene>> {
 class InitialGUIScreen <<GUIScreen>> {
     - GUIElements : list
     + __init__(menu)
-    + render(screen)
-    + events(event_list)
 }
 
 class PlayButton <<Button>> {
@@ -29,11 +27,13 @@ class PlayButton <<Button>> {
 
 class SettingsButton <<Button>> {
     + text = "Settings"
+    + __init__(screen)
     + action()
 }
 
 class ExitButton <<Button>> {
     + text = "Exit"
+    + __init__(screen)
     + action()
 }
 

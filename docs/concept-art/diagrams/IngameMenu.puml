@@ -19,8 +19,6 @@ class IngameMenu <<PyGameScene>> {
 class IngameMenuGUIScreen <<GUIScreen>> {
     - GUIElements : list
     + __init__(menu)
-    + render(screen)
-    + events(event_list)
 }
 
 class ResumeButton <<Button>> {
