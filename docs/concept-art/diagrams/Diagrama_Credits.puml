@@ -1,38 +1,58 @@
-@startuml Diagrama_Credits
-skinparam shadowing false
-skinparam monochrome false
-skinparam classAttributeIconSize 0
-skinparam linetype ortho
+@startuml Diagrama_CreditsScene
+title Diagrama de Clases - Escena CreditsScene
 
-' Separación ajustada para el formato vertical estricto
-skinparam nodesep 60
-skinparam ranksep 80
-skinparam padding 8
-
-title Diagrama de Clases - Escena de Créditos
-
-class PyGameScene <<Core>> {
-    + update(dt: float): void
-    + events(event_list: list): void
-    + render(screen: Surface): void
+abstract class PyGameScene {
+  + director : Director
+  + fade_alpha : float
+  + fade_to_black(callback)
+  + fade_from_black()
+  + update_fade(dt)
+  + draw_fade(screen)
+  + {abstract} update(dt)
+  + {abstract} render(screen)
+  + {abstract} events(event_list)
 }
 
-class CreditsScene <<Cinemática>> {
-    - credits_text: list
-    - scroll_y: float
-    - scroll_speed: float
-    + _render_scrolling_text(screen): void
+class CreditsScene {
+  - background : Surface
+  - scroll_speed : float
+  - y_offset : float
+  - total_height : float
+  - credits_list : List
+  - rendered_texts : List<Surface>
+  - is_exiting : bool
+  - wait_timer : float
+  - font_role : Font
+  - font_name : Font
+
+  + __init__(director)
+  + update(dt)
+  + render(screen)
+  + events(event_list)
+  
+  - _prepare_credits() : List<Surface>
+  - _start_exit_transition()
+  - _set_wait_timer()
+  - _exit_game_completely()
 }
 
-class AssetsManager <<Gestor>> {
-    + get_image(key): Surface
-    + get_music_path(key): str
+class Assets <<Static>> {
+    + _IMAGE_DATA : Dict
+    + get_image(key) : Surface
 }
 
-' Herencia
-PyGameScene <|--down- CreditsScene
+class ScreenSettings <<Static>> {
+    + SCREEN_WIDTH : int
+    + SCREEN_HEIGHT : int
+}
 
-' Relaciones de dependencia verticales
-CreditsScene .down.> AssetsManager : > solicita fondo y música
+class GUISettings <<Static>> {
+    + FONT_TEXT : String
+}
+
+PyGameScene <|-- CreditsScene
+CreditsScene ..> Assets : usa
+CreditsScene ..> ScreenSettings : consulta
+CreditsScene ..> GUISettings : consulta
 
 @enduml
