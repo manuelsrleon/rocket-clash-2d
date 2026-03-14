@@ -1,0 +1,54 @@
+@startuml FSM_Bulldozer
+title FSM — IA Bulldozer
+
+skinparam shadowing false
+hide empty description
+
+skinparam state {
+  BackgroundColor<<ataque>>  #C8E6C9
+  BorderColor<<ataque>>      #388E3C
+  FontColor<<ataque>>        #1B5E20
+
+  BackgroundColor<<defensa>> #FFF9C4
+  BorderColor<<defensa>>     #F9A825
+  FontColor<<defensa>>       #4E342E
+
+  BackgroundColor<<furia>>   #FFCDD2
+  BorderColor<<furia>>       #C62828
+  FontColor<<furia>>         #B71C1C
+}
+
+[*] --> OFENSIVO : inicio partido
+
+state "OFENSIVO" as OFENSIVO <<ataque>>
+OFENSIVO : Persigue y empuja la pelota
+OFENSIVO : hacia la porteria rival
+
+state "DEFENSIVO" as DEFENSIVO <<defensa>>
+DEFENSIVO : Se interpone entre la pelota
+DEFENSIVO : y su propia porteria
+
+state "LOCO" as LOCO <<furia>>
+LOCO : Ignora la pelota
+LOCO : Persigue al jugador directamente
+
+OFENSIVO  --> DEFENSIVO : [pelota en peligro]
+OFENSIVO  --> LOCO      : [furia activa]
+
+DEFENSIVO --> OFENSIVO  : [peligro despejado]
+DEFENSIVO --> LOCO      : [peligro despejado Y furia activa]
+
+LOCO      --> DEFENSIVO : [pelota en peligro]
+LOCO      --> OFENSIVO  : [furia termina]
+
+OFENSIVO  --> [*] : fin del partido
+DEFENSIVO --> [*] : fin del partido
+LOCO      --> [*] : fin del partido
+
+note bottom of DEFENSIVO
+"Pelota en peligro" tiene prioridad maxima:
+incluso en furia el Bulldozer permanece en DEFENSIVO
+si la pelota sigue amenazando su porteria.
+end note
+
+@enduml

@@ -1,0 +1,48 @@
+@startuml FSM_LaJenny
+title FSM — IA La Jenny
+
+skinparam shadowing false
+hide empty description
+
+skinparam state {
+  BackgroundColor<<ataque>>  #C8E6C9
+  BorderColor<<ataque>>      #388E3C
+  FontColor<<ataque>>        #1B5E20
+
+  BackgroundColor<<defensa>> #FFF9C4
+  BorderColor<<defensa>>     #F9A825
+  FontColor<<defensa>>       #4E342E
+}
+
+[*] --> OFENSIVO : inicio partido
+
+state "OFENSIVO" as OFENSIVO <<ataque>>
+OFENSIVO : Persigue y empuja la pelota
+OFENSIVO : hacia la porteria rival
+
+state "DEFENSIVO" as DEFENSIVO <<defensa>>
+DEFENSIVO : Se interpone entre la pelota
+DEFENSIVO : y su propia porteria
+
+OFENSIVO  --> DEFENSIVO : [pelota en peligro]
+DEFENSIVO --> OFENSIVO  : [peligro despejado]
+
+OFENSIVO  --> [*] : fin del partido
+DEFENSIVO --> [*] : fin del partido
+
+note bottom of OFENSIVO
+A diferencia del Bulldozer y MotoMoto,
+La Jenny no tiene estado LOCO.
+Su FSM solo tiene dos estados.
+end note
+
+note right of DEFENSIVO
+FLASH (habilidad paralela, independiente de la FSM):
+- Se recarga cada 20 segundos.
+- Se activa si el jugador esta a su izquierda
+  dentro de un rango horizontal de 35 m.
+- Ciega al jugador durante 2 segundos.
+- El jugador puede neutralizarla con las gafas de sol.
+end note
+
+@enduml
