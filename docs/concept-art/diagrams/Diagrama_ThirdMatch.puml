@@ -1,0 +1,51 @@
+@startuml Diagrama_ThirdMatch
+skinparam shadowing false
+skinparam monochrome false
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+
+' Separación ajustada para el formato vertical estricto
+skinparam nodesep 60
+skinparam ranksep 80
+skinparam padding 8
+
+title Diagrama de Clases - Escena ThirdMatch
+
+class MatchScene <<Base Física>> {
+    # world: b2World
+    + update(dt: float): void
+}
+
+class ThirdScene <<Nivel Trampas>> {
+    - trapdoors: list
+    - lenses_active: bool
+    + _spawn_trapdoors(): void
+    + _handle_flash_effect(): void
+}
+
+class RocketFactory <<Factory>> {
+    + create_element(...)
+    + create_trapdoor_sensor(...)
+}
+
+package "Entidades Box2D (Riazor)" {
+    class LaJenny <<IA Flash>> {
+        + trigger_flash()
+        + should_flash(): bool
+    }
+    class PlayerCar <<Control>>
+    class Ball <<Física>>
+    
+    LaJenny -[hidden]down- PlayerCar
+    PlayerCar -[hidden]down- Ball
+}
+
+' Herencia
+MatchScene <|--down- ThirdScene
+
+' Relaciones de dependencia verticales
+ThirdScene .down.> RocketFactory : > delega instanciación
+RocketFactory ..down.> LaJenny : > crea
+RocketFactory ..down.> PlayerCar : > crea
+RocketFactory ..down.> Ball : > crea
+@enduml

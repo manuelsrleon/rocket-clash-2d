@@ -1,0 +1,49 @@
+@startuml Diagrama_SecondMatch
+skinparam shadowing false
+skinparam monochrome false
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+
+' Separación ajustada para el formato vertical estricto
+skinparam nodesep 60
+skinparam ranksep 80
+skinparam padding 8
+
+title Diagrama de Clases - Escena SecondMatch
+class MatchScene <<Base Física>> {
+    # world: b2World
+    + update(dt: float): void
+}
+
+class SecondScene <<Nivel Vertical>> {
+    - clouds: list
+    - bulldog_powerup_active: bool
+    + _spawn_clouds(): void
+    + _handle_teleport_vfx(): void
+}
+
+class RocketFactory <<Factory>> {
+    + create_element(...)
+    + create_cloud_body(...)
+}
+
+package "Entidades Box2D (Neo-FIC)" {
+    class MotoMoto <<IA Avanzada>> {
+        + teleport_to_goal(goal_x)
+    }
+    class PlayerCar <<Control>>
+    class Ball <<Física>>
+    
+    MotoMoto -[hidden]down- PlayerCar
+    PlayerCar -[hidden]down- Ball
+}
+
+' Herencia
+MatchScene <|--down- SecondScene
+
+' Relaciones de dependencia verticales
+SecondScene .down.> RocketFactory : > delega instanciación
+RocketFactory ..down.> MotoMoto : > crea
+RocketFactory ..down.> PlayerCar : > crea
+RocketFactory ..down.> Ball : > crea
+@enduml

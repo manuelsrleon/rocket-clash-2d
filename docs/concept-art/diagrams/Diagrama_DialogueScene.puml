@@ -1,0 +1,62 @@
+@startuml Diagrama_DialogueScene
+skinparam shadowing false
+skinparam monochrome false
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+
+' Reducimos la separación horizontal porque ahora será vertical
+skinparam nodesep 40
+skinparam ranksep 60
+skinparam padding 8
+
+title Diagrama de Clases - Subsistema de Diálogos (Vertical)
+
+class PyGameScene <<Core>> {
+    + update(dt: float): void
+    + events(event_list: list): void
+    + render(screen: Surface): void
+}
+
+class DialogueScene {
+    - json_path: str
+    - history: list
+    - is_exiting: bool
+    + _spawn_current_bubble(): void
+    + _start_exit_transition(): void
+}
+
+class DialogueManager <<Parser>> {
+    - data: dict
+    - current: int
+    - char_index: float
+    + update(dt: float): void
+    + advance(): str
+    + is_line_complete(): bool
+}
+
+class DialogueUI <<Renderer>> {
+    - full_text: str
+    - entry_mode: str
+    + render(screen, is_last, current_text): void
+    + _wrap_text(text, max_w): list
+}
+
+class DialogueSoundPlayer <<Audio>> {
+    - interval: int
+    + set_interval_by_speed(speed): void
+    + play_check(char, speaker_name): void
+}
+
+' Herencia principal
+PyGameScene <|--down- DialogueScene
+
+' Forzamos que las tres dependencias se apilen verticalmente una debajo de otra
+DialogueManager -[hidden]down- DialogueUI
+DialogueUI -[hidden]down- DialogueSoundPlayer
+
+' Relaciones de composición apuntando hacia abajo con textos más claros
+DialogueScene *--down-> "1" DialogueManager : > delega la lectura del JSON
+DialogueScene *--down-> "1..*" DialogueUI : > delega el renderizado de cajas de diálogos
+DialogueScene *--down-> "1" DialogueSoundPlayer : > delega el audio y las voces
+
+@enduml

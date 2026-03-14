@@ -1,0 +1,38 @@
+@startuml Diagrama_Credits
+skinparam shadowing false
+skinparam monochrome false
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+
+' Separación ajustada para el formato vertical estricto
+skinparam nodesep 60
+skinparam ranksep 80
+skinparam padding 8
+
+title Diagrama de Clases - Escena de Créditos
+
+class PyGameScene <<Core>> {
+    + update(dt: float): void
+    + events(event_list: list): void
+    + render(screen: Surface): void
+}
+
+class CreditsScene <<Cinemática>> {
+    - credits_text: list
+    - scroll_y: float
+    - scroll_speed: float
+    + _render_scrolling_text(screen): void
+}
+
+class AssetsManager <<Gestor>> {
+    + get_image(key): Surface
+    + get_music_path(key): str
+}
+
+' Herencia
+PyGameScene <|--down- CreditsScene
+
+' Relaciones de dependencia verticales
+CreditsScene .down.> AssetsManager : > solicita fondo y música
+
+@enduml

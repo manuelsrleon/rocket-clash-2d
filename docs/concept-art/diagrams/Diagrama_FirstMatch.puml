@@ -1,0 +1,50 @@
+@startuml Diagrama_FirstMatch
+skinparam shadowing false
+skinparam monochrome false
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+
+' Separación ajustada para el formato vertical
+skinparam nodesep 60
+skinparam ranksep 80
+skinparam padding 8
+
+title Diagrama de Clases - Escena FirstMatch 
+
+class MatchScene <<Base Física>> {
+    # world: b2World
+    # contact_listener: b2ContactListener
+    + update(dt: float): void
+    + render(screen: Surface): void
+}
+
+class FirstScene <<Nivel>> {
+    - mud_zones: list
+    - boss_stunned: bool
+    + _spawn_mud(): void
+    + _draw_angry_indicator(): void
+}
+
+class RocketFactory <<Factory>> {
+    + create_element(tipo, world, pos)
+}
+
+package "Entidades Box2D" {
+    class Bulldozer <<IA>>
+    class PlayerCar <<Control>>
+    class Ball <<Física>>
+    
+    Bulldozer -[hidden]down- PlayerCar
+    PlayerCar -[hidden]down- Ball
+}
+
+' Herencia
+MatchScene <|--down- FirstScene
+
+' Relaciones de dependencia verticales
+FirstScene .down.> RocketFactory : > delega instanciación
+RocketFactory ..down.> Bulldozer : > crea
+RocketFactory ..down.> PlayerCar : > crea
+RocketFactory ..down.> Ball : > crea
+
+@enduml
