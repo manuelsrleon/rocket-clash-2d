@@ -1,51 +1,87 @@
 @startuml Diagrama_ThirdMatch
-skinparam shadowing false
-skinparam monochrome false
-skinparam classAttributeIconSize 0
-skinparam linetype ortho
-
-' Separación ajustada para el formato vertical estricto
-skinparam nodesep 60
-skinparam ranksep 80
-skinparam padding 8
-
 title Diagrama de Clases - Escena ThirdMatch
 
-class MatchScene <<Base Física>> {
-    # world: b2World
-    + update(dt: float): void
+abstract class MatchScene <<PyGameScene>> {
+  + __init__(director)
+  + on_exit()
+  + events(event_list)
+  + update(delta_time)
+  + render(screen)
+
+  # _get_config()
+  # _create_boundaries()
+  # _create_goals()
+  # _render_field(screen)
+  # _init_extras()
+  # _on_powerup_collected()
+  # _on_powerup_activate()
+  # _render_field_fg(screen)
+  # _on_goal()
+  # _reset_positions()
 }
 
-class ThirdScene <<Nivel Trampas>> {
-    - trapdoors: list
-    - lenses_active: bool
-    + _spawn_trapdoors(): void
-    + _handle_flash_effect(): void
+class ThirdScene {
+  - boss : LaJenny
+  - contact_listener : ThirdSceneContactListener
+  - _trapdoors : List
+  - player_flashed : bool
+  - flash_stun_timer : float
+  - _sunglasses_timer : float
+  - _flash_overlay_alpha : float
+
+  # _get_config()
+  # _init_extras()
+  # _create_boundaries()
+  # _create_goals()
+  # _on_powerup_collected()
+  # _on_powerup_activate()
+  # _reset_positions()
+  + update(delta_time)
+  + render(screen)
+  + events(event_list)
+
+  - _update_jenny_ai(delta_time)
+  - _update_trapdoors(delta_time)
+  - _update_flash_stun(delta_time)
+  - _spawn_trapdoor()
+  - _launch_player_up(body)
+  - _trigger_player_flash()
+  - _render_field(screen)
+  - _render_field_fg(screen)
 }
 
-class RocketFactory <<Factory>> {
-    + create_element(...)
-    + create_trapdoor_sensor(...)
+class ThirdSceneContactListener <<Box2D.b2ContactListener>> {
+  - scene : ThirdScene
+  - _trapdoor_contact_count : Dict
+  + BeginContact(contact)
+  + EndContact(contact)
+  + reset_flags()
+  + clear_trapdoor_contacts(trapdoor_idx)
+  - _get_trapdoor_player_pair(contact)
 }
 
-package "Entidades Box2D (Riazor)" {
-    class LaJenny <<IA Flash>> {
-        + trigger_flash()
-        + should_flash(): bool
-    }
-    class PlayerCar <<Control>>
-    class Ball <<Física>>
-    
-    LaJenny -[hidden]down- PlayerCar
-    PlayerCar -[hidden]down- Ball
+class RocketFactory <<Static>> {
+  + create_element(tipo, world, pos, subtipo)
+  + create_trapdoor_sensor(world, cx, y, w, h, idx)
+  + create_goals(...)
+  + create_boundaries(...)
+  + destroy_body(world, body)
 }
 
-' Herencia
-MatchScene <|--down- ThirdScene
+class LaJenny {
+  + body : b2Body
+  + is_flashing : bool
+  + FLASH_INTERVAL : float
+  + update_logic(dt)
+  + update_fsm(ball_pos, player_pos, goal_x_right)
+  + should_flash() : bool
+  + trigger_flash()
+  + can_reach_player(player_pos) : bool
+}
 
-' Relaciones de dependencia verticales
-ThirdScene .down.> RocketFactory : > delega instanciación
-RocketFactory ..down.> LaJenny : > crea
-RocketFactory ..down.> PlayerCar : > crea
-RocketFactory ..down.> Ball : > crea
+MatchScene <|-- ThirdScene
+ThirdScene *-- ThirdSceneContactListener
+ThirdSceneContactListener --> ThirdScene : scene
+ThirdScene ..> RocketFactory : usa
+ThirdScene --> LaJenny : boss
 @enduml
