@@ -107,7 +107,7 @@ class RocketFactory:
     # ─── GOALS ────────────────────────────────────────────────
 
     @staticmethod
-    def create_goal(world, side, screen_width, ground_y, goal_w, goal_h, goal_post, goal_top_y):
+    def create_goal(world, side, screen_width, ground_y, goal_w, goal_h, goal_post, goal_top_y, goal_x):
         """Crea una portería (travesaño, palo trasero, suelo interior).
         Devuelve un pygame.Rect que representa la zona de gol."""
         gx = 0 if side == 'left' else screen_width - goal_w
@@ -133,19 +133,19 @@ class RocketFactory:
         )
 
         # Suelo interior portería
-        floor = world.CreateStaticBody(position=(cx, px2m(ground_y)))
+        floor = world.CreateStaticBody(position=(goal_x, px2m(ground_y)))
         floor.CreatePolygonFixture(box=(px2m(goal_w / 2), px2m(5)), friction=0.6)
 
-        return pygame.Rect(gx, goal_top_y, goal_w, goal_h)
+        return (pygame.Rect(goal_x, goal_top_y, goal_w, goal_h),pygame.Rect(goal_x, goal_top_y, goal_w, goal_h))
 
     @staticmethod
-    def create_goals(world, screen_width, ground_y, goal_w, goal_h, goal_post, goal_top_y):
+    def create_goals(world, screen_width, ground_y, goal_w, goal_h, goal_post, goal_top_y, goal_x, goal_y):
         """Crea ambas porterías. Devuelve (rect_left, rect_right)."""
         rect_l = RocketFactory.create_goal(
-            world, 'left', screen_width, ground_y, goal_w, goal_h, goal_post, goal_top_y
+            world, 'left', screen_width, ground_y, goal_w, goal_h, goal_post, goal_top_y, goal_x
         )
         rect_r = RocketFactory.create_goal(
-            world, 'right', screen_width, ground_y, goal_w, goal_h, goal_post, goal_top_y
+            world, 'right', screen_width, ground_y, goal_w, goal_h, goal_post, goal_top_y, goal_x
         )
         return (rect_l, rect_r)
 

@@ -6,10 +6,21 @@ from match_scene import MatchScene, px2m, m2px, SW, SH, PPM
 from settings import ScreenSettings
 from factory import RocketFactory
 
-# Constantes visuales del escenario 1
+# Constantes lógicas del escenario 1, portería izquierda
 GROUND_Y   = 520
+LOGICAL_GOAL_X     = -10
+LOGICAL_GOAL_W     = 160
+LOGICAL_GOAL_H     = 250
+LOGICAL_GOAL_X     = -90
+LOGICAL_GOAL_Y = GROUND_Y
+LOGICAL_GOAL_POST  = 6
+LOGICAL_GOAL_TOP_Y = GROUND_Y - LOGICAL_GOAL_H+30
+
+# Constantes visuales del escenario 1
 GOAL_W     = 160
 GOAL_H     = 320
+GOAL_X     = -10
+GOAL_Y = GROUND_Y
 GOAL_POST  = 6
 GOAL_TOP_Y = GROUND_Y - GOAL_H+30
 
@@ -302,14 +313,56 @@ class FirstScene(MatchScene):
         RocketFactory.create_boundaries(self.world, SW, GROUND_Y, GOAL_TOP_Y)
 
     def _create_goals(self):
-        return RocketFactory.create_goals(
-            self.world, SW, GROUND_Y, GOAL_W, GOAL_H, GOAL_POST, GOAL_TOP_Y
+        """Crea una portería (travesaño, palo trasero, suelo interior).
+        Devuelve un pygame.Rect que representa la zona de gol."""
+        goal_w = GOAL_W
+        goal_x = GOAL_X
+        goal_h = GOAL_H
+        goal_top_y = GOAL_TOP_Y
+        goal_post = GOAL_POST
+        ground_y = GROUND_Y
+        
+        world = self.world
+    
+        side = 'left'
+        gx = 0 if side == 'left' else screen_width - goal_w
+        cx = px2m(gx + goal_w / 2)
+
+        # Travesaño superior
+        bar = world.CreateStaticBody(
+            position=(cx, px2m(goal_top_y - goal_post / 2))
         )
+        bar.CreatePolygonFixture(
+            box=(px2m(goal_w / 2), px2m(goal_post / 2)),
+            friction=0.3, restitution=0.4
+        )
+
+        # Palo trasero
+        px_post = (gx - goal_post / 2) if side == 'left' else (gx + goal_w + goal_post / 2)
+        back = world.CreateStaticBody(
+            position=(px2m(px_post), px2m(goal_top_y + goal_h / 2))
+        )
+        back.CreatePolygonFixture(
+            box=(px2m(goal_post / 2), px2m(goal_h / 2)),
+            friction=0.3, restitution=0.4
+        )
+
+        # Suelo interior portería
+        floor = world.CreateStaticBody(position=(goal_x, px2m(ground_y)))
+        floor.CreatePolygonFixture(box=(px2m(goal_w / 2), px2m(5)), friction=0.6)
+        
+        #if self.PHYSICS_DEBUG_MODE:
+            #pygame.draw.aaline(self.suface, (255,0,255), LOGICAL_GOAL_H, LOGICA)
+
+        return pygame.Rect(LOGICAL_GOAL_X, LOGICAL_GOAL_TOP_Y, LOGICAL_GOAL_W, LOGICAL_GOAL_H), pygame.Rect(SW-LOGICAL_GOAL_W-LOGICAL_GOAL_X, LOGICAL_GOAL_TOP_Y, LOGICAL_GOAL_W, LOGICAL_GOAL_H)
+        # return RocketFactory.create_goals(
+        #     self.world, SW, GROUND_Y, GOAL_W, GOAL_H, GOAL_POST, GOAL_TOP_Y, GOAL_X, GOAL_Y
+        # )
 
     # ─── BARRO DINÁMICO (delegado a RocketFactory) ───────────
 
     def _create_mud_body(self, x_px, w_px):
-        return RocketFactory.create_mud(self.world, x_px, w_px, GROUND_Y, MUD_HEIGHT)
+        return RocketFactory.create_mud(self. world, x_px, w_px, GROUND_Y, MUD_HEIGHT)
 
     def _destroy_mud_body(self, body):
         RocketFactory.destroy_body(self.world, body)
