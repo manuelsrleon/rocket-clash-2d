@@ -174,7 +174,7 @@ class SecondScene(MatchScene):
 
         # Fuentes para indicadores
         self.angry_font = pygame.font.SysFont('Arial', 18, bold=True)
-        self.kick_font  = pygame.font.SysFont('Arial', 22, bold=True)
+        self.kick_font  = pygame.font.SysFont('Arial', 18, bold=True)
 
         # ─── Teletransporte ───────────────────────────────────
         self.teleport_flash_timer = 0
@@ -664,8 +664,8 @@ class SecondScene(MatchScene):
                 label = f"⚡ PELOTAZO [E] - Acércate ({dist:.1f}m)"
 
             text = self.kick_font.render(label, True, color)
-            rect = text.get_rect(bottomleft=(10, SH - 40))
-            bg   = pygame.Surface((rect.width + 12, rect.height + 8), pygame.SRCALPHA)
+            rect = text.get_rect(topleft=(10, 40))
+            bg   = pygame.Surface((rect.width + 8, rect.height + 4), pygame.SRCALPHA)
             bg.fill((0, 0, 0, 150))
-            screen.blit(bg, (rect.x - 6, rect.y - 4))
+            screen.blit(bg, (rect.x - 4, rect.y - 2))
             screen.blit(text, rect)

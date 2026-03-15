@@ -581,7 +581,7 @@ class ThirdScene(MatchScene):
             else:
                 color = SUNGLASSES_HUD_COLOR
             text = pygame.font.SysFont('Arial', 16, bold=True).render(label, True, color)
-            rect = text.get_rect(bottomleft=(10, SH - 10))
+            rect = text.get_rect(bottomleft=(10, 30))
             bg = pygame.Surface((rect.width + 12, rect.height + 8), pygame.SRCALPHA)
             bg.fill((0, 0, 0, 160))
             screen.blit(bg, (rect.x - 6, rect.y - 4))

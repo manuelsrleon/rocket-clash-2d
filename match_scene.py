@@ -420,7 +420,7 @@ class MatchScene(PyGameScene):
     def _render_powerup_hud(self, screen):
         if self.player_has_powerup:
             text = self.font_powerup.render("POWER-UP LISTO [E]", True, POWERUP_COLOR)
-            rect = text.get_rect(bottomleft=(10, SH - 10))
+            rect = text.get_rect(topleft=(10, 10))
             bg = pygame.Surface((rect.width + 12, rect.height + 8), pygame.SRCALPHA)
             bg.fill((0, 0, 0, 150))
             screen.blit(bg, (rect.x - 6, rect.y - 4))
