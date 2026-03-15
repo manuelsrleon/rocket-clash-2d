@@ -10,18 +10,15 @@ from factory import RocketFactory
 
 
 # Constantes lógicas del escenario 1, portería izquierda
-GROUND_Y   = 520
-LOGICAL_GOAL_X     = -10
-LOGICAL_GOAL_W     = 160
-LOGICAL_GOAL_H     = 250
-LOGICAL_GOAL_X     = -90
-LOGICAL_GOAL_Y = GROUND_Y
-LOGICAL_GOAL_POST  = 6
-LOGICAL_GOAL_TOP_Y = GROUND_Y - LOGICAL_GOAL_H+30
+GROUND_Y   = 570
+LOGICAL_GOAL_X     = 10
+LOGICAL_GOAL_W     = 140
+LOGICAL_GOAL_H     = 100
+LOGICAL_GOAL_POST  = GROUND_Y
+LOGICAL_GOAL_TOP_Y = GROUND_Y-LOGICAL_GOAL_H
+SKY = 0
 GOAL_X = 10
 # ─── CONSTANTES DEL ESCENARIO 2 ──────────────────────────────
-
-GROUND_Y   = 570
 GOAL_W     = 100
 GOAL_H     = 160
 GOAL_POST  = 6
@@ -293,7 +290,7 @@ class SecondScene(MatchScene):
         goal_w = GOAL_W
         goal_x = GOAL_X
         goal_h = GOAL_H
-        goal_top_y = GOAL_TOP_Y
+        goal_top_y = LOGICAL_GOAL_TOP_Y
         goal_post = GOAL_POST
         ground_y = GROUND_Y
         
@@ -305,13 +302,16 @@ class SecondScene(MatchScene):
         
         # Travesaño superior
         bar = world.CreateStaticBody(
-            position=(px2m(10), px2m(goal_top_y + goal_post+px2m(10))),
+            position=(0, px2m(LOGICAL_GOAL_TOP_Y-20)),
         )
         upper_hitbox = [
-            (0,0), 
-            (px2m(LOGICAL_GOAL_W-20),px2m(80)), 
-            (px2m(LOGICAL_GOAL_W-50),px2m(10)), 
-            (0,px2m(-40))
+            (0,0),
+            (px2m(LOGICAL_GOAL_W),0), 
+            (px2m(0),px2m(-40)),
+            #(px2m(20),px2m(SKY)),
+            #(px2m(10),px2m(-100)),
+            #(px2m(10),px2m(LOGICAL_GOAL_TOP_Y)),
+            #(0,px2m(LOGICAL_GOAL_TOP_Y))
             ]
         bar.CreatePolygonFixture(
             vertices=upper_hitbox,
@@ -355,12 +355,11 @@ class SecondScene(MatchScene):
         )
 
         # Palo trasero
-        px_post = (gx - goal_post / 2) if side == 'left' else (gx + goal_w + goal_post / 2)
         back = world.CreateStaticBody(
-            position=(px2m(px_post), px2m(goal_top_y + goal_h / 2)),
+            position=(px2m(LOGICAL_GOAL_X+40), px2m(GROUND_Y-10)),
         )
         back.CreatePolygonFixture(
-            box=(px2m(goal_post / 2), px2m(goal_h / 2)),
+            box=(px2m(6), px2m(LOGICAL_GOAL_H)),
             friction=0.3, restitution=0.4
         )
 
@@ -371,7 +370,7 @@ class SecondScene(MatchScene):
         #if self.PHYSICS_DEBUG_MODE:
             #pygame.draw.aaline(self.suface, (255,0,255), LOGICAL_GOAL_H, LOGICA)
 
-        return pygame.Rect(LOGICAL_GOAL_X, LOGICAL_GOAL_TOP_Y, LOGICAL_GOAL_W, LOGICAL_GOAL_H), pygame.Rect(SW-LOGICAL_GOAL_W-LOGICAL_GOAL_X, LOGICAL_GOAL_TOP_Y, LOGICAL_GOAL_W, LOGICAL_GOAL_H)
+        return pygame.Rect(LOGICAL_GOAL_X-55, LOGICAL_GOAL_TOP_Y, LOGICAL_GOAL_W, LOGICAL_GOAL_H), pygame.Rect(SW-LOGICAL_GOAL_W-LOGICAL_GOAL_X, LOGICAL_GOAL_TOP_Y, LOGICAL_GOAL_W, LOGICAL_GOAL_H)
         # return RocketFactory.create_goals(
         #     self.world, SW, GROUND_Y, GOAL_W, GOAL_H, GOAL_POST, GOAL_TOP_Y, GOAL_X, GOAL_Y
         # )
