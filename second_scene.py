@@ -318,41 +318,6 @@ class SecondScene(MatchScene):
             friction=0.3, restitution=0.4
         )
 
-        # Palo trasero
-        px_post = (gx - goal_post / 2) if side == 'left' else (gx + goal_w + goal_post / 2)
-        back = world.CreateStaticBody(
-            position=(px2m(px_post), px2m(goal_top_y + goal_h / 2)),
-        )
-        back.CreatePolygonFixture(
-            box=(px2m(goal_post / 2), px2m(goal_h / 2)),
-            friction=0.3, restitution=0.4
-        )
-
-        # Suelo interior portería
-        floor = world.CreateStaticBody(position=(goal_x, px2m(ground_y)))
-        floor.CreatePolygonFixture(box=(px2m(goal_w / 2), px2m(5)), friction=0.6)
-        
-
-        side = 'right'
-        gx = SW - goal_w
-        cx = px2m(gx + goal_w / 2)
-        
-        # Travesaño superior
-        bar = world.CreateStaticBody(
-            position=(px2m(10), px2m(goal_top_y + goal_post+px2m(10))),
-        )
-        correction_offset = -25
-        upper_hitbox_r = [
-            (px2m(SW+correction_offset),0), 
-            (px2m(SW-LOGICAL_GOAL_W+20+correction_offset),px2m(80)), 
-            (px2m(SW-LOGICAL_GOAL_W+50+correction_offset),px2m(10)), 
-            (px2m(SW+correction_offset),px2m(-40))
-            ]
-        bar.CreatePolygonFixture(
-            vertices=upper_hitbox_r,
-            
-            friction=0.3, restitution=0.4
-        )
 
         # Palo trasero
         back = world.CreateStaticBody(
@@ -363,14 +328,55 @@ class SecondScene(MatchScene):
             friction=0.3, restitution=0.4
         )
 
-        # Suelo interior portería
-        floor = world.CreateStaticBody(position=(goal_x, px2m(ground_y)))
-        floor.CreatePolygonFixture(box=(px2m(goal_w / 2), px2m(5)), friction=0.6)
         
+        bar.CreatePolygonFixture(
+            vertices=upper_hitbox,
+            friction=0.3, restitution=0.4
+        )
+        back.CreatePolygonFixture(
+            box=(px2m(goal_post / 2), px2m(goal_h / 2)),
+            friction=0.3, restitution=0.4
+        )
+        
+        # LADO DERECHO
+
+        side = 'right'
+        gx = 0 if side == 'right' else screen_width - goal_w
+        cx = px2m(gx + goal_w / 2)
+        correction_offset = 0
+        # Travesaño superior
+        # Travesaño superior
+       
+        upper_hitbox_r = [
+            (px2m(-LOGICAL_GOAL_W+correction_offset),0),
+            (px2m(correction_offset),0), 
+            (px2m(correction_offset),px2m(-40)),
+            #(px2m(20),px2m(SKY)),
+            #(px2m(10),px2m(-100)),
+            #(px2m(10),px2m(LOGICAL_GOAL_TOP_Y)),
+            #(0,px2m(LOGICAL_GOAL_TOP_Y))
+            ]
+        bar_r = world.CreateStaticBody(
+            position=(px2m(SW), px2m(LOGICAL_GOAL_TOP_Y-20)),
+        )
+        bar_r.CreatePolygonFixture(
+            vertices=upper_hitbox_r,
+            friction=0.3, restitution=0.4
+        )
+        
+
+        back_r = world.CreateStaticBody(
+            position=(px2m(SW-LOGICAL_GOAL_X-40), px2m(GROUND_Y-40)),
+        )
+
+        back_r.CreatePolygonFixture(
+            box=(px2m(goal_post / 2), px2m(goal_h / 2)),
+            friction=0.3, restitution=0.4
+        )
         #if self.PHYSICS_DEBUG_MODE:
             #pygame.draw.aaline(self.suface, (255,0,255), LOGICAL_GOAL_H, LOGICA)
 
-        return pygame.Rect(LOGICAL_GOAL_X-55, LOGICAL_GOAL_TOP_Y, LOGICAL_GOAL_W, LOGICAL_GOAL_H), pygame.Rect(SW-LOGICAL_GOAL_W-LOGICAL_GOAL_X, LOGICAL_GOAL_TOP_Y, LOGICAL_GOAL_W, LOGICAL_GOAL_H)
+        return pygame.Rect(LOGICAL_GOAL_X-55, LOGICAL_GOAL_TOP_Y, LOGICAL_GOAL_W, LOGICAL_GOAL_H), pygame.Rect(SW-LOGICAL_GOAL_W+LOGICAL_GOAL_X+30, LOGICAL_GOAL_TOP_Y, LOGICAL_GOAL_W, LOGICAL_GOAL_H)
         # return RocketFactory.create_goals(
         #     self.world, SW, GROUND_Y, GOAL_W, GOAL_H, GOAL_POST, GOAL_TOP_Y, GOAL_X, GOAL_Y
         # )
