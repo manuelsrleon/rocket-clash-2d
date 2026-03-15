@@ -2,6 +2,7 @@ import pygame
 import random
 import Box2D
 import math
+from Box2D import b2_pi
 from match_scene import MatchScene, px2m, m2px, SW, SH, PPM
 from settings import ScreenSettings
 from factory import RocketFactory
@@ -327,20 +328,62 @@ class FirstScene(MatchScene):
         side = 'left'
         gx = 0 if side == 'left' else screen_width - goal_w
         cx = px2m(gx + goal_w / 2)
-
+        
         # Travesaño superior
         bar = world.CreateStaticBody(
-            position=(cx, px2m(goal_top_y - goal_post / 2))
+            position=(px2m(10), px2m(goal_top_y + goal_post+px2m(10))),
         )
+        upper_hitbox = [
+            (0,0), 
+            (px2m(LOGICAL_GOAL_W-20),px2m(80)), 
+            (px2m(LOGICAL_GOAL_W-50),px2m(10)), 
+            (0,px2m(-40))
+            ]
         bar.CreatePolygonFixture(
-            box=(px2m(goal_w / 2), px2m(goal_post / 2)),
+            vertices=upper_hitbox,
             friction=0.3, restitution=0.4
         )
 
         # Palo trasero
         px_post = (gx - goal_post / 2) if side == 'left' else (gx + goal_w + goal_post / 2)
         back = world.CreateStaticBody(
-            position=(px2m(px_post), px2m(goal_top_y + goal_h / 2))
+            position=(px2m(px_post), px2m(goal_top_y + goal_h / 2)),
+        )
+        back.CreatePolygonFixture(
+            box=(px2m(goal_post / 2), px2m(goal_h / 2)),
+            friction=0.3, restitution=0.4
+        )
+
+        # Suelo interior portería
+        floor = world.CreateStaticBody(position=(goal_x, px2m(ground_y)))
+        floor.CreatePolygonFixture(box=(px2m(goal_w / 2), px2m(5)), friction=0.6)
+        
+
+        side = 'right'
+        gx = SW - goal_w
+        cx = px2m(gx + goal_w / 2)
+        
+        # Travesaño superior
+        bar = world.CreateStaticBody(
+            position=(px2m(10), px2m(goal_top_y + goal_post+px2m(10))),
+        )
+        correction_offset = -25
+        upper_hitbox_r = [
+            (px2m(SW+correction_offset),0), 
+            (px2m(SW-LOGICAL_GOAL_W+20+correction_offset),px2m(80)), 
+            (px2m(SW-LOGICAL_GOAL_W+50+correction_offset),px2m(10)), 
+            (px2m(SW+correction_offset),px2m(-40))
+            ]
+        bar.CreatePolygonFixture(
+            vertices=upper_hitbox_r,
+            
+            friction=0.3, restitution=0.4
+        )
+
+        # Palo trasero
+        px_post = (gx - goal_post / 2) if side == 'left' else (gx + goal_w + goal_post / 2)
+        back = world.CreateStaticBody(
+            position=(px2m(px_post), px2m(goal_top_y + goal_h / 2)),
         )
         back.CreatePolygonFixture(
             box=(px2m(goal_post / 2), px2m(goal_h / 2)),
