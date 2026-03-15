@@ -585,11 +585,10 @@ class MatchScene(PyGameScene):
         self.world.renderer = renderer
         if self.PHYSICS_DEBUG_MODE:
             renderer.render()
-
-        for body in self.world.bodies:
-            print(body)
-            for fixture in body.fixtures:
-                print(fixture.shape)
+            for body in self.world.bodies:
+                print(body)
+                for fixture in body.fixtures:
+                    print(fixture.shape)
 
     def _draw_intro_countdown(self, screen):
         seconds = self.intro_countdown_timer / 1000.0

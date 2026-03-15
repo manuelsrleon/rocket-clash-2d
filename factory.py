@@ -65,10 +65,10 @@ class RocketFactory:
                 angularDamping=0.3
             )
             objeto.body.CreateCircleFixture(
-                radius=2.5,
-                density=0.00,           # mucho más ligero → reacciona más al contacto
+                radius=3,
+                density=0.05,           # mucho más ligero → reacciona más al contacto
                 friction=0.5,
-                restitution=1.1       # rebota más en general
+                restitution=0.9       # rebota más en general
             )
             return objeto
 
