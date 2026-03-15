@@ -52,6 +52,9 @@ class RocketFactory:
                 linearDamping=0.5
             )
             objeto.body.CreatePolygonFixture(
+                vertices=[(-hw,0), (0,-hh/2),(hw,0)]
+            )
+            objeto.body.CreatePolygonFixture(
                 box=(hw, hh / 2, (0, hh / 2), 0),
                 density=objeto.mass, friction=0.08, restitution=0.12
             )
@@ -65,7 +68,7 @@ class RocketFactory:
                 angularDamping=0.3
             )
             objeto.body.CreateCircleFixture(
-                radius=3,
+                radius=2,
                 density=0.05,           # mucho más ligero → reacciona más al contacto
                 friction=0.5,
                 restitution=0.9       # rebota más en general
