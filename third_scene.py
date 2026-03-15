@@ -5,8 +5,16 @@ import Box2D
 from match_scene import MatchScene, px2m, m2px, SW, SH, PPM
 from factory import RocketFactory
 
-# Scene constants
+
 GROUND_Y   = 570
+LOGICAL_GOAL_X     = 10
+LOGICAL_GOAL_W     = 140
+LOGICAL_GOAL_H     = 170
+LOGICAL_GOAL_POST  = GROUND_Y
+LOGICAL_GOAL_TOP_Y = GROUND_Y-LOGICAL_GOAL_H
+SKY = 0
+GOAL_X = 10
+# Scene constants
 GOAL_W     = 150
 GOAL_H     = 250
 GOAL_POST  = 6
@@ -368,9 +376,96 @@ class ThirdScene(MatchScene):
         RocketFactory.create_boundaries(self.world, SW, GROUND_Y, GOAL_TOP_Y)
 
     def _create_goals(self):
-        return RocketFactory.create_goals(
-            self.world, SW, GROUND_Y, GOAL_W, GOAL_H, GOAL_POST, GOAL_TOP_Y
+        goal_w = GOAL_W
+        goal_x = GOAL_X
+        goal_h = GOAL_H
+        goal_top_y = LOGICAL_GOAL_TOP_Y
+        goal_post = GOAL_POST
+        ground_y = GROUND_Y
+        
+        world = self.world
+    
+        side = 'left'
+        gx = 0 if side == 'left' else screen_width - goal_w
+        cx = px2m(gx + goal_w / 2)
+        
+        # Travesaño superior
+        bar = world.CreateStaticBody(
+            position=(0, px2m(LOGICAL_GOAL_TOP_Y-20)),
         )
+        upper_hitbox = [
+            (0,0),
+            (px2m(LOGICAL_GOAL_W),0), 
+            (px2m(0),px2m(-40)),
+            #(px2m(20),px2m(SKY)),
+            #(px2m(10),px2m(-100)),
+            #(px2m(10),px2m(LOGICAL_GOAL_TOP_Y)),
+            #(0,px2m(LOGICAL_GOAL_TOP_Y))
+            ]
+        bar.CreatePolygonFixture(
+            vertices=upper_hitbox,
+            friction=0.3, restitution=0.4
+        )
+
+
+        # Palo trasero
+        back = world.CreateStaticBody(
+            position=(px2m(LOGICAL_GOAL_X-10), px2m(GROUND_Y-10)),
+        )
+        back.CreatePolygonFixture(
+            box=(px2m(6), px2m(LOGICAL_GOAL_H)),
+            friction=0.3, restitution=0.4
+        )
+
+        
+        bar.CreatePolygonFixture(
+            vertices=upper_hitbox,
+            friction=0.3, restitution=0.4
+        )
+        back.CreatePolygonFixture(
+            box=(px2m(goal_post / 2), px2m(goal_h / 2)),
+            friction=0.3, restitution=0.4
+        )
+        
+        # LADO DERECHO
+
+        side = 'right'
+        gx = 0 if side == 'right' else screen_width - goal_w
+        cx = px2m(gx + goal_w / 2)
+        correction_offset = 0
+        # Travesaño superior
+        # Travesaño superior
+       
+        upper_hitbox_r = [
+            (px2m(-LOGICAL_GOAL_W+correction_offset),0),
+            (px2m(correction_offset),0), 
+            (px2m(correction_offset),px2m(-40)),
+            #(px2m(20),px2m(SKY)),
+            #(px2m(10),px2m(-100)),
+            #(px2m(10),px2m(LOGICAL_GOAL_TOP_Y)),
+            #(0,px2m(LOGICAL_GOAL_TOP_Y))
+            ]
+        bar_r = world.CreateStaticBody(
+            position=(px2m(SW), px2m(LOGICAL_GOAL_TOP_Y-20)),
+        )
+        bar_r.CreatePolygonFixture(
+            vertices=upper_hitbox_r,
+            friction=0.3, restitution=0.4
+        )
+        
+
+        back_r = world.CreateStaticBody(
+            position=(px2m(SW-LOGICAL_GOAL_X+10), px2m(GROUND_Y-40)),
+        )
+
+        back_r.CreatePolygonFixture(
+            box=(px2m(goal_post / 2), px2m(goal_h / 2)),
+            friction=0.3, restitution=0.4
+        )
+        #if self.PHYSICS_DEBUG_MODE:
+            #pygame.draw.aaline(self.suface, (255,0,255), LOGICAL_GOAL_H, LOGICA)
+
+        return pygame.Rect(LOGICAL_GOAL_X-80, LOGICAL_GOAL_TOP_Y, LOGICAL_GOAL_W, LOGICAL_GOAL_H), pygame.Rect(SW-LOGICAL_GOAL_W+LOGICAL_GOAL_X+80, LOGICAL_GOAL_TOP_Y, LOGICAL_GOAL_W, LOGICAL_GOAL_H)
 
     def _reset_positions(self):
         super()._reset_positions()
