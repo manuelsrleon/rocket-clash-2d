@@ -570,7 +570,8 @@ class ThirdScene(MatchScene):
         elif hasattr(self, '_flash_protected_timer') and self._flash_protected_timer > 0:
             self._draw_protected_indicator(screen)
 
-        self._draw_jenny_indicator(screen)
+        if not self.is_exiting:
+            self._draw_jenny_indicator(screen)
 
     def _render_powerup_hud(self, screen):
         if self.player_has_powerup:
