@@ -525,10 +525,11 @@ class SecondScene(MatchScene):
 
     def render(self, screen):
         super().render(screen)
-        self._draw_angry_indicator(screen)
-        self._draw_teleport_flash(screen)
-        self._draw_kick_flash(screen)
-        self._draw_kick_hud(screen)
+        if not self.is_exiting:
+            self._draw_angry_indicator(screen)
+            self._draw_teleport_flash(screen)
+            self._draw_kick_flash(screen)
+            self._draw_kick_hud(screen)
 
     # ─── DIBUJO DE NUBES ─────────────────────────────────────
 
