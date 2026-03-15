@@ -91,9 +91,9 @@ class Bulldozer(Car):
     def update_logic(self, dt_ms):
         """Lógica interna: ciclos de enfado."""
         self.angry_timer += dt_ms
-        if not self.is_angry and self.angry_timer > 5000:
+        if not self.is_angry and self.angry_timer > 10000:
             self.become_angry()
-        elif self.is_angry and self.angry_timer > 15000:
+        elif self.is_angry and self.angry_timer > 8000:
             self.become_normal()
 
     def become_angry(self):

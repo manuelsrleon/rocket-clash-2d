@@ -234,8 +234,8 @@ class FirstScene(MatchScene):
         dx = abs(boss_pos.x - player_pos.x)
         dy = abs(boss_pos.y - player_pos.y)
 
-        threshold_x = 2.5
-        threshold_y = 2.0
+        threshold_x = 4.5
+        threshold_y = 4.0
 
         if dx < threshold_x and dy < threshold_y:
             self._on_boss_hit_player()
@@ -271,8 +271,8 @@ class FirstScene(MatchScene):
         dx = abs(player_pos.x - boss_pos.x)
         dy = abs(player_pos.y - boss_pos.y)
 
-        activate_range_x = 4.0
-        activate_range_y = 3.0
+        activate_range_x = 6.0
+        activate_range_y = 5.0
 
         if dx < activate_range_x and dy < activate_range_y:
             self.boss_stunned = True
