@@ -7,6 +7,8 @@ from end_scene import EndScene
 from assets_manager import Assets
 from settings import ScreenSettings, GUISettings, Colors, GameSettings, VolumeController
 from pygame.locals import *
+from pygame import Color
+from physics_debug_renderer import PhysicsDebugRenderer
 import random
 import os
 
@@ -103,6 +105,7 @@ class MatchScene(PyGameScene):
 
         # Mundo Box2D
         self.world = Box2D.b2World(gravity=self.gravity, doSleep=True)
+        self.PHYSICS_DEBUG_MODE = False
 
         # Campo y porterias (implementado por subclase)
         self._create_boundaries()
@@ -439,6 +442,8 @@ class MatchScene(PyGameScene):
                     self._on_powerup_activate()
                 elif ev.key == K_ESCAPE:
                     self.director.apilarEscena(IngameMenu(self.director))
+                elif ev.key == K_p:
+                    self.PHYSICS_DEBUG_MODE = not self.PHYSICS_DEBUG_MODE
             elif ev.type == KEYUP:
                 if ev.key == K_LEFT or ev.key == K_a:
                     self.move_left_flag = False
@@ -543,6 +548,10 @@ class MatchScene(PyGameScene):
             screen.blit(shadow_surf, (cx - sw // 2, shadow_y - sh // 2))
 
     def render(self, screen):
+        
+        
+
+        
         self._render_field(screen)
         self._render_shadows(screen)
         self.grupo_sprites.draw(screen)
@@ -571,6 +580,16 @@ class MatchScene(PyGameScene):
                 screen.blit(text_surf, text_rect)
 
         self.draw_fade(screen)
+
+        renderer = PhysicsDebugRenderer(surface=screen, test=self, world=self.world)
+        self.world.renderer = renderer
+        if self.PHYSICS_DEBUG_MODE:
+            renderer.render()
+
+        for body in self.world.bodies:
+            print(body)
+            for fixture in body.fixtures:
+                print(fixture.shape)
 
     def _draw_intro_countdown(self, screen):
         seconds = self.intro_countdown_timer / 1000.0
