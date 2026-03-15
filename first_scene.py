@@ -320,7 +320,8 @@ class FirstScene(MatchScene):
         goal_x = GOAL_X
         goal_h = GOAL_H
         goal_top_y = GOAL_TOP_Y
-        goal_post = GOAL_POSTGOAL_W
+        goal_post = GOAL_POST
+        goal_w = GOAL_W
         ground_y = GROUND_Y
         
         world = self.world
