@@ -125,11 +125,11 @@ class Menu(PyGameScene):
 
         d = self.director
         sequence = [
-            #lambda: DialogueScene(d, "dialogues/intro.json"),
-            #lambda: DialogueScene(d, "dialogues/match1.json"),
-            #lambda: FirstScene(d),
-            #lambda: DialogueScene(d, "dialogues/match1_end.json"),
-            #lambda: DialogueScene(d, "dialogues/match2.json"),
+            lambda: DialogueScene(d, "dialogues/intro.json"),
+            lambda: DialogueScene(d, "dialogues/match1.json"),
+            lambda: FirstScene(d),
+            lambda: DialogueScene(d, "dialogues/match1_end.json"),
+            lambda: DialogueScene(d, "dialogues/match2.json"),
             lambda: SecondScene(d),
             lambda: DialogueScene(d, "dialogues/match2_end.json"),
             lambda: DialogueScene(d, "dialogues/match3.json"),
