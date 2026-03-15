@@ -1,0 +1,92 @@
+@startuml SettingsSceneEnfocado
+
+title SettingsScene - esquema enfocado
+
+class SettingsScene {
+  -music_slider: VolumeSlider
+  -sfx_slider: VolumeSlider
+  -dialogue_speed_toggle: DialogueSpeedToggle
+  -save_button: SaveButton
+  -elements: list
+  -selected_index: int
+  -show_save_message: bool
+  -save_message_timer: int
+  +_update_selection()
+  +events(event_list)
+  +update(delta_time)
+  +render(screen)
+  +save_settings()
+}
+
+class VolumeSlider {
+  -value: float (0.0..1.0)
+  -selected: bool
+  +handle_event(event)
+  +get_value(): float
+  +render(screen)
+}
+
+class DialogueSpeedToggle {
+  -selected: bool
+  +handle_event(event)
+  +render(screen, label_font)
+}
+
+class SaveButton {
+  +action()
+}
+
+class SettingsManager <<Manager>> {
+  +get_volumes(): dict
+  +save_volumes(music, sfx)
+}
+
+class VolumeController <<Manager>> {
+  + set_music_volume(volume)
+  + set_sfx_volume(volume)
+}
+
+class DialogueSpeedController <<Manager>> {
+  +set_fast()
+  +set_normal()
+  +is_fast()
+}
+
+class Director <<Controller>> {
+  +exitScene()
+}
+
+SettingsScene *-- VolumeSlider : music_slider
+SettingsScene *-- VolumeSlider : sfx_slider
+SettingsScene *-- DialogueSpeedToggle : dialogue_speed_toggle
+SettingsScene *-- SaveButton : save_button
+
+SettingsScene ..> SettingsManager : carga/guarda ajustes
+SettingsScene ..> VolumeController : aplica volumen en tiempo real
+DialogueSpeedToggle ..> DialogueSpeedController : alterna NORMAL/FAST
+SettingsScene ..> Director : ESC -> exitScene()
+SaveButton ..> SettingsScene : action() -> save_settings()
+
+note left of SettingsScene
+Navegacion central:
+UP/DOWN: mueve selected_index (0..3)
+LEFT/RIGHT:
+- idx 0 -> music_slider
+- idx 1 -> sfx_slider
+- idx 2 -> dialogue_speed_toggle
+ENTER:
+- idx 3 -> save_button.action()
+ESC:
+- salir de la escena
+end note
+
+note right of SettingsScene
+Flujo interno:
+1. init: get_volumes() y crear widgets
+2. update: set_music_volume + set_sfx_volume
+3. save_settings: save_volumes(music, sfx)
+4. feedback: "Settings Saved!" durante 2000 ms
+5. render: titulo, sliders, toggle, boton e instrucciones
+end note
+
+@enduml
