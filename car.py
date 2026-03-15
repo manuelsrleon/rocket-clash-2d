@@ -91,9 +91,9 @@ class Bulldozer(Car):
     def update_logic(self, dt_ms):
         """Lógica interna: ciclos de enfado."""
         self.angry_timer += dt_ms
-        if not self.is_angry and self.angry_timer > 10000:
+        if not self.is_angry and self.angry_timer > 15000:
             self.become_angry()
-        elif self.is_angry and self.angry_timer > 8000:
+        elif self.is_angry and self.angry_timer > 6000:
             self.become_normal()
 
     def become_angry(self):
@@ -263,7 +263,7 @@ class MotoMoto(Car):
         dist_ball_goal = abs(ball_pos.x - goal_x)
         if dist_ball_goal < self.teleport_range:
             # Teletransportarse justo delante de la portería
-            tp_x = goal_x + (2.0 if ball_pos.x < goal_x else -2.0)
+            tp_x = goal_x -8.0
             self.body.position = (tp_x, goal_y)
             self.body.linearVelocity = (0, 0)
             self.teleport_cooldown = self.teleport_cooldown_max
